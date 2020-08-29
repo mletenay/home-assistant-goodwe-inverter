@@ -1,7 +1,8 @@
 {
-  "domain": "goodwe_inverter",
+  "domain": "goodwe",
   "name": "GoodWe Inverter",
   "documentation": "https://github.com/mletenay/home-assistant-goodwe-inverter",
+  "issue_tracker": "https://github.com/mletenay/home-assistant-goodwe-inverter/issues",
   "dependencies": [],
   "codeowners": [
     "@mletenay"
