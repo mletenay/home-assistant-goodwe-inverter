@@ -1,0 +1,10 @@
+{
+  "domain": "goodwe_inverter",
+  "name": "GoodWe Inverter",
+  "documentation": "https://github.com/mletenay/home-assistant-goodwe-inverter",
+  "dependencies": [],
+  "codeowners": [
+    "@mletenay"
+  ],
+  "requirements": []
+}
