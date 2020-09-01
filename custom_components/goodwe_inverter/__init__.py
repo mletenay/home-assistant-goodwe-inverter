@@ -1,1 +1,0 @@
-"""The goodwe inverter sensor integration."""

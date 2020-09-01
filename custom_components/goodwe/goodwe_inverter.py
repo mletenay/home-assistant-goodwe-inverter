@@ -1,4 +1,4 @@
-"""The goodwe inverter data retrieval module"""
+"""The GoodWe inverter data retrieval module"""
 import asyncio
 import logging
 from collections import namedtuple

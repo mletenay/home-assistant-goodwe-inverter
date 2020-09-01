@@ -7,7 +7,7 @@ The values will be presented as sensors (or attributes of sensors) in Home Assis
 
 ``` YAML
 sensor:
-  - platform: goodwe_inverter
+  - platform: goodwe
     ip_address: 192.168.100.100
     #port: 8899
     #scan_interval: 30
