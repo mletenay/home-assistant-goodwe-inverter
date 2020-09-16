@@ -1,3 +1,5 @@
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
+
 ## GoodWe Inverter Sensor Component for Home Assistant.
 
 The GoodWe solar sensor component will retrieve data from an GoodWe solar inverter.

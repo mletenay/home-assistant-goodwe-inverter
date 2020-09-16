@@ -222,12 +222,12 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        _LOGGER.debug("Send: %s", self.request)
+        _LOGGER.debug("Send: '%s'", self.request.hex())
         self.transport.sendto(self.request)
         asyncio.get_event_loop().call_later(self.timeout, self._timeout_heartbeat)
 
     def datagram_received(self, data, addr):
-        _LOGGER.debug("Received: %s", data)
+        _LOGGER.debug("Received: '%s'", data.hex())
         data = data[5:-2]
         if len(data) == self.response_len:
             self.on_response_received.set_result(data)
@@ -343,6 +343,7 @@ async def discover(host, port=8899):
     for inverter in REGISTRY:
         i = inverter(host, port)
         try:
+            _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
             await i.get_model()
             return i
         except InverterError as ex:
