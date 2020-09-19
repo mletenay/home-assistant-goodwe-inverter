@@ -171,6 +171,13 @@ def _read_temp(data, offset):
     return float(value) / 10
 
 
+def _read_byte(data, offset):
+    # Shift to real offset, 1000 is the marker
+    if offset >= 1000:
+        offset -= 1000
+    return data[offset]
+
+
 def _read_bytes2(data, offset):
     # Shift to real offset, 1000 is the marker
     if offset >= 1000:
@@ -226,9 +233,14 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
         self.transport.sendto(self.request)
         asyncio.get_event_loop().call_later(self.timeout, self._timeout_heartbeat)
 
+    def connection_lost(self, exc):
+        if exc is not None:
+            _LOGGER.debug("Socket closed with error: '%s'", exc)    
+        if not self.on_response_received.done():
+            self.on_response_received.cancel()
+
     def datagram_received(self, data, addr):
         _LOGGER.debug("Received: '%s'", data.hex())
-        data = data[5:-2]
         if len(data) == self.response_len:
             self.on_response_received.set_result(data)
             self.transport.close()
@@ -241,6 +253,9 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
             self.retry_nr += 1
             self.connection_made(self.transport)
 
+    def error_received(self, exc):
+        _LOGGER.debug("Received error: '%s'", exc)
+
     def _timeout_heartbeat(self):
         if self.on_response_received.done():
             self.transport.close()
@@ -249,7 +264,7 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
             self.retry_nr += 1
             self.connection_made(self.transport)
         else:
-            _LOGGER.debug("Timeout #%d", self.retry_nr)
+            _LOGGER.debug("Timeout #%d, closing socket", self.retry_nr)
             self.transport.close()
 
 
@@ -344,8 +359,11 @@ async def discover(host, port=8899):
         i = inverter(host, port)
         try:
             _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
-            await i.get_model()
+            response = await i.get_model()
+            _LOGGER.debug("Detected %s inverter %s, S/N:%s", inverter.__name__, response.type, response.serial_number)
             return i
+        except asyncio.exceptions.CancelledError as ex:
+            failures.append(ex)
         except InverterError as ex:
             failures.append(ex)
     msg = (
@@ -362,13 +380,13 @@ class ET(Inverter):
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
         bytes([0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1]),
-        66,
+        73,
     )
     _READ_DEVICE_RUNNING_DATA1 = (
         bytes([0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7]),
-        250,
+        257,
     )
-    _READ_BATTERY_INFO = (bytes([0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1]), 22)
+    _READ_BATTERY_INFO = (bytes([0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1]), 29)
 
     __model_name = None
     __serial_number = None
@@ -377,6 +395,7 @@ class ET(Inverter):
     # value.0: offset in raw data
     # value.1: getter_method
     # value.2: unit (String)
+    # value.3: icon
     __sensor_map = {
         "PV1 Voltage": (6, _read_voltage, "V", _ICON_PV),
         "PV1 Current": (8, _read_current, "A", _ICON_PV),
@@ -474,9 +493,10 @@ class ET(Inverter):
     @classmethod
     async def make_model_request(cls, host, port):
         response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
-        cls.__serial_number = response[6:22].decode("utf-8")
-        cls.__model_name = response[22:32].decode("utf-8")
         if response is not None:
+            response = response[5:-2]
+            cls.__serial_number = response[6:22].decode("utf-8")
+            cls.__model_name = response[22:32].decode("utf-8")
             return InverterResponse(
                 data=None, serial_number=cls.__serial_number, type=cls.__model_name
             )
@@ -486,9 +506,9 @@ class ET(Inverter):
     @classmethod
     async def make_request(cls, host, port):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA1, (host, port))
-        data = cls.map_response(raw_data, cls.__sensor_map)
+        data = cls.map_response(raw_data[5:-2], cls.__sensor_map)
         raw_data = await _read_from_socket(cls._READ_BATTERY_INFO, (host, port))
-        data.update(cls.map_response(raw_data, cls.__sensor_map_bat))
+        data.update(cls.map_response(raw_data[5:-2], cls.__sensor_map_bat))
         return InverterResponse(
             data=data, serial_number=cls.__serial_number, type=cls.__model_name
         )
@@ -500,5 +520,93 @@ class ET(Inverter):
         return result
 
 
+class ES(Inverter):
+    """Class representing inverter of ES family"""
+
+    # (request data including checksum, expected response length)
+    _READ_DEVICE_VERSION_INFO = (
+        bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41]),
+        85,
+    )
+    _READ_DEVICE_RUNNING_DATA = (
+        bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45]),
+        149,
+    )
+
+    __model_name = None
+    __serial_number = None
+
+    # key: name of sensor
+    # value.0: offset in raw data
+    # value.1: getter_method
+    # value.2: unit (String)
+    # value.3: icon
+    __sensor_map = {
+        "PV1 Voltage": (7, _read_voltage, "V", _ICON_PV),
+        "PV1 Current": (9, _read_current, "A", _ICON_PV),
+        "PV1 State": (10, _read_byte, "", _ICON_PV),
+        "PV2 Voltage": (12, _read_voltage, "V", _ICON_PV),
+        "PV2 Current": (14, _read_current, "A", _ICON_PV),
+        "PV2 State": (16, _read_byte, "", _ICON_PV),
+        "Battery Voltage": (17, _read_voltage, "V", _ICON_BATT),
+        # 4b ??
+        "Battery Temperature": (23, _read_temp, "C", _ICON_BATT),
+        "Battery Current": (25, _read_current, "A", _ICON_BATT),
+        "Battery Charge Limit": (27, _read_bytes2, "A", _ICON_BATT),
+        "Battery Discharge Limit": (29, _read_bytes2, "A", _ICON_BATT),
+        # 4b ??
+        "Battery State of Charge": (35, _read_byte, "%", _ICON_BATT),
+        "Battery State of Health": (36, _read_byte, "%", _ICON_BATT),
+        "Battery Mode": (37, _read_byte, "", _ICON_BATT),
+        # 3b ??
+        "On-grid Voltage": (41, _read_voltage, "V", _ICON_AC),
+        "On-grid Current": (43, _read_current, "A", _ICON_AC),
+        "On-grid Power": (45, _read_power, "W", _ICON_AC),
+        "On-grid Frequency": (47, _read_freq, "Hz", _ICON_AC),
+        # 1b ??
+        "Back-up Voltage": (50, _read_voltage, "V", _ICON_AC_BACK),
+        "Back-up Current": (52, _read_current, "A", _ICON_AC_BACK),
+        "Back-up Power": (54, _read_power, "W", _ICON_AC_BACK),
+        "Back-up Frequency": (56, _read_freq, "Hz", _ICON_AC_BACK),
+        # 1b ??
+        "Grid Mode": (59, _read_byte, "", _ICON_AC),
+        "Inverter Temperature": (60, _read_temp, "C", _ICON_BATT),
+        # 12b ??
+        "PV State": (71, _read_byte, "", _ICON_AC),
+        # 5b ??
+        # 2b counter
+        # 2b counter
+        # 3b ??
+        #"Importing": (87, _read_byte, "", _ICON_AC),
+        #"Back-up Power?": (88, _read_power, "W", _ICON_AC_BACK),
+        # 44b ??
+        # Total power ?
+        # 11b ??
+    }
+
+    @classmethod
+    async def make_model_request(cls, host, port):
+        response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
+        if response is not None:
+            cls.__serial_number = response[38:54].decode("utf-8")
+            cls.__model_name = response[12:22].decode("utf-8")
+            return InverterResponse(
+                data=None, serial_number=cls.__serial_number, type=cls.__model_name
+            )
+        else:
+            raise ValueError
+
+    @classmethod
+    async def make_request(cls, host, port):
+        raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
+        data = cls.map_response(raw_data, cls.__sensor_map)
+        return InverterResponse(
+            data=data, serial_number=cls.__serial_number, type=cls.__model_name
+        )
+
+    @classmethod
+    def sensor_map(cls):
+        return cls.__sensor_map
+
 # registry of supported inverter models
-REGISTRY = [ET]
+REGISTRY = [ET, ES]
