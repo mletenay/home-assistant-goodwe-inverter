@@ -586,7 +586,7 @@ class ES(Inverter):
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
         bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41]),
-        85,
+        86,
     )
     _READ_DEVICE_RUNNING_DATA = (
         bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45]),
@@ -650,7 +650,9 @@ class ES(Inverter):
 
     @classmethod
     async def make_model_request(cls, host, port):
-        response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
+        #response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
+        response = bytes.fromhex("aa557fc001824d31303130424757353034382d454d20233130202020202020202020202020203735303438454d553139365730333230333630303431302d30343030302d3130203431302d30323033342d31311011b6")
+        len(response)
         if response is not None:
             cls.__serial_number = response[38:54].decode("utf-8")
             cls.__model_name = response[12:22].decode("utf-8")
