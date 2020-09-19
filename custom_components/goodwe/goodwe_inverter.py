@@ -10,7 +10,7 @@ _ICON_AC = "mdi:power-plug-outline"
 _ICON_AC_BACK = "mdi:power-plug-off-outline"
 _ICON_BATT = "mdi:battery-high"
 
-_WORK_MODES = {
+_WORK_MODES_ET = {
     0: "Wait Mode",
     1: "Normal(On-Grid)",
     2: "Normal(Off-Grid)",
@@ -19,7 +19,7 @@ _WORK_MODES = {
     5: "Check Mode",
 }
 
-_BATTERY_MODES = {
+_BATTERY_MODES_ET = {
     0: "No battery or battery disconnected",
     1: "Spare",
     2: "Discharge",
@@ -28,7 +28,43 @@ _BATTERY_MODES = {
     5: "To be discharged",
 }
 
-_SAFETY_COUNTRIES = {
+_PV_MODES = {
+    0: "Disconnect the inverter and PV panels",
+    1: "No power output PV",
+    2: "Working,PV has a power output",
+}
+
+_LOAD_MODES = {
+    0: "The inverter is connected to a load",
+    1: "Inverter and the load is disconnected",
+}
+
+_WORK_MODES = {
+    0: "Wait for the conditions to generate electricity",
+    1: "The inverter is generating",
+    2: "System abnormalities, while stopping power",
+    3: "System is severely abnormal, 20 seconds after the restart",
+}
+
+_ENERGY_MODES = {
+    0: "Check Mode",
+    1: "Wait Mode",
+    2: "Normal(On-Grid)",
+    4: "Normal(Off-Grid)",
+    8: "Flash Mode",
+    16: "Fault Mode",
+    32: "Battery Standby",
+    64: "Battery Charging",
+    128: "Battery Discharging",
+}
+
+_GRID_MODES = {
+    0: "Inverter neither send power to grid,nor get power from grid",
+    1: "Inverter sends power to grid",
+    2: "Inverter gets power from grid",   
+}
+
+_SAFETY_COUNTRIES_ET = {
     0: "Italy",
     1: "Czech",
     2: "Germany",
@@ -207,15 +243,39 @@ def _read_grid_mode(data, offset):
 
 
 def _read_battery_mode(data, offset):
-    return _BATTERY_MODES.get(_read_bytes2(data, offset))
+    return _BATTERY_MODES_ET.get(_read_bytes2(data, offset))
 
 
 def _read_safety_country(data, offset):
-    return _SAFETY_COUNTRIES.get(_read_bytes2(data, offset))
+    return _SAFETY_COUNTRIES_ET.get(_read_bytes2(data, offset))
 
 
 def _read_work_mode(data, offset):
-    return _WORK_MODES.get(_read_bytes2(data, offset))
+    return _WORK_MODES_ET.get(_read_bytes2(data, offset))
+
+
+def _read_pv_mode1(data, offset):
+    return _PV_MODES.get(_read_byte(data, offset))
+
+
+def _read_work_mode1(data, offset):
+    return _WORK_MODES.get(_read_byte(data, offset))
+
+
+def _read_load_mode1(data, offset):
+    return _LOAD_MODES.get(_read_byte(data, offset))
+
+
+def _read_energy_mode1(data, offset):
+    return _ENERGY_MODES.get(_read_byte(data, offset))
+
+
+def _read_grid_mode1(data, offset):
+    return _GRID_MODES.get(_read_byte(data, offset))
+
+
+def _read_battery_mode1(data, offset):
+    return _BATTERY_MODES_ET.get(_read_byte(data, offset))
 
 
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
@@ -542,46 +602,50 @@ class ES(Inverter):
     # value.2: unit (String)
     # value.3: icon
     __sensor_map = {
-        "PV1 Voltage": (7, _read_voltage, "V", _ICON_PV),
-        "PV1 Current": (9, _read_current, "A", _ICON_PV),
-        "PV1 State": (10, _read_byte, "", _ICON_PV),
-        "PV2 Voltage": (12, _read_voltage, "V", _ICON_PV),
-        "PV2 Current": (14, _read_current, "A", _ICON_PV),
-        "PV2 State": (16, _read_byte, "", _ICON_PV),
-        "Battery Voltage": (17, _read_voltage, "V", _ICON_BATT),
-        # 4b ??
-        "Battery Temperature": (23, _read_temp, "C", _ICON_BATT),
-        "Battery Current": (25, _read_current, "A", _ICON_BATT),
-        "Battery Charge Limit": (27, _read_bytes2, "A", _ICON_BATT),
-        "Battery Discharge Limit": (29, _read_bytes2, "A", _ICON_BATT),
-        # 4b ??
-        "Battery State of Charge": (35, _read_byte, "%", _ICON_BATT),
-        "Battery State of Health": (36, _read_byte, "%", _ICON_BATT),
-        "Battery Mode": (37, _read_byte, "", _ICON_BATT),
-        # 3b ??
-        "On-grid Voltage": (41, _read_voltage, "V", _ICON_AC),
-        "On-grid Current": (43, _read_current, "A", _ICON_AC),
-        "On-grid Power": (45, _read_power, "W", _ICON_AC),
-        "On-grid Frequency": (47, _read_freq, "Hz", _ICON_AC),
-        # 1b ??
-        "Back-up Voltage": (50, _read_voltage, "V", _ICON_AC_BACK),
-        "Back-up Current": (52, _read_current, "A", _ICON_AC_BACK),
-        "Back-up Power": (54, _read_power, "W", _ICON_AC_BACK),
-        "Back-up Frequency": (56, _read_freq, "Hz", _ICON_AC_BACK),
-        # 1b ??
-        "Grid Mode": (59, _read_byte, "", _ICON_AC),
-        "Inverter Temperature": (60, _read_temp, "C", _ICON_BATT),
-        # 12b ??
-        "PV State": (71, _read_byte, "", _ICON_AC),
-        # 5b ??
-        # 2b counter
-        # 2b counter
-        # 3b ??
-        #"Importing": (87, _read_byte, "", _ICON_AC),
-        #"Back-up Power?": (88, _read_power, "W", _ICON_AC_BACK),
-        # 44b ??
-        # Total power ?
-        # 11b ??
+        "PV1 Voltage": (0, _read_voltage, "V", _ICON_PV),
+        "PV1 Current": (2, _read_current, "A", _ICON_PV),
+        "PV1 Mode": (4, _read_pv_mode1, "", _ICON_PV),
+        "PV2 Voltage": (5, _read_voltage, "V", _ICON_PV),
+        "PV2 Current": (7, _read_current, "A", _ICON_PV),
+        "PV2 Mode": (9, _read_pv_mode1, "", _ICON_PV),
+        "Battery Voltage": (10, _read_voltage, "V", _ICON_BATT),
+        "Battery Voltage 2": (12, _read_voltage, "V", _ICON_BATT),
+        "Battery Voltage 3": (14, _read_voltage, "V", _ICON_BATT),
+        "Battery Voltage 4": (16, _read_voltage, "V", _ICON_BATT),
+        "Battery Current": (18, _read_current, "A", _ICON_BATT),
+        "Battery Charge Limit": (20, _read_bytes2, "A", _ICON_BATT),
+        "Battery Discharge Limit": (22, _read_bytes2, "A", _ICON_BATT),
+        # BMS status 24-25
+        "Battery State of Charge": (26, _read_byte, "%", _ICON_BATT),
+        "Battery State of Charge 2": (27, _read_byte, "%", _ICON_BATT),
+        "Battery State of Charge 3": (28, _read_byte, "%", _ICON_BATT),
+        "Battery State of Health": (29, _read_byte, "%", _ICON_BATT),
+        "Battery Mode": (30, _read_battery_mode1, "", _ICON_BATT),
+        # BMS warning 31-32
+        # Meter status 33
+        "On-grid Voltage": (34, _read_voltage, "V", _ICON_AC),
+        "On-grid Current": (36, _read_current, "A", _ICON_AC),
+        "On-grid Power": (38, _read_power, "W", _ICON_AC),
+        "On-grid Frequency": (40, _read_freq, "Hz", _ICON_AC),
+        "Work Mode": (41, _read_work_mode1, "", None),
+        "Back-up Voltage": (43, _read_voltage, "V", _ICON_AC_BACK),
+        "Back-up Current": (45, _read_current, "A", _ICON_AC_BACK),
+        "Back-up Power": (47, _read_power, "W", _ICON_AC_BACK),
+        "Back-up Frequency": (49, _read_freq, "Hz", _ICON_AC_BACK),
+        "Load Mode": (51, _read_load_mode1, "", None),
+        "Energy Mode": (52, _read_energy_mode1, "", None),
+        "Inverter Temperature": (53, _read_temp, "C", None),
+        "Error Codes": (55, _read_bytes4, "", None),
+        "Total Energy": (59, _read_power_k, "kW", None),
+        # htotal 63-66
+        "Today's Energy": (67, _read_power_k, "kW", None),
+        "Today's Load": (69, _read_power, "kW", None),
+        "Total Load": (71, _read_power_k, "kW", None),
+        "Total Power": (75, _read_bytes2, "kW", None),
+        # Effective work mode 77
+        # Effective relay control 78-79
+        'On-grid Mode': (80, _read_grid_mode1, ''),
+        "Diag Status": (89, _read_bytes4, "", None),
     }
 
     @classmethod
@@ -599,7 +663,7 @@ class ES(Inverter):
     @classmethod
     async def make_request(cls, host, port):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
-        data = cls.map_response(raw_data, cls.__sensor_map)
+        data = cls.map_response(raw_data[7:-2], cls.__sensor_map)
         return InverterResponse(
             data=data, serial_number=cls.__serial_number, type=cls.__model_name
         )
