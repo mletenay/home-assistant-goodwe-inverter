@@ -352,7 +352,7 @@ class DiscoveryError(Exception):
     """Raised when unable to discover inverter"""
 
 
-InverterResponse = namedtuple("InverterResponse", "data, serial_number, type")
+InverterResponse = namedtuple("InverterResponse", "data, serial_number, type, sofware_version")
 
 
 class Inverter:
@@ -450,6 +450,7 @@ class ET(Inverter):
 
     __model_name = None
     __serial_number = None
+    __software_version = None
 
     # key: name of sensor
     # value.0: offset in raw data
@@ -557,8 +558,9 @@ class ET(Inverter):
             response = response[5:-2]
             cls.__serial_number = response[6:22].decode("utf-8")
             cls.__model_name = response[22:32].decode("utf-8")
+            cls.__software_version = response[54:66].decode("utf-8")
             return InverterResponse(
-                data=None, serial_number=cls.__serial_number, type=cls.__model_name
+                data=None, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
             )
         else:
             raise ValueError
@@ -570,7 +572,7 @@ class ET(Inverter):
         raw_data = await _read_from_socket(cls._READ_BATTERY_INFO, (host, port))
         data.update(cls.map_response(raw_data[5:-2], cls.__sensor_map_bat))
         return InverterResponse(
-            data=data, serial_number=cls.__serial_number, type=cls.__model_name
+            data=data, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
         )
 
     @classmethod
@@ -595,6 +597,7 @@ class ES(Inverter):
 
     __model_name = None
     __serial_number = None
+    __software_version = None
 
     # key: name of sensor
     # value.0: offset in raw data
@@ -650,14 +653,13 @@ class ES(Inverter):
 
     @classmethod
     async def make_model_request(cls, host, port):
-        #response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
-        response = bytes.fromhex("aa557fc001824d31303130424757353034382d454d20233130202020202020202020202020203735303438454d553139365730333230333630303431302d30343030302d3130203431302d30323033342d31311011b6")
-        len(response)
+        response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
         if response is not None:
             cls.__serial_number = response[38:54].decode("utf-8")
             cls.__model_name = response[12:22].decode("utf-8")
+            cls.__software_version = response[58:70].decode("utf-8")
             return InverterResponse(
-                data=None, serial_number=cls.__serial_number, type=cls.__model_name
+                data=None, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
             )
         else:
             raise ValueError
@@ -667,7 +669,7 @@ class ES(Inverter):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
         data = cls.map_response(raw_data[7:-2], cls.__sensor_map)
         return InverterResponse(
-            data=data, serial_number=cls.__serial_number, type=cls.__model_name
+            data=data, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
         )
 
     @classmethod
