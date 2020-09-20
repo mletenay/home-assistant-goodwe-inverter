@@ -17,5 +17,5 @@ IP_ADDRESS = "192.168.1.14"
 inverter = asyncio.run(inverter.discover(IP_ADDRESS, 8899))
 response = asyncio.run(inverter.get_data())
 
-for sensor, (_, _, unit, icon) in inverter.sensor_map().items():
+for (_, _, unit, sensor, icon) in inverter.sensors():
     print(f"{sensor} = {response.data[sensor]} {unit}")

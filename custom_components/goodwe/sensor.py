@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.async_add_job(endpoint.async_refresh)
     async_track_time_interval(hass, endpoint.async_refresh, config[CONF_SCAN_INTERVAL])
     devices = []
-    for sensor, (idx, _, unit, icon) in api.sensor_map().items():
+    for (idx, _, unit, sensor, icon) in api.sensors():
         if unit == "C":
             unit = TEMP_CELSIUS
         uid = f"goodwe-{serial}-{idx}"

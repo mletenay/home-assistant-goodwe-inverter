@@ -379,7 +379,7 @@ class Inverter:
     async def get_model(self):
         """Request the model information from the inverter"""
         try:
-            data = await self.make_model_request(self.host, self.port)
+            data = await self._make_model_request(self.host, self.port)
         except ValueError as ex:
             msg = "Received invalid data from inverter"
             raise InverterError(msg, str(self.__class__.__name__)) from ex
@@ -388,14 +388,14 @@ class Inverter:
     async def get_data(self):
         """Request the runtime data from the inverter"""
         try:
-            data = await self.make_request(self.host, self.port)
+            data = await self._make_request(self.host, self.port)
         except ValueError as ex:
             msg = "Received invalid data from inverter"
             raise InverterError(msg, str(self.__class__.__name__)) from ex
         return data
 
     @classmethod
-    async def make_model_request(cls, host, port):
+    async def _make_model_request(cls, host, port):
         """
         Return instance of 'InverterResponse'
         Raise exception if unable to get version
@@ -403,7 +403,7 @@ class Inverter:
         raise NotImplementedError()
 
     @classmethod
-    async def make_request(cls, host, port):
+    async def _make_request(cls, host, port):
         """
         Return instance of 'InverterResponse'
         Raise exception if unable to get data
@@ -411,18 +411,18 @@ class Inverter:
         raise NotImplementedError()
 
     @classmethod
-    def sensor_map(cls):
+    def sensors(cls):
         """
         Return sensor map
         """
         raise NotImplementedError()
 
     @staticmethod
-    def map_response(resp_data, sensor_map):
+    def _map_response(resp_data, sensors):
         """Process the response data and return dictionary with runtime values"""
         return {
-            sensor_name: fn(resp_data, i)
-            for sensor_name, (i, fn, _, _) in sensor_map.items()
+            name: fn(resp_data, offset)
+            for (offset, fn, _, name, _) in sensors
         }
 
 
@@ -453,120 +453,113 @@ class ET(Inverter):
 
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
-        bytes([0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1]),
-        [73],
+        bytes((0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1)),
+        (73,),
     )
     _READ_DEVICE_RUNNING_DATA1 = (
-        bytes([0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7]),
-        [257],
+        bytes((0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7)),
+        (257,),
     )
-    _READ_BATTERY_INFO = (bytes([0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1]), [29])
+    _READ_BATTERY_INFO = (bytes((0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1)), (29,))
 
     __model_name = None
     __serial_number = None
     __software_version = None
 
-    # key: name of sensor
-    # value.0: offset in raw data
-    # value.1: getter_method
-    # value.2: unit (String)
-    # value.3: icon
-    __sensor_map = {
-        "PV1 Voltage": (6, _read_voltage, "V", _ICON_PV),
-        "PV1 Current": (8, _read_current, "A", _ICON_PV),
-        "PV1 Power": (10, _read_power, "W", _ICON_PV),
-        "PV2 Voltage": (14, _read_voltage, "V", _ICON_PV),
-        "PV2 Current": (16, _read_current, "A", _ICON_PV),
-        "PV2 Power": (18, _read_power, "W", _ICON_PV),
-        # 'PV3 Voltage': (22, _read_voltage, 'V'),
-        # 'PV3 Current': (24, _read_current, 'A'),
-        # 'PV3 Power': (26, _read_power, 'W'),
-        # 'PV4 Voltage': (30, _read_voltage, 'V'),
-        # 'PV4 Current': (32, _read_current, 'A'),
-        # 'PV4 Power': (34, _read_power, 'W'),
+    # Sensors ("id, offset, getter, unit, name, icon")
+    __sensors = (
+        (6, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
+        (8, _read_current, "A", "PV1 Current", _ICON_PV),
+        (10, _read_power, "W", "PV1 Power", _ICON_PV),
+        (14, _read_voltage, "V", "PV2 Voltage", _ICON_PV),
+        (16, _read_current, "A", "PV2 Current", _ICON_PV),
+        (18, _read_power, "W", "PV2 Power", _ICON_PV),
+        #(22, _read_voltage, "V", "PV3 Voltage", _ICON_PV),
+        #(24, _read_current, "A", "PV3 Current", _ICON_PV),
+        #(26, _read_power, "W", "PV3 Power", _ICON_PV),
+        #(30, _read_voltage, "V", "PV4 Voltage", _ICON_PV),
+        #(32, _read_current, "A", "PV4 Current", _ICON_PV),
+        #(34, _read_power, "W", "PV4 Power", _ICON_PV),
         # 'PV Power': ppv1 + ppv2 + ppv3 + ppv4
-        "PV Power": (
+        (
             -10,
             lambda data, x: _read_power(data, 10) + _read_power(data, 18),
-            "W",
-            _ICON_PV,
+            "W", "PV Power", _ICON_PV,
         ),
-        "On-grid 1 Voltage": (42, _read_voltage, "V", _ICON_AC),
-        "On-grid Current": (44, _read_current, "A", _ICON_AC),
-        "On-grid Frequency": (46, _read_freq, "Hz", _ICON_AC),
-        "On-grid Power": (48, _read_power, "W", _ICON_AC),
-        "On-grid2 Voltage": (52, _read_voltage, "V", _ICON_AC),
-        "On-grid2 Current": (54, _read_current, "A", _ICON_AC),
-        "On-grid2 Frequency": (56, _read_freq, "Hz", _ICON_AC),
-        "On-grid2 Power": (58, _read_power, "W", _ICON_AC),
-        "On-grid3 Voltage": (62, _read_voltage, "V", _ICON_AC),
-        "On-grid3 Current": (64, _read_current, "A", _ICON_AC),
-        "On-grid3 Frequency": (66, _read_freq, "Hz", _ICON_AC),
-        "On-grid3 Power": (68, _read_power, "W", _ICON_AC),
-        "Total Power": (74, _read_power, "W", _ICON_AC),
-        "Active Power": (78, _read_power, "W", _ICON_AC),
-        # 'On-grid Mode': (-78, _read_grid_mode, ''),
-        "Back-up1 Voltage": (90, _read_voltage, "V", _ICON_AC_BACK),
-        "Back-up1 Current": (92, _read_current, "A", _ICON_AC_BACK),
-        "Back-up1 Frequency": (94, _read_freq, "Hz", _ICON_AC_BACK),
-        # 'Back-up1 ?': (96, _read_bytes2, '?');
-        "Back-up1 Power": (98, _read_power, "W", _ICON_AC_BACK),
-        "Back-up2 Voltage": (102, _read_voltage, "V", _ICON_AC_BACK),
-        "Back-up2 Current": (104, _read_current, "A", _ICON_AC_BACK),
-        "Back-up2 Frequency": (106, _read_freq, "Hz", _ICON_AC_BACK),
-        # 'Back-up2 ?': (108, _read_bytes2, '?');
-        "Back-up2 Power": (110, _read_power, "W", _ICON_AC_BACK),
-        "Back-up3 Voltage": (114, _read_voltage, "V", _ICON_AC_BACK),
-        "Back-up3 Current": (116, _read_current, "A", _ICON_AC_BACK),
-        "Back-up3 Frequency": (118, _read_freq, "Hz", _ICON_AC_BACK),
-        # 'Back-up3 ?': (120, _read_bytes2, '?');
-        "Back-up3 Power": (122, _read_power, "W", _ICON_AC_BACK),
-        "Load 1": (126, _read_power, "W", _ICON_AC),
-        "Load 2": (130, _read_power, "W", _ICON_AC),
-        "Load 3": (134, _read_power, "W", _ICON_AC),
+        (42, _read_voltage, "V", "On-grid 1 Voltage", _ICON_AC),
+        (44, _read_current, "A", "On-grid Current", _ICON_AC),
+        (46, _read_freq, "Hz", "On-grid Frequency", _ICON_AC),
+        (48, _read_power, "W", "On-grid Power", _ICON_AC),
+        (52, _read_voltage, "V", "On-grid2 Voltage", _ICON_AC),
+        (54, _read_current, "A", "On-grid2 Current", _ICON_AC),
+        (56, _read_freq, "Hz", "On-grid2 Frequency", _ICON_AC),
+        (58, _read_power, "W", "On-grid2 Power", _ICON_AC),
+        (62, _read_voltage, "V", "On-grid3 Voltage", _ICON_AC),
+        (64, _read_current, "A", "On-grid3 Current", _ICON_AC),
+        (66, _read_freq, "Hz", "On-grid3 Frequency", _ICON_AC),
+        (68, _read_power, "W", "On-grid3 Power", _ICON_AC),
+        (74, _read_power, "W", "Total Power", _ICON_AC),
+        (78, _read_power, "W", "Active Power", _ICON_AC),
+        #(-78, _read_grid_mode, "", "On-grid Mode",  _ICON_AC),
+        (90, _read_voltage, "V", "Back-up1 Voltage", _ICON_AC_BACK),
+        (92, _read_current, "A", "Back-up1 Current", _ICON_AC_BACK),
+        (94, _read_freq, "Hz", "Back-up1 Frequency", _ICON_AC_BACK),
+        #(96, _read_bytes2, "", "Back-up1 ?", None);
+        (98, _read_power, "W", "Back-up1 Power", _ICON_AC_BACK),
+        (102, _read_voltage, "V", "Back-up2 Voltage", _ICON_AC_BACK),
+        (104, _read_current, "A", "Back-up2 Current", _ICON_AC_BACK),
+        (106, _read_freq, "Hz", "Back-up2 Frequency", _ICON_AC_BACK),
+        #(108, _read_bytes2, "", 'Back-up2 ?', None);
+        (110, _read_power, "W", "Back-up2 Power", _ICON_AC_BACK),
+        (114, _read_voltage, "V", "Back-up3 Voltage", _ICON_AC_BACK),
+        (116, _read_current, "A", "Back-up3 Current", _ICON_AC_BACK),
+        (118, _read_freq, "Hz", "Back-up3 Frequency", _ICON_AC_BACK),
+        #(120, _read_bytes2, "", 'Back-up3 ?', None);
+        (122, _read_power, "W", "Back-up3 Power", _ICON_AC_BACK),
+        (126, _read_power, "W", "Load 1", _ICON_AC),
+        (130, _read_power, "W", "Load 2", _ICON_AC),
+        (134, _read_power, "W", "Load 3", _ICON_AC),
         # 'Load Total': load_p1 + load_p2 + load_p3
-        "Load Total": (
+        (
             -126,
             lambda data, x: _read_power(data, 126)
             + _read_power(data, 130)
             + _read_power(data, 134),
-            "W",
-            _ICON_AC,
+            "W", "Load Total", _ICON_AC,
         ),
-        "Back-up Power": (138, _read_power, "W", _ICON_AC_BACK),
-        "Load": (142, _read_power, "W", _ICON_AC),
-        "Battery Voltage": (160, _read_voltage, "V", _ICON_BATT),
-        "Battery Current": (162, _read_current, "A", _ICON_BATT),
+        (138, _read_power, "W", "Back-up Power", _ICON_AC_BACK),
+        (142, _read_power, "W", "Load", _ICON_AC),
+        (160, _read_voltage, "V", "Battery Voltage", _ICON_BATT),
+        (162, _read_current, "A", "Battery Current", _ICON_BATT),
         # 'Battery Power': round('Battery Voltage' * 'Battery Current', 'W'),
-        "Battery Power": (
+        (
             -160,
             lambda data, x: round(_read_voltage(data, 160) * _read_current(data, 162)),
-            "W",
-            _ICON_BATT,
+            "W", "Battery Power", _ICON_BATT,
         ),
-        "Battery Mode": (168, _read_battery_mode, "", _ICON_BATT),
-        "Safety Country": (172, _read_safety_country, "", None),
-        "Work Mode": (174, _read_work_mode, "", None),
-        "Error Codes": (178, _read_bytes4, "", None),
-        "Total Energy": (182, _read_power_k, "kW", None),
-        "Today's Energy": (186, _read_power_k, "kW", None),
-        "Diag Status": (240, _read_bytes4, "", None),
-    }
+        (168, _read_battery_mode, "", "Battery Mode", _ICON_BATT),
+        (172, _read_safety_country, "", "Safety Country", None),
+        (174, _read_work_mode, "", "Work Mode", None),
+        (178, _read_bytes4, "", "Error Codes", None),
+        (182, _read_power_k, "kW", "Total Energy", None),
+        (186, _read_power_k, "kW", "Today's Energy", None),
+        (240, _read_bytes4, "", "Diag Status", None),
+    )
 
-    __sensor_map_bat = {
-        "Battery BMS": (1000, _read_bytes2, "", _ICON_BATT),
-        "Battery Index": (1002, _read_bytes2, "", _ICON_BATT),
-        "Battery Temperature": (1006, _read_temp, "C", _ICON_BATT),
-        "Battery Charge Limit": (1008, _read_bytes2, "A", _ICON_BATT),
-        "Battery Discharge Limit": (1010, _read_bytes2, "A", _ICON_BATT),
-        "Battery Status": (1012, _read_bytes2, "", _ICON_BATT),
-        "Battery State of Charge": (1014, _read_bytes2, "%", _ICON_BATT),
-        "Battery State of Health": (1016, _read_bytes2, "%", _ICON_BATT),
-        "Battery Warning": (1020, _read_bytes2, "", None),
-    }
+    __sensors_battery = (
+        (1000, _read_bytes2, "", "Battery BMS", _ICON_BATT),
+        (1002, _read_bytes2, "", "Battery Index", _ICON_BATT),
+        (1006, _read_temp, "C", "Battery Temperature", _ICON_BATT),
+        (1008, _read_bytes2, "A", "Battery Charge Limit", _ICON_BATT),
+        (1010, _read_bytes2, "A", "Battery Discharge Limit", _ICON_BATT),
+        (1012, _read_bytes2, "", "Battery Status", _ICON_BATT),
+        (1014, _read_bytes2, "%", "Battery State of Charge", _ICON_BATT),
+        (1016, _read_bytes2, "%", "Battery State of Health", _ICON_BATT),
+        (1020, _read_bytes2, "", "Battery Warning", None),
+    )
 
     @classmethod
-    async def make_model_request(cls, host, port):
+    async def _make_model_request(cls, host, port):
         response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
         if response is not None:
             response = response[5:-2]
@@ -580,20 +573,18 @@ class ET(Inverter):
             raise ValueError
 
     @classmethod
-    async def make_request(cls, host, port):
+    async def _make_request(cls, host, port):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA1, (host, port))
-        data = cls.map_response(raw_data[5:-2], cls.__sensor_map)
+        data = cls._map_response(raw_data[5:-2], cls.__sensors)
         raw_data = await _read_from_socket(cls._READ_BATTERY_INFO, (host, port))
-        data.update(cls.map_response(raw_data[5:-2], cls.__sensor_map_bat))
+        data.update(cls._map_response(raw_data[5:-2], cls.__sensors_battery))
         return InverterResponse(
             data=data, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
         )
 
     @classmethod
-    def sensor_map(cls):
-        result = dict(cls.__sensor_map)
-        result.update(cls.__sensor_map_bat)
-        return result
+    def sensors(cls):
+        return cls.__sensors + cls.__sensors_battery
 
 
 class ES(Inverter):
@@ -601,72 +592,68 @@ class ES(Inverter):
 
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
-        bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41]),
-        [85,86],
+        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
+        (85,86),
     )
     _READ_DEVICE_RUNNING_DATA = (
-        bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45]),
-        [142,149],
+        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45)),
+        (142,149),
     )
 
     __model_name = None
     __serial_number = None
     __software_version = None
 
-    # key: name of sensor
-    # value.0: offset in raw data
-    # value.1: getter_method
-    # value.2: unit (String)
-    # value.3: icon
-    __sensor_map = {
-        "PV1 Voltage": (0, _read_voltage, "V", _ICON_PV),
-        "PV1 Current": (2, _read_current, "A", _ICON_PV),
-        "PV1 Mode": (4, _read_pv_mode1, "", _ICON_PV),
-        "PV2 Voltage": (5, _read_voltage, "V", _ICON_PV),
-        "PV2 Current": (7, _read_current, "A", _ICON_PV),
-        "PV2 Mode": (9, _read_pv_mode1, "", _ICON_PV),
-        "Battery Voltage": (10, _read_voltage, "V", _ICON_BATT),
-        "Battery Voltage 2": (12, _read_voltage, "V", _ICON_BATT),
-        "Battery Voltage 3": (14, _read_voltage, "V", _ICON_BATT),
-        "Battery Voltage 4": (16, _read_voltage, "V", _ICON_BATT),
-        "Battery Current": (18, _read_current, "A", _ICON_BATT),
-        "Battery Charge Limit": (20, _read_bytes2, "A", _ICON_BATT),
-        "Battery Discharge Limit": (22, _read_bytes2, "A", _ICON_BATT),
+    # Sensors ("id, offset, getter, unit, name, icon")
+    __sensors = (
+        (0, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
+        (2, _read_current, "A", "PV1 Current", _ICON_PV),
+        (4, _read_pv_mode1, "", "PV1 Mode", _ICON_PV),
+        (5, _read_voltage, "V", "PV2 Voltage", _ICON_PV),
+        (7, _read_current, "A", "PV2 Current", _ICON_PV),
+        (9, _read_pv_mode1, "", "PV2 Mode", _ICON_PV),
+        (10, _read_voltage, "V", "Battery Voltage", _ICON_BATT),
+        (12, _read_voltage, "V", "Battery Voltage 2", _ICON_BATT),
+        (14, _read_voltage, "V", "Battery Voltage 3", _ICON_BATT),
+        (16, _read_voltage, "V", "Battery Voltage 4", _ICON_BATT),
+        (18, _read_current, "A", "Battery Current", _ICON_BATT),
+        (20, _read_bytes2, "A", "Battery Charge Limit", _ICON_BATT),
+        (22, _read_bytes2, "A", "Battery Discharge Limit", _ICON_BATT),
         # BMS status 24-25
-        "Battery State of Charge": (26, _read_byte, "%", _ICON_BATT),
-        "Battery State of Charge 2": (27, _read_byte, "%", _ICON_BATT),
-        "Battery State of Charge 3": (28, _read_byte, "%", _ICON_BATT),
-        "Battery State of Health": (29, _read_byte, "%", _ICON_BATT),
-        "Battery Mode": (30, _read_battery_mode1, "", _ICON_BATT),
+        (26, _read_byte, "%", "Battery State of Charge", _ICON_BATT),
+        (27, _read_byte, "%", "Battery State of Charge 2", _ICON_BATT),
+        (28, _read_byte, "%", "Battery State of Charge 3", _ICON_BATT),
+        (29, _read_byte, "%", "Battery State of Health", _ICON_BATT),
+        (30, _read_battery_mode1, "", "Battery Mode", _ICON_BATT),
         # BMS warning 31-32
         # Meter status 33
-        "On-grid Voltage": (34, _read_voltage, "V", _ICON_AC),
-        "On-grid Current": (36, _read_current, "A", _ICON_AC),
-        "On-grid Power": (38, _read_power2, "W", _ICON_AC),
-        "On-grid Frequency": (40, _read_freq, "Hz", _ICON_AC),
-        "Work Mode": (41, _read_work_mode1, "", None),
-        "Back-up Voltage": (43, _read_voltage, "V", _ICON_AC_BACK),
-        "Back-up Current": (45, _read_current, "A", _ICON_AC_BACK),
-        "Back-up Power": (47, _read_power2, "W", _ICON_AC_BACK),
-        "Back-up Frequency": (49, _read_freq, "Hz", _ICON_AC_BACK),
-        "Load Mode": (51, _read_load_mode1, "", None),
-        "Energy Mode": (52, _read_energy_mode1, "", None),
-        "Inverter Temperature": (53, _read_temp, "C", None),
-        "Error Codes": (55, _read_bytes4, "", None),
-        "Total Energy": (59, _read_power_k, "kW", None),
+        (34, _read_voltage, "V", "On-grid Voltage", _ICON_AC),
+        (36, _read_current, "A", "On-grid Current", _ICON_AC),
+        (38, _read_power2, "W", "On-grid Power", _ICON_AC),
+        (40, _read_freq, "Hz", "On-grid Frequency", _ICON_AC),
+        (41, _read_work_mode1, "", "Work Mode", None),
+        (43, _read_voltage, "V", "Back-up Voltage", _ICON_AC_BACK),
+        (45, _read_current, "A", "Back-up Current", _ICON_AC_BACK),
+        (47, _read_power2, "W", "Back-up Power", _ICON_AC_BACK),
+        (49, _read_freq, "Hz", "Back-up Frequency", _ICON_AC_BACK),
+        (51, _read_load_mode1, "", "Load Mode", None),
+        (52, _read_energy_mode1, "", "Energy Mode", None),
+        (53, _read_temp, "C", "Inverter Temperature", None),
+        (55, _read_bytes4, "", "Error Codes", None),
+        (59, _read_power_k, "kW", "Total Energy", None),
         # htotal 63-66
-        "Today's Energy": (67, _read_power_k2, "kW", None),
-        "Today's Load": (69, _read_power_k2, "kW", None),
-        "Total Load": (71, _read_power_k, "kW", None),
-        "Total Power": (75, _read_bytes2, "kW", None),
+        (67, _read_power_k2, "kW", "Today's Energy", None),
+        (69, _read_power_k2, "kW", "Today's Load", None),
+        (71, _read_power_k, "kW", "Total Load", None),
+        (75, _read_bytes2, "kW", "Total Power", None),
         # Effective work mode 77
         # Effective relay control 78-79
-        'On-grid Mode': (80, _read_grid_mode1, '', None),
-        "Diag Status": (89, _read_bytes4, "", None),
-    }
+        (80, _read_grid_mode1, '', 'On-grid Mode', None),
+        (89, _read_bytes4, "", "Diag Status", None),
+    )
 
     @classmethod
-    async def make_model_request(cls, host, port):
+    async def _make_model_request(cls, host, port):
         response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
         if response is not None:
             cls.__serial_number = response[38:54].decode("utf-8")
@@ -679,16 +666,16 @@ class ES(Inverter):
             raise ValueError
 
     @classmethod
-    async def make_request(cls, host, port):
+    async def _make_request(cls, host, port):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
-        data = cls.map_response(raw_data[7:-2], cls.__sensor_map)
+        data = cls._map_response(raw_data[7:-2], cls.__sensors)
         return InverterResponse(
             data=data, serial_number=cls.__serial_number, type=cls.__model_name, sofware_version=cls.__software_version
         )
 
     @classmethod
-    def sensor_map(cls):
-        return cls.__sensor_map
+    def sensors(cls):
+        return cls.__sensors
 
 # registry of supported inverter models
 REGISTRY = [ET, ES]
