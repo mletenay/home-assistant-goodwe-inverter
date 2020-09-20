@@ -182,6 +182,13 @@ def _read_power(data, offset):
     return value
 
 
+def _read_power2(data, offset):
+    value = (data[offset] << 8) | data[offset + 1]
+    if value > 32768:
+        value = value - 65536
+    return value
+
+
 def _read_power_k(data, offset):
     value = (
         (data[offset] << 24)
@@ -189,6 +196,13 @@ def _read_power_k(data, offset):
         | (data[offset + 2] << 8)
         | data[offset + 3]
     )
+    if value > 32768:
+        value = value - 65536
+    return float(value) / 10
+
+
+def _read_power_k2(data, offset):
+    value = (data[offset] << 8) | data[offset + 1]
     if value > 32768:
         value = value - 65536
     return float(value) / 10
@@ -628,12 +642,12 @@ class ES(Inverter):
         # Meter status 33
         "On-grid Voltage": (34, _read_voltage, "V", _ICON_AC),
         "On-grid Current": (36, _read_current, "A", _ICON_AC),
-        "On-grid Power": (38, _read_power, "W", _ICON_AC),
+        "On-grid Power": (38, _read_power2, "W", _ICON_AC),
         "On-grid Frequency": (40, _read_freq, "Hz", _ICON_AC),
         "Work Mode": (41, _read_work_mode1, "", None),
         "Back-up Voltage": (43, _read_voltage, "V", _ICON_AC_BACK),
         "Back-up Current": (45, _read_current, "A", _ICON_AC_BACK),
-        "Back-up Power": (47, _read_power, "W", _ICON_AC_BACK),
+        "Back-up Power": (47, _read_power2, "W", _ICON_AC_BACK),
         "Back-up Frequency": (49, _read_freq, "Hz", _ICON_AC_BACK),
         "Load Mode": (51, _read_load_mode1, "", None),
         "Energy Mode": (52, _read_energy_mode1, "", None),
@@ -641,8 +655,8 @@ class ES(Inverter):
         "Error Codes": (55, _read_bytes4, "", None),
         "Total Energy": (59, _read_power_k, "kW", None),
         # htotal 63-66
-        "Today's Energy": (67, _read_power_k, "kW", None),
-        "Today's Load": (69, _read_power, "kW", None),
+        "Today's Energy": (67, _read_power_k2, "kW", None),
+        "Today's Load": (69, _read_power_k2, "kW", None),
         "Total Load": (71, _read_power_k, "kW", None),
         "Total Power": (75, _read_bytes2, "kW", None),
         # Effective work mode 77
