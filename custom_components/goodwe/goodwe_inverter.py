@@ -279,9 +279,9 @@ def _read_battery_mode1(data, offset):
 
 
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
-    def __init__(self, request, response_len, on_response_received, timeout=2):
+    def __init__(self, request, response_lenghts, on_response_received, timeout=2):
         self.request = request
-        self.response_len = response_len
+        self.response_lenghts = response_lenghts
         self.on_response_received = on_response_received
         self.transport = None
         self.timeout = timeout
@@ -301,13 +301,13 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data, addr):
         _LOGGER.debug("Received: '%s'", data.hex())
-        if len(data) == self.response_len:
+        if len(data) in self.response_lenghts:
             self.on_response_received.set_result(data)
             self.transport.close()
         else:
             _LOGGER.debug(
-                "Unexpected response length: expected %d, received: %d",
-                self.response_len,
+                "Unexpected response length: expected %s, received: %d",
+                self.response_lenghts,
                 len(data),
             )
             self.retry_nr += 1
@@ -440,13 +440,13 @@ class ET(Inverter):
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
         bytes([0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1]),
-        73,
+        [73],
     )
     _READ_DEVICE_RUNNING_DATA1 = (
         bytes([0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7]),
-        257,
+        [257],
     )
-    _READ_BATTERY_INFO = (bytes([0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1]), 29)
+    _READ_BATTERY_INFO = (bytes([0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1]), [29])
 
     __model_name = None
     __serial_number = None
@@ -588,11 +588,11 @@ class ES(Inverter):
     # (request data including checksum, expected response length)
     _READ_DEVICE_VERSION_INFO = (
         bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41]),
-        86,
+        [85,86],
     )
     _READ_DEVICE_RUNNING_DATA = (
         bytes([0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45]),
-        149,
+        [142,149],
     )
 
     __model_name = None
@@ -647,7 +647,7 @@ class ES(Inverter):
         "Total Power": (75, _read_bytes2, "kW", None),
         # Effective work mode 77
         # Effective relay control 78-79
-        'On-grid Mode': (80, _read_grid_mode1, ''),
+        'On-grid Mode': (80, _read_grid_mode1, '', None),
         "Diag Status": (89, _read_bytes4, "", None),
     }
 
