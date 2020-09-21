@@ -608,10 +608,25 @@ class ES(Inverter):
     __sensors = (
         (0, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
         (2, _read_current, "A", "PV1 Current", _ICON_PV),
+        (
+            -2,
+            lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2)),
+            "W", "PV1 Power", _ICON_PV,
+        ),
         (4, _read_pv_mode1, "", "PV1 Mode", _ICON_PV),
         (5, _read_voltage, "V", "PV2 Voltage", _ICON_PV),
         (7, _read_current, "A", "PV2 Current", _ICON_PV),
+        (
+            -7,
+            lambda data, x: round(_read_voltage(data, 5) * _read_current(data, 7)),
+            "W", "PV2 Power", _ICON_PV,
+        ),
         (9, _read_pv_mode1, "", "PV2 Mode", _ICON_PV),
+        (
+            -9,
+            lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2)) + round(_read_voltage(data, 5) * _read_current(data, 7)),
+            "W", "PV Power", _ICON_PV,
+        ),
         (10, _read_voltage, "V", "Battery Voltage", _ICON_BATT),
         (12, _read_voltage, "V", "Battery Voltage 2", _ICON_BATT),
         (14, _read_voltage, "V", "Battery Voltage 3", _ICON_BATT),
