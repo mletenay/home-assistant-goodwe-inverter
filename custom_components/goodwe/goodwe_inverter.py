@@ -245,6 +245,9 @@ def _read_bytes4(data, offset):
 
 
 def _read_grid_mode(data, offset):
+    # Shift to real offset, 1000 is the marker
+    if offset >= 1000:
+        offset -= 1000
     value = _read_bytes4(data, offset)
     if value > 32768:
         value -= 65535
@@ -282,10 +285,6 @@ def _read_load_mode1(data, offset):
 
 def _read_energy_mode1(data, offset):
     return _ENERGY_MODES.get(_read_byte(data, offset))
-
-
-def _read_grid_mode1(data, offset):
-    return _GRID_MODES.get(_read_byte(data, offset))
 
 
 def _read_battery_mode1(data, offset):
@@ -500,7 +499,12 @@ class ET(Inverter):
         ("pgrid3", 68, _read_power, "W", "On-grid3 Power", _ICON_AC),
         ("total_inverter_power", 74, _read_power, "W", "Total Power", _ICON_AC),
         ("active_power", 78, _read_power, "W", "Active Power", _ICON_AC),
-        #("grid_in_out_flag", -78, _read_grid_mode, "", "On-grid Mode",  _ICON_AC),
+        ("grid_in_out_code", 1078, _read_grid_mode, '', 'On-grid Mode Code', None),
+        (
+            "grid_in_out", -1078,
+            lambda data, x: _GRID_MODES.get(_read_grid_mode(data, 78)),
+            "", "On-grid Mode", None,
+        ),
         ("backup_v1", 90, _read_voltage, "V", "Back-up1 Voltage", _ICON_AC_BACK),
         ("backup_i1", 92, _read_current, "A", "Back-up1 Current", _ICON_AC_BACK),
         ("backup_f1", 94, _read_freq, "Hz", "Back-up1 Frequency", _ICON_AC_BACK),
@@ -668,7 +672,18 @@ class ES(Inverter):
         ("total_power", 75, _read_bytes2, "kW", "Total Power", None),
         # Effective work mode 77
         # Effective relay control 78-79
-        ("grid_in_out_flag", 80, _read_grid_mode1, '', 'On-grid Mode', None),
+        ("grid_in_out_code", 80, _read_byte, '', 'On-grid Mode Code', None),
+        (
+            "grid_in_out", -80,
+            lambda data, x: _GRID_MODES.get(_read_byte(data, 80)),
+            "", "On-grid Mode", None,
+        ),
+        # pgrid with sign
+        (
+            "active_power", -81,
+            lambda data, x: (-1 if _read_byte(data, 80) == 2 else 1) * _read_power2(data, 38),
+            "W", "Active Power", _ICON_AC,
+        ),
         #("", 89, _read_bytes4, "", "Diag Status", None),
     )
 
@@ -698,4 +713,4 @@ class ES(Inverter):
         return cls.__sensors
 
 # registry of supported inverter models
-REGISTRY = [ET, ES]
+REGISTRY = [ES, ES]
