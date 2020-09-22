@@ -503,7 +503,7 @@ class ET(Inverter):
         (
             "grid_in_out", -1078,
             lambda data, x: _GRID_MODES.get(_read_grid_mode(data, 78)),
-            "", "On-grid Mode", None,
+            "", "On-grid Mode", _ICON_AC,
         ),
         ("backup_v1", 90, _read_voltage, "V", "Back-up1 Voltage", _ICON_AC_BACK),
         ("backup_i1", 92, _read_current, "A", "Back-up1 Current", _ICON_AC_BACK),
@@ -713,4 +713,4 @@ class ES(Inverter):
         return cls.__sensors
 
 # registry of supported inverter models
-REGISTRY = [ES, ES]
+REGISTRY = [ET, ES]
