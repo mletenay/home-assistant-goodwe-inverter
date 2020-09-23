@@ -3,7 +3,7 @@ import asyncio
 import logging
 import voluptuous as vol
 from datetime import timedelta
-from .goodwe_inverter import discover, InverterError
+from .goodwe_inverter import discover, InverterError, SensorKind
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -34,6 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_ICONS = {
+    SensorKind.pv: "mdi:solar-power",
+    SensorKind.ac: "mdi:power-plug-outline",
+    SensorKind.ups: "mdi:power-plug-off-outline",
+    SensorKind.bat: "mdi:battery-high",
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
@@ -43,11 +50,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(
         hass, refresh_job.async_refresh, config[CONF_SCAN_INTERVAL]
     )
-    for (sensor_id, _, _, unit, name, icon) in inverter.sensors():
+    for (sensor_id, _, _, unit, name, kind) in inverter.sensors():
         uid = f"{DOMAIN}-{sensor_id}-{inverter.serial_number}"
         sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {name}".strip()
         refresh_job.sensors.append(
-            InverterSensor(uid, sensor_id, sensor_name, unit, icon, hass)
+            InverterSensor(uid, sensor_id, sensor_name, unit, kind, hass)
         )
     async_add_entities(refresh_job.sensors)
 
@@ -82,7 +89,7 @@ class InverterRefreshJob:
 class InverterSensor(Entity):
     """Class for a sensor."""
 
-    def __init__(self, uid, sensor_id, sensor_name, unit, icon_name, hass):
+    def __init__(self, uid, sensor_id, sensor_name, unit, kind, hass):
         """Initialize an inverter sensor."""
         super().__init__()
         self.entity_id = async_generate_entity_id(
@@ -94,7 +101,9 @@ class InverterSensor(Entity):
         self._unit = unit
         if self._unit == "C":
             self._unit = TEMP_CELSIUS
-        self._icon_name = icon_name
+        self._icon_name = None
+        if kind is not None:
+            self._icon_name = _ICONS[kind]
         self._value = None
 
     def update_value(self, inverter_response):

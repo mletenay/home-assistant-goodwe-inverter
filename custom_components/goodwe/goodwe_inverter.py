@@ -2,13 +2,9 @@
 import asyncio
 import logging
 from collections import namedtuple
+from enum import Enum
 
 _LOGGER = logging.getLogger(__name__)
-
-_ICON_PV = "mdi:solar-power"
-_ICON_AC = "mdi:power-plug-outline"
-_ICON_AC_BACK = "mdi:power-plug-off-outline"
-_ICON_BATT = "mdi:battery-high"
 
 _WORK_MODES_ET = {
     0: "Wait Mode",
@@ -279,6 +275,15 @@ def _read_battery_mode1(data, offset):
     return _BATTERY_MODES_ET.get(_read_byte(data, offset))
 
 
+class SensorKind(Enum):
+    """Enumeration of sensor kinds"""
+
+    pv = 1
+    ac = 2
+    ups = 3
+    bat = 4
+
+
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
     def __init__(self, request, response_lenghts, on_response_received, timeout=2):
         self.request = request
@@ -467,18 +472,18 @@ class ET(Inverter):
 
     # Sensors ("id, offset, getter, unit, name, icon")
     __sensors = (
-        ("vpv1", 6, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
-        ("ipv1", 8, _read_current, "A", "PV1 Current", _ICON_PV),
-        ("ppv1", 10, _read_power, "W", "PV1 Power", _ICON_PV),
-        ("vpv2", 14, _read_voltage, "V", "PV2 Voltage", _ICON_PV),
-        ("ipv2", 16, _read_current, "A", "PV2 Current", _ICON_PV),
-        ("ppv2", 18, _read_power, "W", "PV2 Power", _ICON_PV),
-        # ("vpv3", 22, _read_voltage, "V", "PV3 Voltage", _ICON_PV),
-        # ("ipv3", 24, _read_current, "A", "PV3 Current", _ICON_PV),
-        # ("ppv3", 26, _read_power, "W", "PV3 Power", _ICON_PV),
-        # ("vpv4", 30, _read_voltage, "V", "PV4 Voltage", _ICON_PV),
-        # ("ipv4", 32, _read_current, "A", "PV4 Current", _ICON_PV),
-        # ("ppv4", 34, _read_power, "W", "PV4 Power", _ICON_PV),
+        ("vpv1", 6, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
+        ("ipv1", 8, _read_current, "A", "PV1 Current", SensorKind.pv),
+        ("ppv1", 10, _read_power, "W", "PV1 Power", SensorKind.pv),
+        ("vpv2", 14, _read_voltage, "V", "PV2 Voltage", SensorKind.pv),
+        ("ipv2", 16, _read_current, "A", "PV2 Current", SensorKind.pv),
+        ("ppv2", 18, _read_power, "W", "PV2 Power", SensorKind.pv),
+        # ("vpv3", 22, _read_voltage, "V", "PV3 Voltage", SensorKind.pv),
+        # ("ipv3", 24, _read_current, "A", "PV3 Current", SensorKind.pv),
+        # ("ppv3", 26, _read_power, "W", "PV3 Power", SensorKind.pv),
+        # ("vpv4", 30, _read_voltage, "V", "PV4 Voltage", SensorKind.pv),
+        # ("ipv4", 32, _read_current, "A", "PV4 Current", SensorKind.pv),
+        # ("ppv4", 34, _read_power, "W", "PV4 Power", SensorKind.pv),
         # ppv1 + ppv2 + ppv3 + ppv4
         (
             "ppv",
@@ -486,49 +491,49 @@ class ET(Inverter):
             lambda data, x: _read_power(data, 10) + _read_power(data, 18),
             "W",
             "PV Power",
-            _ICON_PV,
+            SensorKind.pv,
         ),
-        ("vgrid", 42, _read_voltage, "V", "On-grid 1 Voltage", _ICON_AC),
-        ("igrid", 44, _read_current, "A", "On-grid Current", _ICON_AC),
-        ("fgrid", 46, _read_freq, "Hz", "On-grid Frequency", _ICON_AC),
-        ("pgrid", 48, _read_power, "W", "On-grid Power", _ICON_AC),
-        ("vgrid2", 52, _read_voltage, "V", "On-grid2 Voltage", _ICON_AC),
-        ("igrid2", 54, _read_current, "A", "On-grid2 Current", _ICON_AC),
-        ("fgrid2", 56, _read_freq, "Hz", "On-grid2 Frequency", _ICON_AC),
-        ("pgrid2", 58, _read_power, "W", "On-grid2 Power", _ICON_AC),
-        ("vgrid3", 62, _read_voltage, "V", "On-grid3 Voltage", _ICON_AC),
-        ("igrid3", 64, _read_current, "A", "On-grid3 Current", _ICON_AC),
-        ("fgrid3", 66, _read_freq, "Hz", "On-grid3 Frequency", _ICON_AC),
-        ("pgrid3", 68, _read_power, "W", "On-grid3 Power", _ICON_AC),
-        ("total_inverter_power", 74, _read_power, "W", "Total Power", _ICON_AC),
-        ("active_power", 78, _read_power, "W", "Active Power", _ICON_AC),
-        ("grid_in_out", 78, _read_grid_mode, "", "On-grid Mode", None),
+        ("vgrid", 42, _read_voltage, "V", "On-grid 1 Voltage", SensorKind.ac),
+        ("igrid", 44, _read_current, "A", "On-grid Current", SensorKind.ac),
+        ("fgrid", 46, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
+        ("pgrid", 48, _read_power, "W", "On-grid Power", SensorKind.ac),
+        ("vgrid2", 52, _read_voltage, "V", "On-grid2 Voltage", SensorKind.ac),
+        ("igrid2", 54, _read_current, "A", "On-grid2 Current", SensorKind.ac),
+        ("fgrid2", 56, _read_freq, "Hz", "On-grid2 Frequency", SensorKind.ac),
+        ("pgrid2", 58, _read_power, "W", "On-grid2 Power", SensorKind.ac),
+        ("vgrid3", 62, _read_voltage, "V", "On-grid3 Voltage", SensorKind.ac),
+        ("igrid3", 64, _read_current, "A", "On-grid3 Current", SensorKind.ac),
+        ("fgrid3", 66, _read_freq, "Hz", "On-grid3 Frequency", SensorKind.ac),
+        ("pgrid3", 68, _read_power, "W", "On-grid3 Power", SensorKind.ac),
+        ("total_inverter_power", 74, _read_power, "W", "Total Power", SensorKind.ac),
+        ("active_power", 78, _read_power, "W", "Active Power", SensorKind.ac),
+        ("grid_in_out", 78, _read_grid_mode, "", "On-grid Mode", SensorKind.ac),
         (
             "grid_in_out_label",
             None,
             lambda data, x: _GRID_MODES.get(_read_grid_mode(data, 78)),
             "",
             "On-grid Mode",
-            _ICON_AC,
+            SensorKind.ac,
         ),
-        ("backup_v1", 90, _read_voltage, "V", "Back-up1 Voltage", _ICON_AC_BACK),
-        ("backup_i1", 92, _read_current, "A", "Back-up1 Current", _ICON_AC_BACK),
-        ("backup_f1", 94, _read_freq, "Hz", "Back-up1 Frequency", _ICON_AC_BACK),
+        ("backup_v1", 90, _read_voltage, "V", "Back-up1 Voltage", SensorKind.ups),
+        ("backup_i1", 92, _read_current, "A", "Back-up1 Current", SensorKind.ups),
+        ("backup_f1", 94, _read_freq, "Hz", "Back-up1 Frequency", SensorKind.ups),
         # ("", 96, _read_bytes2, "", "Back-up1 ?", None);
-        ("backup_p1", 98, _read_power, "W", "Back-up1 Power", _ICON_AC_BACK),
-        ("backup_v2", 102, _read_voltage, "V", "Back-up2 Voltage", _ICON_AC_BACK),
-        ("backup_i2", 104, _read_current, "A", "Back-up2 Current", _ICON_AC_BACK),
-        ("backup_f2", 106, _read_freq, "Hz", "Back-up2 Frequency", _ICON_AC_BACK),
+        ("backup_p1", 98, _read_power, "W", "Back-up1 Power", SensorKind.ups),
+        ("backup_v2", 102, _read_voltage, "V", "Back-up2 Voltage", SensorKind.ups),
+        ("backup_i2", 104, _read_current, "A", "Back-up2 Current", SensorKind.ups),
+        ("backup_f2", 106, _read_freq, "Hz", "Back-up2 Frequency", SensorKind.ups),
         # ("", 108, _read_bytes2, "", 'Back-up2 ?', None);
-        ("backup_p2", 110, _read_power, "W", "Back-up2 Power", _ICON_AC_BACK),
-        ("backup_v3", 114, _read_voltage, "V", "Back-up3 Voltage", _ICON_AC_BACK),
-        ("backup_i3", 116, _read_current, "A", "Back-up3 Current", _ICON_AC_BACK),
-        ("backup_f3", 118, _read_freq, "Hz", "Back-up3 Frequency", _ICON_AC_BACK),
+        ("backup_p2", 110, _read_power, "W", "Back-up2 Power", SensorKind.ups),
+        ("backup_v3", 114, _read_voltage, "V", "Back-up3 Voltage", SensorKind.ups),
+        ("backup_i3", 116, _read_current, "A", "Back-up3 Current", SensorKind.ups),
+        ("backup_f3", 118, _read_freq, "Hz", "Back-up3 Frequency", SensorKind.ups),
         # ("", 120, _read_bytes2, "", 'Back-up3 ?', None);
-        ("backup_p3", 122, _read_power, "W", "Back-up3 Power", _ICON_AC_BACK),
-        ("load_p1", 126, _read_power, "W", "Load 1", _ICON_AC),
-        ("load_p2", 130, _read_power, "W", "Load 2", _ICON_AC),
-        ("load_p3", 134, _read_power, "W", "Load 3", _ICON_AC),
+        ("backup_p3", 122, _read_power, "W", "Back-up3 Power", SensorKind.ups),
+        ("load_p1", 126, _read_power, "W", "Load 1", SensorKind.ac),
+        ("load_p2", 130, _read_power, "W", "Load 2", SensorKind.ac),
+        ("load_p3", 134, _read_power, "W", "Load 3", SensorKind.ac),
         # load_p1 + load_p2 + load_p3
         (
             "load_ptotal",
@@ -538,12 +543,12 @@ class ET(Inverter):
             + _read_power(data, 134),
             "W",
             "Load Total",
-            _ICON_AC,
+            SensorKind.ac,
         ),
-        ("backup_ptotal", 138, _read_power, "W", "Back-up Power", _ICON_AC_BACK),
-        ("pload", 142, _read_power, "W", "Load", _ICON_AC),
-        ("vbattery1", 160, _read_voltage, "V", "Battery Voltage", _ICON_BATT),
-        ("ibattery1", 162, _read_current, "A", "Battery Current", _ICON_BATT),
+        ("backup_ptotal", 138, _read_power, "W", "Back-up Power", SensorKind.ups),
+        ("pload", 142, _read_power, "W", "Load", SensorKind.ac),
+        ("vbattery1", 160, _read_voltage, "V", "Battery Voltage", SensorKind.bat),
+        ("ibattery1", 162, _read_current, "A", "Battery Current", SensorKind.bat),
         # round(vbattery1 * ibattery1),
         (
             "pbattery1",
@@ -551,10 +556,17 @@ class ET(Inverter):
             lambda data, x: round(_read_voltage(data, 160) * _read_current(data, 162)),
             "W",
             "Battery Power",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
-        ("battery_mode", 168, _read_bytes2, "", "Battery Mode", _ICON_BATT),
-        ("battery_mode_label", 168, _read_battery_mode, "", "Battery Mode", _ICON_BATT),
+        ("battery_mode", 168, _read_bytes2, "", "Battery Mode", SensorKind.bat),
+        (
+            "battery_mode_label",
+            168,
+            _read_battery_mode,
+            "",
+            "Battery Mode",
+            SensorKind.bat,
+        ),
         ("safety_country", 172, _read_bytes2, "", "Safety Country", None),
         ("safety_country_label", 172, _read_safety_country, "", "Safety Country", None),
         ("work_mode", 174, _read_bytes2, "", "Work Mode", None),
@@ -567,15 +579,15 @@ class ET(Inverter):
     )
 
     __sensors_battery = (
-        ("battery_bms", 0, _read_bytes2, "", "Battery BMS", _ICON_BATT),
-        ("battery_index", 2, _read_bytes2, "", "Battery Index", _ICON_BATT),
+        ("battery_bms", 0, _read_bytes2, "", "Battery BMS", SensorKind.bat),
+        ("battery_index", 2, _read_bytes2, "", "Battery Index", SensorKind.bat),
         (
             "battery_temperature",
             6,
             _read_temp,
             "C",
             "Battery Temperature",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
         (
             "battery_charge_limit",
@@ -583,7 +595,7 @@ class ET(Inverter):
             _read_bytes2,
             "A",
             "Battery Charge Limit",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
         (
             "battery_discharge_limit",
@@ -591,12 +603,26 @@ class ET(Inverter):
             _read_bytes2,
             "A",
             "Battery Discharge Limit",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
-        ("battery_status", 12, _read_bytes2, "", "Battery Status", _ICON_BATT),
-        ("battery_soc", 14, _read_bytes2, "%", "Battery State of Charge", _ICON_BATT),
-        ("battery_soh", 16, _read_bytes2, "%", "Battery State of Health", _ICON_BATT),
-        ("battery_warning", 20, _read_bytes2, "", "Battery Warning", None),
+        ("battery_status", 12, _read_bytes2, "", "Battery Status", SensorKind.bat),
+        (
+            "battery_soc",
+            14,
+            _read_bytes2,
+            "%",
+            "Battery State of Charge",
+            SensorKind.bat,
+        ),
+        (
+            "battery_soh",
+            16,
+            _read_bytes2,
+            "%",
+            "Battery State of Health",
+            SensorKind.bat,
+        ),
+        ("battery_warning", 20, _read_bytes2, "", "Battery Warning", SensorKind.bat),
     )
 
     @classmethod
@@ -639,30 +665,30 @@ class ES(Inverter):
 
     # Sensors ("id, offset, getter, unit, name, icon")
     __sensors = (
-        ("vpv1", 0, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
-        ("ipv1", 2, _read_current, "A", "PV1 Current", _ICON_PV),
+        ("vpv1", 0, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
+        ("ipv1", 2, _read_current, "A", "PV1 Current", SensorKind.pv),
         (
             "ppv1",
             None,
             lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2)),
             "W",
             "PV1 Power",
-            _ICON_PV,
+            SensorKind.pv,
         ),
-        ("pv1_mode", 4, _read_byte, "", "PV1 Mode", _ICON_PV),
-        ("pv1_mode_label", 4, _read_pv_mode1, "", "PV1 Mode", _ICON_PV),
-        ("vpv2", 5, _read_voltage, "V", "PV2 Voltage", _ICON_PV),
-        ("ipv2", 7, _read_current, "A", "PV2 Current", _ICON_PV),
+        ("pv1_mode", 4, _read_byte, "", "PV1 Mode", SensorKind.pv),
+        ("pv1_mode_label", 4, _read_pv_mode1, "", "PV1 Mode", SensorKind.pv),
+        ("vpv2", 5, _read_voltage, "V", "PV2 Voltage", SensorKind.pv),
+        ("ipv2", 7, _read_current, "A", "PV2 Current", SensorKind.pv),
         (
             "ppv2",
             None,
             lambda data, x: round(_read_voltage(data, 5) * _read_current(data, 7)),
             "W",
             "PV2 Power",
-            _ICON_PV,
+            SensorKind.pv,
         ),
-        ("pv2_mode", 9, _read_byte, "", "PV2 Mode", _ICON_PV),
-        ("pv2_mode_label", 9, _read_pv_mode1, "", "PV2 Mode", _ICON_PV),
+        ("pv2_mode", 9, _read_byte, "", "PV2 Mode", SensorKind.pv),
+        ("pv2_mode_label", 9, _read_pv_mode1, "", "PV2 Mode", SensorKind.pv),
         (
             "ppv",
             None,
@@ -670,13 +696,20 @@ class ES(Inverter):
             + round(_read_voltage(data, 5) * _read_current(data, 7)),
             "W",
             "PV Power",
-            _ICON_PV,
+            SensorKind.pv,
         ),
-        ("vbattery1", 10, _read_voltage, "V", "Battery Voltage", _ICON_BATT),
-        # ("vbattery2", 12, _read_voltage, "V", "Battery Voltage 2", _ICON_BATT),
-        # ("vbattery3", 14, _read_voltage, "V", "Battery Voltage 3", _ICON_BATT),
-        ("battery_temperature", 16, _read_temp, "C", "Battery Temperature", _ICON_BATT),
-        ("ibattery1", 18, _read_current, "A", "Battery Current", _ICON_BATT),
+        ("vbattery1", 10, _read_voltage, "V", "Battery Voltage", SensorKind.bat),
+        # ("vbattery2", 12, _read_voltage, "V", "Battery Voltage 2", SensorKind.bat),
+        # ("vbattery3", 14, _read_voltage, "V", "Battery Voltage 3", SensorKind.bat),
+        (
+            "battery_temperature",
+            16,
+            _read_temp,
+            "C",
+            "Battery Temperature",
+            SensorKind.bat,
+        ),
+        ("ibattery1", 18, _read_current, "A", "Battery Current", SensorKind.bat),
         # round(vbattery1 * ibattery1),
         (
             "pbattery1",
@@ -684,7 +717,7 @@ class ES(Inverter):
             lambda data, x: round(_read_voltage(data, 10) * _read_current(data, 18)),
             "W",
             "Battery Power",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
         (
             "battery_charge_limit",
@@ -692,7 +725,7 @@ class ES(Inverter):
             _read_bytes2,
             "A",
             "Battery Charge Limit",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
         (
             "battery_discharge_limit",
@@ -700,27 +733,34 @@ class ES(Inverter):
             _read_bytes2,
             "A",
             "Battery Discharge Limit",
-            _ICON_BATT,
+            SensorKind.bat,
         ),
-        ("battery_status", 24, _read_bytes2, "", "Battery Status", _ICON_BATT),
-        ("battery_soc", 26, _read_byte, "%", "Battery State of Charge", _ICON_BATT),
-        # ("cbattery2", 27, _read_byte, "%", "Battery State of Charge 2", _ICON_BATT),
-        # ("cbattery3", 28, _read_byte, "%", "Battery State of Charge 3", _ICON_BATT),
-        ("battery_soh", 29, _read_byte, "%", "Battery State of Health", _ICON_BATT),
-        ("battery_mode", 30, _read_byte, "", "Battery Mode", _ICON_BATT),
-        ("battery_mode_label", 30, _read_battery_mode1, "", "Battery Mode", _ICON_BATT),
-        ("battery_warning", 31, _read_bytes2, "", "Battery Warning", None),
-        ("meter_status", 33, _read_byte, "", "Meter status", None),
-        ("vgrid", 34, _read_voltage, "V", "On-grid Voltage", _ICON_AC),
-        ("igrid", 36, _read_current, "A", "On-grid Current", _ICON_AC),
-        ("pgrid", 38, _read_power2, "W", "On-grid Power", _ICON_AC),
-        ("fgrid", 40, _read_freq, "Hz", "On-grid Frequency", _ICON_AC),
+        ("battery_status", 24, _read_bytes2, "", "Battery Status", SensorKind.bat),
+        ("battery_soc", 26, _read_byte, "%", "Battery State of Charge", SensorKind.bat),
+        # ("cbattery2", 27, _read_byte, "%", "Battery State of Charge 2", SensorKind.bat),
+        # ("cbattery3", 28, _read_byte, "%", "Battery State of Charge 3", SensorKind.bat),
+        ("battery_soh", 29, _read_byte, "%", "Battery State of Health", SensorKind.bat),
+        ("battery_mode", 30, _read_byte, "", "Battery Mode", SensorKind.bat),
+        (
+            "battery_mode_label",
+            30,
+            _read_battery_mode1,
+            "",
+            "Battery Mode",
+            SensorKind.bat,
+        ),
+        ("battery_warning", 31, _read_bytes2, "", "Battery Warning", SensorKind.bat),
+        ("meter_status", 33, _read_byte, "", "Meter status", SensorKind.ac),
+        ("vgrid", 34, _read_voltage, "V", "On-grid Voltage", SensorKind.ac),
+        ("igrid", 36, _read_current, "A", "On-grid Current", SensorKind.ac),
+        ("pgrid", 38, _read_power2, "W", "On-grid Power", SensorKind.ac),
+        ("fgrid", 40, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
         ("grid_mode", 42, _read_byte, "", "Work Mode", None),
         ("grid_mode_label", 42, _read_work_mode1, "", "Work Mode", None),
-        ("vload", 43, _read_voltage, "V", "Back-up Voltage", _ICON_AC_BACK),
-        ("iload", 45, _read_current, "A", "Back-up Current", _ICON_AC_BACK),
-        ("pload", 47, _read_power2, "W", "Back-up Power", _ICON_AC_BACK),
-        ("fload", 49, _read_freq, "Hz", "Back-up Frequency", _ICON_AC_BACK),
+        ("vload", 43, _read_voltage, "V", "Back-up Voltage", SensorKind.ups),
+        ("iload", 45, _read_current, "A", "Back-up Current", SensorKind.ups),
+        ("pload", 47, _read_power2, "W", "Back-up Power", SensorKind.ups),
+        ("fload", 49, _read_freq, "Hz", "Back-up Frequency", SensorKind.ups),
         ("load_mode", 51, _read_byte, "", "Load Mode", None),
         ("load_mode_label", 51, _read_load_mode1, "", "Load Mode", None),
         ("work_mode", 52, _read_byte, "", "Energy Mode", None),
@@ -735,14 +775,14 @@ class ES(Inverter):
         ("total_power", 75, _read_power2, "kW", "Total Power", None),
         # Effective work mode 77
         # Effective relay control 78-79
-        ("grid_in_out", 80, _read_byte, "", "On-grid Mode", None),
+        ("grid_in_out", 80, _read_byte, "", "On-grid Mode", SensorKind.ac),
         (
             "grid_in_out_label",
             None,
             lambda data, x: _GRID_MODES.get(_read_byte(data, 80)),
             "",
             "On-grid Mode",
-            None,
+            SensorKind.ac,
         ),
         # pgrid with sign
         (
@@ -752,7 +792,7 @@ class ES(Inverter):
             * _read_power2(data, 38),
             "W",
             "Active Power",
-            _ICON_AC,
+            SensorKind.ac,
         ),
         # ("", 89, _read_bytes4, "", "Diag Status", None),
     )
