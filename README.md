@@ -2,14 +2,15 @@
 
 # GoodWe Inverter Sensor Component for Home Assistant
 
-The GoodWe Inverter Sensor component will retrieve data from a GoodWe inverter connected to your local network.
-It has been tested on GoodWe ET, ES and EM families of inverters. It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to supported communication protocols.
+The GoodWe Inverter Sensor component will retrieve data from a GoodWe inverter connected to your local network.  
+It has been tested on GoodWe ET, ES and EM families of inverters.  
+It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
 The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).
 
 ## Requirements
 
-Your GoodWe Inverter needs to be connected to your local network, as this custom component will utilise the UDP protocol of the inverter to read data. All you need to know is the IP address of the inverter and you are good to go.
+Your inverter needs to be connected to your local network, as this custom component will utilise the UDP protocol to read data from inverter. All you need to know is the IP address of the inverter and you are good to go.
 
 ## HACS installation
 

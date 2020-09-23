@@ -7,7 +7,7 @@ The values will be presented as sensors (or attributes of sensors) in Home Assis
 
 ## Configuration
 
-``` YAML
+```YAML
 sensor:
   - platform: goodwe
     ip_address: 192.168.100.100
@@ -15,6 +15,8 @@ sensor:
     #scan_interval: 30
     #sensor_name_prefix: GoodWe
 ```
+
+The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
 
 ### Documentation
 
