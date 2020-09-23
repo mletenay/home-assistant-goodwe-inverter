@@ -1,8 +1,9 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
 # GoodWe Inverter Sensor Component for Home Assistant
-The GoodWe Inverter Sensor component will retrieve data from an GoodWe inverter connected to your local network.
-It has been tested and developed on an GoodWe ET and it might work for other inverters as well, as long as they listen on UDP port 8899.
+
+The GoodWe Inverter Sensor component will retrieve data from a GoodWe inverter connected to your local network.
+It has been tested on GoodWe ET, ES and EM families of inverters. It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to supported communication protocols.
 
 The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).
 
@@ -20,6 +21,7 @@ Create a directory called `goodwe` in the `<config directory>/custom_components/
 Install this component by copying all files in `/custom_components/goodwe/` folder from this repo into the new `<config directory>/custom_components/goodwe/` directory you just created.
 
 This is how your custom_components directory should look like:
+
 ```bash
 custom_components
 ├── goodwe
@@ -33,7 +35,7 @@ custom_components
 
 To enable this sensor, add the following lines to your `configuration.yaml` file:
 
-``` YAML
+```YAML
 sensor:
   - platform: goodwe
     ip_address: 192.168.100.100
@@ -42,7 +44,7 @@ sensor:
     #sensor_name_prefix: GoodWe
 ```
 
-The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names. Since the entity name is used to construct also the home assistant's entity-id, it is recomennded to change the prefix after the initial setup of the platform, so the generated entity-id have reasonable (goodwe) names.
+The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
 
 ## Inverter communication testing
 

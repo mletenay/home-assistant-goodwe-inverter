@@ -214,24 +214,15 @@ def _read_freq(data, offset):
 
 
 def _read_temp(data, offset):
-    # Shift to real offset, 1000 is the marker
-    if offset > 1000:
-        offset -= 1000
     value = (data[offset] << 8) | data[offset + 1]
     return float(value) / 10
 
 
 def _read_byte(data, offset):
-    # Shift to real offset, 1000 is the marker
-    if offset >= 1000:
-        offset -= 1000
     return data[offset]
 
 
 def _read_bytes2(data, offset):
-    # Shift to real offset, 1000 is the marker
-    if offset >= 1000:
-        offset -= 1000
     return (data[offset] << 8) | data[offset + 1]
 
 
@@ -245,9 +236,6 @@ def _read_bytes4(data, offset):
 
 
 def _read_grid_mode(data, offset):
-    # Shift to real offset, 1000 is the marker
-    if offset >= 1000:
-        offset -= 1000
     value = _read_bytes4(data, offset)
     if value > 32768:
         value -= 65535
@@ -366,7 +354,7 @@ class DiscoveryError(Exception):
 
 
 InverterResponse = namedtuple(
-    "InverterResponse", "data, serial_number, type, sofware_version"
+    "InverterResponse", "model_name, serial_number, software_version"
 )
 
 
@@ -376,11 +364,17 @@ class Inverter:
     def __init__(self, host, port):
         self.host = host
         self.port = port
+        self.model_name = None
+        self.serial_number = None
+        self.software_version = None
 
     async def get_model(self):
         """Request the model information from the inverter"""
         try:
             data = await self._make_model_request(self.host, self.port)
+            self.model_name = data.model_name
+            self.serial_number = data.serial_number
+            self.software_version = data.software_version
         except ValueError as ex:
             msg = "Received invalid data from inverter"
             raise InverterError(msg, str(self.__class__.__name__)) from ex
@@ -421,7 +415,10 @@ class Inverter:
     @staticmethod
     def _map_response(resp_data, sensors):
         """Process the response data and return dictionary with runtime values"""
-        return {name: fn(resp_data, offset) for (id, offset, fn, _, name, _) in sensors}
+        return {
+            sensor_id: fn(resp_data, offset)
+            for (sensor_id, offset, fn, _, name, _) in sensors
+        }
 
 
 async def discover(host, port=8899):
@@ -433,9 +430,9 @@ async def discover(host, port=8899):
             _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
             response = await i.get_model()
             _LOGGER.debug(
-                "Detected %s inverter %s, S/N:%s",
+                "Detected %s protocol inverter %s, S/N:%s",
                 inverter.__name__,
-                response.type,
+                response.model_name,
                 response.serial_number,
             )
             return i
@@ -468,10 +465,6 @@ class ET(Inverter):
         (29,),
     )
 
-    __model_name = None
-    __serial_number = None
-    __software_version = None
-
     # Sensors ("id, offset, getter, unit, name, icon")
     __sensors = (
         ("vpv1", 6, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
@@ -489,7 +482,7 @@ class ET(Inverter):
         # ppv1 + ppv2 + ppv3 + ppv4
         (
             "ppv",
-            -10,
+            None,
             lambda data, x: _read_power(data, 10) + _read_power(data, 18),
             "W",
             "PV Power",
@@ -509,10 +502,10 @@ class ET(Inverter):
         ("pgrid3", 68, _read_power, "W", "On-grid3 Power", _ICON_AC),
         ("total_inverter_power", 74, _read_power, "W", "Total Power", _ICON_AC),
         ("active_power", 78, _read_power, "W", "Active Power", _ICON_AC),
-        ("grid_in_out_code", 1078, _read_grid_mode, "", "On-grid Mode Code", None),
+        ("grid_in_out_code", 78, _read_grid_mode, "", "On-grid Mode Code", None),
         (
             "grid_in_out",
-            -1078,
+            None,
             lambda data, x: _GRID_MODES.get(_read_grid_mode(data, 78)),
             "",
             "On-grid Mode",
@@ -539,7 +532,7 @@ class ET(Inverter):
         # load_p1 + load_p2 + load_p3
         (
             "load_ptotal",
-            -126,
+            None,
             lambda data, x: _read_power(data, 126)
             + _read_power(data, 130)
             + _read_power(data, 134),
@@ -554,7 +547,7 @@ class ET(Inverter):
         # round(vbattery1 * ibattery1),
         (
             "pbattery1",
-            -160,
+            None,
             lambda data, x: round(_read_voltage(data, 160) * _read_current(data, 162)),
             "W",
             "Battery Power",
@@ -570,11 +563,11 @@ class ET(Inverter):
     )
 
     __sensors_battery = (
-        ("battery_bms", 1000, _read_bytes2, "", "Battery BMS", _ICON_BATT),
-        ("battery_index", 1002, _read_bytes2, "", "Battery Index", _ICON_BATT),
+        ("battery_bms", 0, _read_bytes2, "", "Battery BMS", _ICON_BATT),
+        ("battery_index", 2, _read_bytes2, "", "Battery Index", _ICON_BATT),
         (
             "battery_temperature",
-            1006,
+            6,
             _read_temp,
             "C",
             "Battery Temperature",
@@ -582,7 +575,7 @@ class ET(Inverter):
         ),
         (
             "battery_charge_limit",
-            1008,
+            8,
             _read_bytes2,
             "A",
             "Battery Charge Limit",
@@ -590,16 +583,16 @@ class ET(Inverter):
         ),
         (
             "battery_discharge_limit",
-            1010,
+            10,
             _read_bytes2,
             "A",
             "Battery Discharge Limit",
             _ICON_BATT,
         ),
-        ("battery_status", 1012, _read_bytes2, "", "Battery Status", _ICON_BATT),
-        ("battery_soc", 1014, _read_bytes2, "%", "Battery State of Charge", _ICON_BATT),
-        ("battery_soh", 1016, _read_bytes2, "%", "Battery State of Health", _ICON_BATT),
-        ("battery_warning", 1020, _read_bytes2, "", "Battery Warning", None),
+        ("battery_status", 12, _read_bytes2, "", "Battery Status", _ICON_BATT),
+        ("battery_soc", 14, _read_bytes2, "%", "Battery State of Charge", _ICON_BATT),
+        ("battery_soh", 16, _read_bytes2, "%", "Battery State of Health", _ICON_BATT),
+        ("battery_warning", 20, _read_bytes2, "", "Battery Warning", None),
     )
 
     @classmethod
@@ -607,17 +600,12 @@ class ET(Inverter):
         response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
         if response is not None:
             response = response[5:-2]
-            cls.__serial_number = response[6:22].decode("utf-8")
-            cls.__model_name = response[22:32].decode("utf-8")
-            cls.__software_version = response[54:66].decode("utf-8")
             return InverterResponse(
-                data=None,
-                serial_number=cls.__serial_number,
-                type=cls.__model_name,
-                sofware_version=cls.__software_version,
+                model_name=response[22:32].decode("utf-8").rstrip(),
+                serial_number=response[6:22].decode("utf-8"),
+                software_version=response[54:66].decode("utf-8"),
             )
-        else:
-            raise ValueError
+        raise ValueError
 
     @classmethod
     async def _make_request(cls, host, port):
@@ -625,12 +613,7 @@ class ET(Inverter):
         data = cls._map_response(raw_data[5:-2], cls.__sensors)
         raw_data = await _read_from_socket(cls._READ_BATTERY_INFO, (host, port))
         data.update(cls._map_response(raw_data[5:-2], cls.__sensors_battery))
-        return InverterResponse(
-            data=data,
-            serial_number=cls.__serial_number,
-            type=cls.__model_name,
-            sofware_version=cls.__software_version,
-        )
+        return data
 
     @classmethod
     def sensors(cls):
@@ -650,17 +633,13 @@ class ES(Inverter):
         (142, 149),
     )
 
-    __model_name = None
-    __serial_number = None
-    __software_version = None
-
     # Sensors ("id, offset, getter, unit, name, icon")
     __sensors = (
         ("vpv1", 0, _read_voltage, "V", "PV1 Voltage", _ICON_PV),
         ("ipv1", 2, _read_current, "A", "PV1 Current", _ICON_PV),
         (
             "ppv1",
-            -2,
+            None,
             lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2)),
             "W",
             "PV1 Power",
@@ -671,7 +650,7 @@ class ES(Inverter):
         ("ipv2", 7, _read_current, "A", "PV2 Current", _ICON_PV),
         (
             "ppv2",
-            -7,
+            None,
             lambda data, x: round(_read_voltage(data, 5) * _read_current(data, 7)),
             "W",
             "PV2 Power",
@@ -680,7 +659,7 @@ class ES(Inverter):
         ("pv2mode", 9, _read_pv_mode1, "", "PV2 Mode", _ICON_PV),
         (
             "ppv",
-            -9,
+            None,
             lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2))
             + round(_read_voltage(data, 5) * _read_current(data, 7)),
             "W",
@@ -695,7 +674,7 @@ class ES(Inverter):
         # round(vbattery1 * ibattery1),
         (
             "pbattery1",
-            -18,
+            None,
             lambda data, x: round(_read_voltage(data, 10) * _read_current(data, 18)),
             "W",
             "Battery Power",
@@ -749,7 +728,7 @@ class ES(Inverter):
         ("grid_in_out_code", 80, _read_byte, "", "On-grid Mode Code", None),
         (
             "grid_in_out",
-            -80,
+            None,
             lambda data, x: _GRID_MODES.get(_read_byte(data, 80)),
             "",
             "On-grid Mode",
@@ -758,7 +737,7 @@ class ES(Inverter):
         # pgrid with sign
         (
             "active_power",
-            -81,
+            None,
             lambda data, x: (-1 if _read_byte(data, 80) == 2 else 1)
             * _read_power2(data, 38),
             "W",
@@ -772,28 +751,18 @@ class ES(Inverter):
     async def _make_model_request(cls, host, port):
         response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
         if response is not None:
-            cls.__serial_number = response[38:54].decode("utf-8")
-            cls.__model_name = response[12:22].decode("utf-8")
-            cls.__software_version = response[58:70].decode("utf-8")
             return InverterResponse(
-                data=None,
-                serial_number=cls.__serial_number,
-                type=cls.__model_name,
-                sofware_version=cls.__software_version,
+                model_name=response[12:22].decode("utf-8").rstrip(),
+                serial_number=response[38:54].decode("utf-8"),
+                software_version=response[58:70].decode("utf-8"),
             )
-        else:
-            raise ValueError
+        raise ValueError
 
     @classmethod
     async def _make_request(cls, host, port):
         raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
         data = cls._map_response(raw_data[7:-2], cls.__sensors)
-        return InverterResponse(
-            data=data,
-            serial_number=cls.__serial_number,
-            type=cls.__model_name,
-            sofware_version=cls.__software_version,
-        )
+        return data
 
     @classmethod
     def sensors(cls):

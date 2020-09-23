@@ -15,9 +15,13 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "goodwe"
+ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
 
 CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
 
@@ -33,89 +37,96 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    api = await discover(config[CONF_IP_ADDRESS], config[CONF_PORT])
-    endpoint = RealTimeDataEndpoint(hass, api)
-    resp = await api.get_data()
-    serial = resp.serial_number
-    hass.async_add_job(endpoint.async_refresh)
-    async_track_time_interval(hass, endpoint.async_refresh, config[CONF_SCAN_INTERVAL])
-    devices = []
-    for (_, idx, _, unit, sensor, icon) in api.sensors():
-        if unit == "C":
-            unit = TEMP_CELSIUS
-        uid = f"goodwe-{serial}-{idx}"
-        sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {sensor}".strip()
-        devices.append(InverterSensor(uid, sensor, sensor_name, unit, icon))
-    endpoint.sensors = devices
-    async_add_entities(devices)
+    inverter = await discover(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    refresh_job = InverterRefreshJob(hass, inverter)
+    hass.async_add_job(refresh_job.async_refresh)
+    async_track_time_interval(
+        hass, refresh_job.async_refresh, config[CONF_SCAN_INTERVAL]
+    )
+    for (sensor_id, _, _, unit, name, icon) in inverter.sensors():
+        uid = f"{DOMAIN}-{sensor_id}-{inverter.serial_number}"
+        sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {name}".strip()
+        refresh_job.sensors.append(
+            InverterSensor(uid, sensor_id, sensor_name, unit, icon, hass)
+        )
+    async_add_entities(refresh_job.sensors)
 
 
-class RealTimeDataEndpoint:
-    """Representation of a Sensor."""
+class InverterRefreshJob:
+    """Job for refreshing inverter sensors values"""
 
-    def __init__(self, hass, api):
-        """Initialize the sensor."""
+    def __init__(self, hass, inverter):
+        """Initialize the sensors."""
         self.hass = hass
-        self.api = api
+        self.inverter = inverter
         self.ready = asyncio.Event()
         self.sensors = []
 
     async def async_refresh(self, now=None):
-        """Fetch new state data for the sensor.
+        """Fetch new state data for the sensors.
 
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            api_response = await self.api.get_data()
+            inverter_response = await self.inverter.get_data()
             self.ready.set()
         except InverterError:
             if now is not None:
                 self.ready.clear()
                 return
             raise PlatformNotReady
-        data = api_response.data
         for sensor in self.sensors:
-            if sensor.key in data:
-                sensor.value = data[sensor.key]
-                sensor.async_schedule_update_ha_state()
+            sensor.update_value(inverter_response)
 
 
 class InverterSensor(Entity):
     """Class for a sensor."""
 
-    def __init__(self, uid, key, sensor_name, unit, icon_name):
+    def __init__(self, uid, sensor_id, sensor_name, unit, icon_name, hass):
         """Initialize an inverter sensor."""
-        self.uid = uid
-        self.key = key
-        self.sensor_name = sensor_name
-        self.value = None
-        self.unit = unit
-        self.icon_name = icon_name
+        super().__init__()
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, sensor_id, hass=hass
+        )
+        self._uid = uid
+        self._sensor_id = sensor_id
+        self._sensor_name = sensor_name
+        self._unit = unit
+        if self._unit == "C":
+            self._unit = TEMP_CELSIUS
+        self._icon_name = icon_name
+        self._value = None
+
+    def update_value(self, inverter_response):
+        """Update the sensor value from the response received from inverter"""
+        if self._sensor_id in inverter_response:
+            self._value = inverter_response[self._sensor_id]
+            self.async_schedule_update_ha_state()
 
     @property
     def state(self):
         """State of this inverter attribute."""
-        return self.value
+        return self._value
 
     @property
     def unique_id(self):
         """Return unique id."""
-        return self.uid
+        return self._uid
 
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return self.sensor_name
+        return self._sensor_name
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self.unit
+        return self._unit
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return self.icon_name
+        return self._icon_name
 
     @property
     def should_poll(self):
