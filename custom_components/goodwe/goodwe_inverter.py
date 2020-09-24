@@ -573,8 +573,8 @@ class ET(Inverter):
         ("work_mode_label", 174, _read_work_mode, "", "Work Mode", None),
         ("strwork_mode", 178, _read_bytes4, "", "Error Codes", None),
         ("strwork_mode_label", 178, _read_bytes4, "", "Error Codes", None),
-        ("e_total", 182, _read_power_k, "kW", "Total Energy", None),
-        ("e_day", 186, _read_power_k, "kW", "Today's Energy", None),
+        ("e_total", 182, _read_power_k, "kWh", "Total PV Generation", None),
+        ("e_day", 186, _read_power_k, "kWh", "Today's PV Generation", None),
         ("diagnose_result", 240, _read_bytes4, "", "Diag Status", None),
     )
 
@@ -767,7 +767,7 @@ class ES(Inverter):
         ("work_mode_label", 52, _read_energy_mode1, "", "Energy Mode", None),
         ("temperature", 53, _read_temp, "C", "Inverter Temperature", None),
         ("error_codes", 55, _read_bytes4, "", "Error Codes", None),
-        ("e_total", 59, _read_power_k, "kW", "Total Energy", None),
+        ("e_total", 59, _read_power_k, "kWh", "Total PV Generation", None),
         ("h_total", 63, _read_bytes4, "", "Hours Total", None),
         ("e_day", 67, _read_power_k2, "kWh", "Today's PV Generation", None),
         ("e_load_day", 69, _read_power_k2, "kWh", "Today's Load Consumption", None),
