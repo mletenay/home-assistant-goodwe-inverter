@@ -554,9 +554,9 @@ class ET(Inverter):
         ("backup_ptotal", 138, _read_power, "W", "Back-up Power", SensorKind.ups),
         ("pload", 142, _read_power, "W", "Load", SensorKind.ac),
         ("xx146", 146, _read_bytes2, "", "Unknown sensor@146", None),
-        ("temperature2", 148, _read_temp, "", "Inverter Temperature 2", None),
+        ("temperature2", 148, _read_temp, "C", "Inverter Temperature 2", SensorKind.ac),
         ("xx150", 150, _read_bytes2, "", "Unknown sensor@150", None),
-        ("temperature", 152, _read_temp, "C", "Inverter Temperature", None),
+        ("temperature", 152, _read_temp, "C", "Inverter Temperature", SensorKind.ac),
         ("xx154", 154, _read_bytes2, "", "Unknown sensor@154", None),
         ("xx156", 156, _read_bytes2, "", "Unknown sensor@156", None),
         ("xx158", 158, _read_bytes2, "", "Unknown sensor@158", None),
@@ -596,6 +596,18 @@ class ET(Inverter):
         ("xx196", 196, _read_bytes2, "", "Unknown sensor@196", None),
         ("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
         ("diagnose_result", 240, _read_bytes4, "", "Diag Status", None),
+        # ppv1 + ppv2 + pbattery - active_power
+        (
+            "house_consumption",
+            None,
+            lambda data, x: _read_power(data, 10)
+            + _read_power(data, 18)
+            + round(_read_voltage(data, 160) * _read_current(data, 162))
+            - _read_power(data, 78),
+            "W",
+            "House Comsumption",
+            None,
+        ),
     )
 
     __sensors_battery = (
@@ -824,6 +836,18 @@ class ES(Inverter):
             None,
         ),
         ("diagnose_result", 89, _read_bytes4, "", "Diag Status", None),
+        # ppv1 + ppv2 + pbattery - active_power
+        (
+            "house_consumption",
+            None,
+            lambda data, x: round(_read_voltage(data, 0) * _read_current(data, 2))
+            + round(_read_voltage(data, 5) * _read_current(data, 7))
+            + round(_read_voltage(data, 10) * _read_current(data, 18))
+            - ((-1 if _read_byte(data, 80) == 2 else 1) * _read_power2(data, 38)),
+            "W",
+            "House Comsumption",
+            None,
+        ),
     )
 
     @classmethod
