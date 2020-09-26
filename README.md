@@ -1,8 +1,8 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-# GoodWe Inverter Sensor Component for Home Assistant
+# GoodWe solar inverter sensors for Home Assistant
 
-The GoodWe Inverter Sensor component will retrieve data from a GoodWe inverter connected to your local network.  
+The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.  
 It has been tested on GoodWe ET, ES and EM families of inverters.  
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
@@ -40,7 +40,6 @@ To enable this sensor, add the following lines to your `configuration.yaml` file
 sensor:
   - platform: goodwe
     ip_address: 192.168.100.100
-    #port: 8899
     #scan_interval: 30
     #sensor_name_prefix: GoodWe
 ```

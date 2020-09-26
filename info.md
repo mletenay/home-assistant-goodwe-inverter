@@ -1,9 +1,9 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-## GoodWe Inverter Sensor Component for Home Assistant.
+## GoodWe solar inverter sensors for Home Assistant
 
-The GoodWe solar sensor component will retrieve data from an GoodWe solar inverter.
-The values will be presented as sensors (or attributes of sensors) in Home Assistant.
+The component retrieves data from GoodWe solar inverter connected to local network and presents them as sensors in Home Assistant.
+GoodWe ET, ES and EM families of inverters are supported, other types may work too.
 
 ## Configuration
 
@@ -11,7 +11,6 @@ The values will be presented as sensors (or attributes of sensors) in Home Assis
 sensor:
   - platform: goodwe
     ip_address: 192.168.100.100
-    #port: 8899
     #scan_interval: 30
     #sensor_name_prefix: GoodWe
 ```

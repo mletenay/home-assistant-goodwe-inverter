@@ -3,7 +3,7 @@ import asyncio
 import logging
 import voluptuous as vol
 from datetime import timedelta
-from .goodwe_inverter import discover, InverterError, SensorKind
+from .goodwe_inverter import discover, SensorKind
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -77,7 +77,7 @@ class InverterRefreshJob:
         try:
             inverter_response = await self.inverter.get_data()
             self.ready.set()
-        except InverterError:
+        except:
             if now is not None:
                 self.ready.clear()
                 return
