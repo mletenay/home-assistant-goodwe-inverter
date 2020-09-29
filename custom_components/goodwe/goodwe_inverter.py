@@ -785,12 +785,23 @@ class ES(Inverter):
             "Battery Temperature",
             SensorKind.bat,
         ),
-        Sensor("ibattery1", 18, _read_current, "A", "Battery Current", SensorKind.bat),
+        Sensor(
+            "ibattery1",
+            18,
+            lambda data, _: abs(_read_current(data, 18))
+            * (-1 if _read_byte(data, 30) == 2 else 1),
+            "A",
+            "Battery Current",
+            SensorKind.bat,
+        ),
         # round(vbattery1 * ibattery1),
         Sensor(
             "pbattery1",
             0,
-            lambda data, _: round(_read_voltage(data, 10) * _read_current(data, 18)),
+            lambda data, _: abs(
+                round(_read_voltage(data, 10) * _read_current(data, 18))
+            )
+            * (-1 if _read_byte(data, 30) == 2 else 1),
             "W",
             "Battery Power",
             SensorKind.bat,
@@ -848,7 +859,13 @@ class ES(Inverter):
         Sensor("vgrid", 34, _read_voltage, "V", "On-grid Voltage", SensorKind.ac),
         Sensor("igrid", 36, _read_current, "A", "On-grid Current", SensorKind.ac),
         Sensor(
-            "pgrid", 38, _read_power2, "W", "On-grid Power (EzMeter)", SensorKind.ac
+            "pgrid",
+            38,
+            lambda data, _: abs(_read_power2(data, 38))
+            * (-1 if _read_byte(data, 80) == 2 else 1),
+            "W",
+            "On-grid Export Power",
+            SensorKind.ac,
         ),
         Sensor("fgrid", 40, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
         Sensor("grid_mode", 42, _read_byte, "", "Work Mode", None),
@@ -882,17 +899,8 @@ class ES(Inverter):
             "On-grid Mode",
             SensorKind.ac,
         ),
-        # pgrid with sign
-        Sensor(
-            "active_power",
-            0,
-            lambda data, _: (-1 if _read_byte(data, 80) == 2 else 1)
-            * _read_power2(data, 38),
-            "W",
-            "Active Power",
-            SensorKind.ac,
-        ),
         Sensor("pback_up", 81, _read_power2, "W", "Back-up Power", SensorKind.ups),
+        # pload + pback_up
         Sensor(
             "plant_power",
             0,
@@ -902,14 +910,17 @@ class ES(Inverter):
             None,
         ),
         Sensor("diagnose_result", 89, _read_bytes4, "", "Diag Status", None),
-        # ppv1 + ppv2 + pbattery - active_power
+        # ppv1 + ppv2 + pbattery - pgrid
         Sensor(
             "house_consumption",
             0,
             lambda data, _: round(_read_voltage(data, 0) * _read_current(data, 2))
             + round(_read_voltage(data, 5) * _read_current(data, 7))
-            + round(_read_voltage(data, 10) * _read_current(data, 18))
-            - ((-1 if _read_byte(data, 80) == 2 else 1) * _read_power2(data, 38)),
+            + (
+                abs(round(_read_voltage(data, 10) * _read_current(data, 18)))
+                * (-1 if _read_byte(data, 30) == 2 else 1)
+            )
+            - (abs(_read_power2(data, 38)) * (-1 if _read_byte(data, 80) == 2 else 1)),
             "W",
             "House Comsumption",
             None,
