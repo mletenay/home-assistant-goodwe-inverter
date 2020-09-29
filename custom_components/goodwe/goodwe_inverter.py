@@ -455,6 +455,8 @@ async def discover(host, port=8899) -> Inverter:
                 response.serial_number,
             )
             return i
+        except asyncio.exceptions.CancelledError as ex:
+            failures.append(ex)
         except Exception as ex:
             failures.append(ex)
     msg = (
