@@ -870,7 +870,7 @@ class ES(Inverter):
             "e_load_day", 69, _read_power_k2, "kWh", "Today's Load Consumption", None
         ),
         Sensor("e_load_total", 71, _read_power_k, "kW", "Total Load", None),
-        Sensor("total_power", 75, _read_power2, "kW", "Total Power", None),
+        Sensor("total_power", 75, _read_power2, "W", "Total Power", None),
         # Effective work mode 77
         # Effective relay control 78-79
         Sensor("grid_in_out", 80, _read_byte, "", "On-grid Mode", SensorKind.ac),
