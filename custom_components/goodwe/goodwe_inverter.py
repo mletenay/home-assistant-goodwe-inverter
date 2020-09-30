@@ -789,7 +789,7 @@ class ES(Inverter):
             "ibattery1",
             18,
             lambda data, _: abs(_read_current(data, 18))
-            * (-1 if _read_byte(data, 30) == 2 else 1),
+            * (-1 if _read_byte(data, 30) == 3 else 1),
             "A",
             "Battery Current",
             SensorKind.bat,
@@ -801,7 +801,7 @@ class ES(Inverter):
             lambda data, _: abs(
                 round(_read_voltage(data, 10) * _read_current(data, 18))
             )
-            * (-1 if _read_byte(data, 30) == 2 else 1),
+            * (-1 if _read_byte(data, 30) == 3 else 1),
             "W",
             "Battery Power",
             SensorKind.bat,
@@ -918,7 +918,7 @@ class ES(Inverter):
             + round(_read_voltage(data, 5) * _read_current(data, 7))
             + (
                 abs(round(_read_voltage(data, 10) * _read_current(data, 18)))
-                * (-1 if _read_byte(data, 30) == 2 else 1)
+                * (-1 if _read_byte(data, 30) == 3 else 1)
             )
             - (abs(_read_power2(data, 38)) * (-1 if _read_byte(data, 80) == 2 else 1)),
             "W",
