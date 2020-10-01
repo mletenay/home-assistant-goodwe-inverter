@@ -332,7 +332,7 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data: bytes, addr: Tuple[str, int]):
         _LOGGER.debug("Received: '%s'", data.hex())
-        if len(data) in self.response_lenghts:
+        if not self.response_lenghts or len(data) in self.response_lenghts:
             self.on_response_received.set_result(data)
             self.transport.close()
         else:
@@ -386,7 +386,7 @@ async def _read_from_socket(
 class Inverter:
     """Base wrapper around Inverter UDP protocol"""
 
-    def __init__(self, host, port):
+    def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
         self.model_name = None
@@ -405,8 +405,17 @@ class Inverter:
         """Request the runtime data from the inverter"""
         return await self._make_request(self.host, self.port)
 
+    async def send_command(self, command: str) -> str:
+        """
+        Send low level udp command (in hex).
+        Answer command's raw response data (in hex).
+        """
+        request = (bytes.fromhex(command), ())
+        response = await _read_from_socket(request, (self.host, self.port))
+        return response.hex()
+
     @classmethod
-    async def _make_model_request(cls, host, port) -> InverterInfo:
+    async def _make_model_request(cls, host: str, port: int) -> InverterInfo:
         """
         Return instance of 'InverterInfo'
         Raise exception if unable to get version
@@ -414,7 +423,7 @@ class Inverter:
         raise NotImplementedError()
 
     @classmethod
-    async def _make_request(cls, host, port) -> Dict[str, Any]:
+    async def _make_request(cls, host: str, port: int) -> Dict[str, Any]:
         """
         Return dictionary of sensor names and their values
         Raise exception if unable to get data

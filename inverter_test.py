@@ -19,3 +19,5 @@ response = asyncio.run(inverter.get_data())
 
 for (sensor, _, _, unit, name, _) in inverter.sensors():
     print(f"{sensor}: {name} = {response[sensor]} {unit}")
+
+# print(asyncio.run(inverter.send_command("f70388b800213ac1")))
