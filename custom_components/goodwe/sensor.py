@@ -75,7 +75,7 @@ class InverterRefreshJob:
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            inverter_response = await self.inverter.get_data()
+            inverter_response = await self.inverter.read_runtime_data()
             self.ready.set()
         except:
             if now is not None:

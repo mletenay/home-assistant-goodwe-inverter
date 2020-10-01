@@ -284,14 +284,6 @@ class SensorKind(Enum):
     bat = 4
 
 
-class InverterInfo(NamedTuple):
-    """Object representing inverter model and version info"""
-
-    model_name: str
-    serial_number: str
-    software_version: str
-
-
 class Sensor(NamedTuple):
     """Definition of inverter sensor and its attributes"""
 
@@ -301,6 +293,13 @@ class Sensor(NamedTuple):
     unit: str
     name: str
     kind: Optional[SensorKind]
+
+
+class ProtocolCommand(NamedTuple):
+    """Definition of inverter protocol command"""
+
+    request: bytes
+    expected_response_length: Tuple[int, ...]
 
 
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
@@ -359,76 +358,64 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
             self.transport.close()
 
 
-async def _read_from_socket(
-    command_spec: Tuple[bytes, Tuple[int, ...]], inverter_address: Tuple[str, int]
-) -> bytes:
-    loop = asyncio.get_running_loop()
-    on_response_received = loop.create_future()
-    transport, _ = await loop.create_datagram_endpoint(
-        lambda: _UdpInverterProtocol(
-            command_spec[0], command_spec[1], on_response_received
-        ),
-        remote_addr=inverter_address,
-    )
-    try:
-        await on_response_received
-        result = on_response_received.result()
-        if result is not None:
-            return result
-        else:
-            raise RuntimeError(
-                "No response received to '" + command_spec[0].hex() + "' request"
-            )
-    finally:
-        transport.close()
-
-
 class Inverter:
-    """Base wrapper around Inverter UDP protocol"""
+    """
+    Common superclass for various inverter models implementations.
+    Represents the inverter state and its basic behavior
+    """
 
     def __init__(self, host: str, port: int):
         self.host = host
         self.port = port
-        self.model_name = None
-        self.serial_number = None
-        self.software_version = None
+        self.model_name = ""
+        self.serial_number = ""
+        self.software_version = ""
 
-    async def get_model(self) -> InverterInfo:
-        """Request the model information from the inverter"""
-        data = await self._make_model_request(self.host, self.port)
-        self.model_name = data.model_name
-        self.serial_number = data.serial_number
-        self.software_version = data.software_version
-        return data
+    async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
+        loop = asyncio.get_running_loop()
+        on_response_received = loop.create_future()
+        transport, _ = await loop.create_datagram_endpoint(
+            lambda: _UdpInverterProtocol(
+                command.request, command.expected_response_length, on_response_received
+            ),
+            remote_addr=(self.host, self.port),
+        )
+        try:
+            await on_response_received
+            result = on_response_received.result()
+            if result is not None:
+                return result
+            else:
+                raise RuntimeError(
+                    "No response received to '" + command.request.hex() + "' request"
+                )
+        finally:
+            transport.close()
 
-    async def get_data(self) -> Dict[str, Any]:
-        """Request the runtime data from the inverter"""
-        return await self._make_request(self.host, self.port)
+    async def read_device_info(self):
+        """
+        Request the device information from the inverter.
+        The inverter instance variables will be loaded with relevant data.
+        """
+        raise NotImplementedError()
+
+    async def read_runtime_data(self) -> Dict[str, Any]:
+        """
+        Request the runtime data from the inverter.
+        Answer dictionary of individual sensors and their values.
+        List of supported sensors (and their definitions) is provided by sensors() method.
+        """
+        raise NotImplementedError()
 
     async def send_command(self, command: str) -> str:
         """
         Send low level udp command (in hex).
         Answer command's raw response data (in hex).
         """
-        request = (bytes.fromhex(command), ())
-        response = await _read_from_socket(request, (self.host, self.port))
+        response = await self._read_from_socket(
+            ProtocolCommand(bytes.fromhex(command), ())
+        )
         return response.hex()
-
-    @classmethod
-    async def _make_model_request(cls, host: str, port: int) -> InverterInfo:
-        """
-        Return instance of 'InverterInfo'
-        Raise exception if unable to get version
-        """
-        raise NotImplementedError()
-
-    @classmethod
-    async def _make_request(cls, host: str, port: int) -> Dict[str, Any]:
-        """
-        Return dictionary of sensor names and their values
-        Raise exception if unable to get data
-        """
-        raise NotImplementedError()
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
@@ -456,12 +443,12 @@ async def discover(host, port=8899) -> Inverter:
         i = inverter(host, port)
         try:
             _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
-            response = await i.get_model()
+            await i.read_device_info()
             _LOGGER.debug(
                 "Detected %s protocol inverter %s, S/N:%s",
                 inverter.__name__,
-                response.model_name,
-                response.serial_number,
+                i.model_name,
+                i.serial_number,
             )
             return i
         except asyncio.exceptions.CancelledError as ex:
@@ -480,15 +467,15 @@ class ET(Inverter):
     """Class representing inverter of ET family"""
 
     # (request data including checksum, expected response lengths)
-    _READ_DEVICE_VERSION_INFO: Tuple[bytes, Tuple[int, ...]] = (
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1)),
         (73,),
     )
-    _READ_DEVICE_RUNNING_DATA1: Tuple[bytes, Tuple[int, ...]] = (
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7)),
         (257,),
     )
-    _READ_BATTERY_INFO: Tuple[bytes, Tuple[int, ...]] = (
+    _READ_BATTERY_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1)),
         (29,),
     )
@@ -713,22 +700,18 @@ class ET(Inverter):
         ),
     )
 
-    @classmethod
-    async def _make_model_request(cls, host: str, port: int) -> InverterInfo:
-        response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
+    async def read_device_info(self):
+        response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
-        return InverterInfo(
-            model_name=response[22:32].decode("utf-8").rstrip(),
-            serial_number=response[6:22].decode("utf-8"),
-            software_version=response[54:66].decode("utf-8"),
-        )
+        self.model_name = response[22:32].decode("utf-8").rstrip()
+        self.serial_number = response[6:22].decode("utf-8")
+        self.software_version = response[54:66].decode("utf-8")
 
-    @classmethod
-    async def _make_request(cls, host: str, port: int) -> Dict[str, Any]:
-        raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA1, (host, port))
-        data = cls._map_response(raw_data[5:-2], cls.__sensors)
-        raw_data = await _read_from_socket(cls._READ_BATTERY_INFO, (host, port))
-        data.update(cls._map_response(raw_data[5:-2], cls.__sensors_battery))
+    async def read_runtime_data(self) -> Dict[str, Any]:
+        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
+        data = self._map_response(raw_data[5:-2], self.__sensors)
+        raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
+        data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
         return data
 
     @classmethod
@@ -740,11 +723,11 @@ class ES(Inverter):
     """Class representing inverter of ES/EM family"""
 
     # (request data including checksum, expected response lengths)
-    _READ_DEVICE_VERSION_INFO: Tuple[bytes, Tuple[int, ...]] = (
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
         (85, 86),
     )
-    _READ_DEVICE_RUNNING_DATA: Tuple[bytes, Tuple[int, ...]] = (
+    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45)),
         (142, 149),
     )
@@ -936,19 +919,15 @@ class ES(Inverter):
         ),
     )
 
-    @classmethod
-    async def _make_model_request(cls, host: str, port: int) -> InverterInfo:
-        response = await _read_from_socket(cls._READ_DEVICE_VERSION_INFO, (host, port))
-        return InverterInfo(
-            model_name=response[12:22].decode("utf-8").rstrip(),
-            serial_number=response[38:54].decode("utf-8"),
-            software_version=response[58:70].decode("utf-8"),
-        )
+    async def read_device_info(self):
+        response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
+        self.model_name = response[12:22].decode("utf-8").rstrip()
+        self.serial_number = response[38:54].decode("utf-8")
+        self.software_version = response[58:70].decode("utf-8")
 
-    @classmethod
-    async def _make_request(cls, host: str, port: int) -> Dict[str, Any]:
-        raw_data = await _read_from_socket(cls._READ_DEVICE_RUNNING_DATA, (host, port))
-        data = cls._map_response(raw_data[7:-2], cls.__sensors)
+    async def read_runtime_data(self) -> Dict[str, Any]:
+        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
+        data = self._map_response(raw_data[7:-2], self.__sensors)
         return data
 
     @classmethod
