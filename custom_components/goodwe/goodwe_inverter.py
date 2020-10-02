@@ -295,13 +295,6 @@ class Sensor(NamedTuple):
     kind: Optional[SensorKind]
 
 
-class ProtocolCommand(NamedTuple):
-    """Definition of inverter protocol command"""
-
-    request: bytes
-    expected_response_length: Tuple[int, ...]
-
-
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
     def __init__(
         self,
@@ -358,27 +351,24 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
             self.transport.close()
 
 
-class Inverter:
-    """
-    Common superclass for various inverter models implementations.
-    Represents the inverter state and its basic behavior
-    """
+class ProtocolCommand(NamedTuple):
+    """Definition of inverter protocol command"""
 
-    def __init__(self, host: str, port: int):
-        self.host = host
-        self.port = port
-        self.model_name = ""
-        self.serial_number = ""
-        self.software_version = ""
+    request: bytes
+    expected_response_length: Tuple[int, ...]
 
-    async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
+    async def execute(self, host: str, port: int) -> bytes:
+        """
+        Execute the udp protocol command on the specified address/port.
+        Return raw response data
+        """
         loop = asyncio.get_running_loop()
         on_response_received = loop.create_future()
         transport, _ = await loop.create_datagram_endpoint(
             lambda: _UdpInverterProtocol(
-                command.request, command.expected_response_length, on_response_received
+                self.request, self.expected_response_length, on_response_received
             ),
-            remote_addr=(self.host, self.port),
+            remote_addr=(host, port),
         )
         try:
             await on_response_received
@@ -387,10 +377,34 @@ class Inverter:
                 return result
             else:
                 raise RuntimeError(
-                    "No response received to '" + command.request.hex() + "' request"
+                    "No response received to '" + self.request.hex() + "' request"
                 )
         finally:
             transport.close()
+
+
+class Inverter:
+    """
+    Common superclass for various inverter models implementations.
+    Represents the inverter state and its basic behavior
+    """
+
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        model_name: str = "",
+        serial_number: str = "",
+        software_version: str = "",
+    ):
+        self.host = host
+        self.port = port
+        self.model_name = model_name
+        self.serial_number = serial_number
+        self.software_version = software_version
+
+    async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
+        return await command.execute(self.host, self.port)
 
     async def read_device_info(self):
         """
@@ -433,12 +447,34 @@ class Inverter:
         }
 
 
-async def discover(host, port=8899) -> Inverter:
+async def discover(host: str, port: int = 8899) -> Inverter:
     """Contact the inverter at the specified value and answer appropriare Inverter instance
 
     Raise exception if unable to contact or recognise supported inverter
     """
     failures = []
+    # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
+    try:
+        _LOGGER.debug("Probing inverter at %s:%s", host, port)
+        response = await ProtocolCommand(
+            bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
+            (85, 86),
+        ).execute(host, port)
+        model_name = response[12:22].decode("ascii").rstrip()
+        serial_number = response[38:54].decode("ascii")
+        software_version = response[58:70].decode("ascii")
+        if "ETU" in serial_number:
+            _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
+            return ET(host, port, model_name, serial_number, software_version)
+        else:
+            _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
+            return ES(host, port, model_name, serial_number, software_version)
+    except asyncio.exceptions.CancelledError as ex:
+        failures.append(ex)
+    except Exception as ex:
+        failures.append(ex)
+
+    # Probe inverter specific protocols
     for inverter in REGISTRY:
         i = inverter(host, port)
         try:
@@ -466,7 +502,6 @@ async def discover(host, port=8899) -> Inverter:
 class ET(Inverter):
     """Class representing inverter of ET family"""
 
-    # (request data including checksum, expected response lengths)
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1)),
         (73,),
@@ -734,7 +769,6 @@ class ET(Inverter):
 class ES(Inverter):
     """Class representing inverter of ES/EM family"""
 
-    # (request data including checksum, expected response lengths)
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
         (85, 86),
