@@ -864,7 +864,7 @@ class ES(Inverter):
         Sensor("grid_mode_label", 42, _read_work_mode1, "", "Work Mode", None),
         Sensor("vload", 43, _read_voltage, "V", "Back-up Voltage", SensorKind.ups),
         Sensor("iload", 45, _read_current, "A", "Back-up Current", SensorKind.ups),
-        Sensor("pload", 47, _read_power2, "W", "On-grid Power", SensorKind.ups),
+        Sensor("pload", 47, _read_power2, "W", "On-grid Power", SensorKind.ac),
         Sensor("fload", 49, _read_freq, "Hz", "Back-up Frequency", SensorKind.ups),
         Sensor("load_mode", 51, _read_byte, "", "Load Mode", None),
         Sensor("load_mode_label", 51, _read_load_mode1, "", "Load Mode", None),
