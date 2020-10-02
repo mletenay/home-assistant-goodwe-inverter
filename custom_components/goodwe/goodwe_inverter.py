@@ -619,22 +619,28 @@ class ET(Inverter):
             SensorKind.bat,
         ),
         Sensor("xx170", 170, _read_bytes2, "", "Unknown sensor@170", None),
-        Sensor("safety_country", 172, _read_bytes2, "", "Safety Country", None),
+        Sensor(
+            "safety_country", 172, _read_bytes2, "", "Safety Country", SensorKind.ac
+        ),
         Sensor(
             "safety_country_label",
             172,
             _read_safety_country,
             "",
             "Safety Country",
-            None,
+            SensorKind.ac,
         ),
         Sensor("work_mode", 174, _read_bytes2, "", "Work Mode", None),
         Sensor("work_mode_label", 174, _read_work_mode, "", "Work Mode", None),
         Sensor("xx176", 176, _read_bytes2, "", "Unknown sensor@176", None),
         Sensor("strwork_mode", 178, _read_bytes4, "", "Error Codes", None),
         Sensor("strwork_mode_label", 178, _read_bytes4, "", "Error Codes", None),
-        Sensor("e_total", 182, _read_power_k, "kWh", "Total PV Generation", None),
-        Sensor("e_day", 186, _read_power_k, "kWh", "Today's PV Generation", None),
+        Sensor(
+            "e_total", 182, _read_power_k, "kWh", "Total PV Generation", SensorKind.pv
+        ),
+        Sensor(
+            "e_day", 186, _read_power_k, "kWh", "Today's PV Generation", SensorKind.pv
+        ),
         Sensor("xx190", 190, _read_bytes2, "", "Unknown sensor@190", None),
         Sensor("xx192", 192, _read_bytes2, "", "Unknown sensor@192", None),
         Sensor("xx194", 194, _read_bytes2, "", "Unknown sensor@194", None),
@@ -651,7 +657,7 @@ class ET(Inverter):
             - _read_power(data, 78),
             "W",
             "House Comsumption",
-            None,
+            SensorKind.ac,
         ),
     )
 
@@ -866,21 +872,27 @@ class ES(Inverter):
             SensorKind.ac,
         ),
         Sensor("fgrid", 40, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
-        Sensor("grid_mode", 42, _read_byte, "", "Work Mode", None),
-        Sensor("grid_mode_label", 42, _read_work_mode1, "", "Work Mode", None),
+        Sensor("grid_mode", 42, _read_byte, "", "Work Mode", SensorKind.ac),
+        Sensor("grid_mode_label", 42, _read_work_mode1, "", "Work Mode", SensorKind.ac),
         Sensor("vload", 43, _read_voltage, "V", "Back-up Voltage", SensorKind.ups),
         Sensor("iload", 45, _read_current, "A", "Back-up Current", SensorKind.ups),
         Sensor("pload", 47, _read_power2, "W", "On-grid Power", SensorKind.ac),
         Sensor("fload", 49, _read_freq, "Hz", "Back-up Frequency", SensorKind.ups),
-        Sensor("load_mode", 51, _read_byte, "", "Load Mode", None),
-        Sensor("load_mode_label", 51, _read_load_mode1, "", "Load Mode", None),
-        Sensor("work_mode", 52, _read_byte, "", "Energy Mode", None),
-        Sensor("work_mode_label", 52, _read_energy_mode1, "", "Energy Mode", None),
+        Sensor("load_mode", 51, _read_byte, "", "Load Mode", SensorKind.ac),
+        Sensor("load_mode_label", 51, _read_load_mode1, "", "Load Mode", SensorKind.ac),
+        Sensor("work_mode", 52, _read_byte, "", "Energy Mode", SensorKind.ac),
+        Sensor(
+            "work_mode_label", 52, _read_energy_mode1, "", "Energy Mode", SensorKind.ac
+        ),
         Sensor("temperature", 53, _read_temp, "C", "Inverter Temperature", None),
         Sensor("error_codes", 55, _read_bytes4, "", "Error Codes", None),
-        Sensor("e_total", 59, _read_power_k, "kWh", "Total PV Generation", None),
-        Sensor("h_total", 63, _read_bytes4, "", "Hours Total", None),
-        Sensor("e_day", 67, _read_power_k2, "kWh", "Today's PV Generation", None),
+        Sensor(
+            "e_total", 59, _read_power_k, "kWh", "Total PV Generation", SensorKind.pv
+        ),
+        Sensor("h_total", 63, _read_bytes4, "", "Hours Total", SensorKind.pv),
+        Sensor(
+            "e_day", 67, _read_power_k2, "kWh", "Today's PV Generation", SensorKind.pv
+        ),
         Sensor(
             "e_load_day", 69, _read_power_k2, "kWh", "Today's Load Consumption", None
         ),
@@ -905,7 +917,7 @@ class ES(Inverter):
             lambda data, _: round(_read_power2(data, 47) + _read_power2(data, 81)),
             "W",
             "Plant Power",
-            None,
+            SensorKind.ac,
         ),
         Sensor("diagnose_result", 89, _read_bytes4, "", "Diag Status", None),
         # ppv1 + ppv2 + pbattery - pgrid
@@ -921,7 +933,7 @@ class ES(Inverter):
             - (abs(_read_power2(data, 38)) * (-1 if _read_byte(data, 80) == 2 else 1)),
             "W",
             "House Comsumption",
-            None,
+            SensorKind.ac,
         ),
     )
 
