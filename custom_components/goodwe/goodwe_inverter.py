@@ -504,18 +504,18 @@ class ET(Inverter):
         ),
         Sensor("xx38", 38, _read_bytes2, "", "Unknown sensor@38", None),
         Sensor("xx40", 40, _read_bytes2, "", "Unknown sensor@40", None),
-        Sensor("vgrid", 42, _read_voltage, "V", "On-grid 1 Voltage", SensorKind.ac),
-        Sensor("igrid", 44, _read_current, "A", "On-grid Current", SensorKind.ac),
-        Sensor("fgrid", 46, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
-        Sensor("pgrid", 48, _read_power, "W", "On-grid Power", SensorKind.ac),
-        Sensor("vgrid2", 52, _read_voltage, "V", "On-grid2 Voltage", SensorKind.ac),
-        Sensor("igrid2", 54, _read_current, "A", "On-grid2 Current", SensorKind.ac),
-        Sensor("fgrid2", 56, _read_freq, "Hz", "On-grid2 Frequency", SensorKind.ac),
-        Sensor("pgrid2", 58, _read_power, "W", "On-grid2 Power", SensorKind.ac),
-        Sensor("vgrid3", 62, _read_voltage, "V", "On-grid3 Voltage", SensorKind.ac),
-        Sensor("igrid3", 64, _read_current, "A", "On-grid3 Current", SensorKind.ac),
-        Sensor("fgrid3", 66, _read_freq, "Hz", "On-grid3 Frequency", SensorKind.ac),
-        Sensor("pgrid3", 68, _read_power, "W", "On-grid3 Power", SensorKind.ac),
+        Sensor("vgrid", 42, _read_voltage, "V", "On-grid L1 Voltage", SensorKind.ac),
+        Sensor("igrid", 44, _read_current, "A", "On-grid L1 Current", SensorKind.ac),
+        Sensor("fgrid", 46, _read_freq, "Hz", "On-grid L1 Frequency", SensorKind.ac),
+        Sensor("pgrid", 48, _read_power, "W", "On-grid L1 Power", SensorKind.ac),
+        Sensor("vgrid2", 52, _read_voltage, "V", "On-grid L2 Voltage", SensorKind.ac),
+        Sensor("igrid2", 54, _read_current, "A", "On-grid L2 Current", SensorKind.ac),
+        Sensor("fgrid2", 56, _read_freq, "Hz", "On-grid L2 Frequency", SensorKind.ac),
+        Sensor("pgrid2", 58, _read_power, "W", "On-grid L2 Power", SensorKind.ac),
+        Sensor("vgrid3", 62, _read_voltage, "V", "On-grid L3 Voltage", SensorKind.ac),
+        Sensor("igrid3", 64, _read_current, "A", "On-grid L3 Current", SensorKind.ac),
+        Sensor("fgrid3", 66, _read_freq, "Hz", "On-grid L3 Frequency", SensorKind.ac),
+        Sensor("pgrid3", 68, _read_power, "W", "On-grid L3 Power", SensorKind.ac),
         Sensor("xx72", 72, _read_bytes2, "", "Unknown sensor@72", None),
         Sensor(
             "total_inverter_power", 74, _read_power, "W", "Total Power", SensorKind.ac
@@ -533,36 +533,42 @@ class ET(Inverter):
         Sensor("xx82", 82, _read_bytes2, "", "Unknown sensor@82", None),
         Sensor("xx84", 84, _read_bytes2, "", "Unknown sensor@84", None),
         Sensor("xx86", 86, _read_bytes2, "", "Unknown sensor@86", None),
-        Sensor("backup_v1", 90, _read_voltage, "V", "Back-up1 Voltage", SensorKind.ups),
-        Sensor("backup_i1", 92, _read_current, "A", "Back-up1 Current", SensorKind.ups),
-        Sensor("backup_f1", 94, _read_freq, "Hz", "Back-up1 Frequency", SensorKind.ups),
+        Sensor(
+            "backup_v1", 90, _read_voltage, "V", "Back-up L1 Voltage", SensorKind.ups
+        ),
+        Sensor(
+            "backup_i1", 92, _read_current, "A", "Back-up L1 Current", SensorKind.ups
+        ),
+        Sensor(
+            "backup_f1", 94, _read_freq, "Hz", "Back-up L1 Frequency", SensorKind.ups
+        ),
         Sensor("xx96", 96, _read_bytes2, "", "Unknown sensor@96", None),
-        Sensor("backup_p1", 98, _read_power, "W", "Back-up1 Power", SensorKind.ups),
+        Sensor("backup_p1", 98, _read_power, "W", "Back-up L1 Power", SensorKind.ups),
         Sensor(
-            "backup_v2", 102, _read_voltage, "V", "Back-up2 Voltage", SensorKind.ups
+            "backup_v2", 102, _read_voltage, "V", "Back-up L2 Voltage", SensorKind.ups
         ),
         Sensor(
-            "backup_i2", 104, _read_current, "A", "Back-up2 Current", SensorKind.ups
+            "backup_i2", 104, _read_current, "A", "Back-up L2 Current", SensorKind.ups
         ),
         Sensor(
-            "backup_f2", 106, _read_freq, "Hz", "Back-up2 Frequency", SensorKind.ups
+            "backup_f2", 106, _read_freq, "Hz", "Back-up L2 Frequency", SensorKind.ups
         ),
         Sensor("xx108", 108, _read_bytes2, "", "Unknown sensor@108", None),
-        Sensor("backup_p2", 110, _read_power, "W", "Back-up2 Power", SensorKind.ups),
+        Sensor("backup_p2", 110, _read_power, "W", "Back-up L2 Power", SensorKind.ups),
         Sensor(
-            "backup_v3", 114, _read_voltage, "V", "Back-up3 Voltage", SensorKind.ups
+            "backup_v3", 114, _read_voltage, "V", "Back-up L3 Voltage", SensorKind.ups
         ),
         Sensor(
-            "backup_i3", 116, _read_current, "A", "Back-up3 Current", SensorKind.ups
+            "backup_i3", 116, _read_current, "A", "Back-up L3 Current", SensorKind.ups
         ),
         Sensor(
-            "backup_f3", 118, _read_freq, "Hz", "Back-up3 Frequency", SensorKind.ups
+            "backup_f3", 118, _read_freq, "Hz", "Back-up L3 Frequency", SensorKind.ups
         ),
         Sensor("xx120", 120, _read_bytes2, "", "Unknown sensor@120", None),
-        Sensor("backup_p3", 122, _read_power, "W", "Back-up3 Power", SensorKind.ups),
-        Sensor("load_p1", 126, _read_power, "W", "Load 1", SensorKind.ac),
-        Sensor("load_p2", 130, _read_power, "W", "Load 2", SensorKind.ac),
-        Sensor("load_p3", 134, _read_power, "W", "Load 3", SensorKind.ac),
+        Sensor("backup_p3", 122, _read_power, "W", "Back-up L3 Power", SensorKind.ups),
+        Sensor("load_p1", 126, _read_power, "W", "Load L1", SensorKind.ac),
+        Sensor("load_p2", 130, _read_power, "W", "Load L2", SensorKind.ac),
+        Sensor("load_p3", 134, _read_power, "W", "Load L3", SensorKind.ac),
         # load_p1 + load_p2 + load_p3
         Sensor(
             "load_ptotal",
@@ -703,9 +709,9 @@ class ET(Inverter):
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
-        self.model_name = response[22:32].decode("utf-8").rstrip()
-        self.serial_number = response[6:22].decode("utf-8")
-        self.software_version = response[54:66].decode("utf-8")
+        self.model_name = response[22:32].decode("ascii").rstrip()
+        self.serial_number = response[6:22].decode("ascii")
+        self.software_version = response[54:66].decode("ascii")
 
     async def read_runtime_data(self) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
@@ -921,9 +927,9 @@ class ES(Inverter):
 
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
-        self.model_name = response[12:22].decode("utf-8").rstrip()
-        self.serial_number = response[38:54].decode("utf-8")
-        self.software_version = response[58:70].decode("utf-8")
+        self.model_name = response[12:22].decode("ascii").rstrip()
+        self.serial_number = response[38:54].decode("ascii")
+        self.software_version = response[58:70].decode("ascii")
 
     async def read_runtime_data(self) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
