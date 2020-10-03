@@ -22,6 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "goodwe"
 ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
+SERVICE_SET_WORK_MODE = "set_work_mode"
+ATTR_WORK_MODE = "work_mode"
+SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_WORK_MODE): cv.positive_int,}
+)
 
 CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
 
@@ -57,6 +62,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             InverterSensor(uid, sensor_id, sensor_name, unit, kind, hass)
         )
     async_add_entities(refresh_job.sensors)
+
+    async def _set_work_mode(call):
+        work_mode = call.data.get(ATTR_WORK_MODE)
+        await inverter.set_work_mode(work_mode)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_WORK_MODE,
+        _set_work_mode,
+        schema=SET_WORK_MODE_SERVICE_SCHEMA,
+    )
+    return True
 
 
 class InverterRefreshJob:

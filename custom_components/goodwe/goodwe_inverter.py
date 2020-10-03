@@ -431,6 +431,19 @@ class Inverter:
         )
         return response.hex()
 
+    async def set_work_mode(self, work_mode: int):
+        """
+        BEWARE !!!
+        This method modifies inverter operational parameter accessible to installers only.
+        Use with caution and at your own risk !
+
+        Set the inverter work mode
+        0 - General mode
+        1 - Off grid mode
+        2 - Backup mode
+        """
+        raise NotImplementedError()
+
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
         """
@@ -777,6 +790,10 @@ class ES(Inverter):
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45)),
         (142, 149),
     )
+    _SET_WORK_MODE: ProtocolCommand = ProtocolCommand(
+        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x03, 0x59, 0x01, 0x00, 0x02, 0x9B)),
+        (10,),
+    )
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 0, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
@@ -981,6 +998,18 @@ class ES(Inverter):
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
         data = self._map_response(raw_data[7:-2], self.__sensors)
         return data
+
+    async def set_work_mode(self, work_mode: int):
+        if work_mode in (0, 1, 2):
+            # modify the work mode parameter at index 7 and checksum at index 9
+            request = bytearray(self._SET_WORK_MODE.request)
+            request[7] = work_mode
+            request[9] = request[9] + work_mode
+            await self._read_from_socket(
+                ProtocolCommand(
+                    bytes(request), self._SET_WORK_MODE.expected_response_length
+                )
+            )
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
