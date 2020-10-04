@@ -1,11 +1,11 @@
 set_work_mode:
   description: |
-    USE WITH CAUTION AND AT YOUR OWN RISK !
-    This method modifies inverter operational parameter accessible to installers only - the work mode
+    USE WITH CAUTION AND AT YOUR OWN RISK !!!
+    This service modifies inverter operational parameter accessible to installers only - the work mode
   fields:
     entity_id:
-      description: Name of the inverter entity
-      example: "goodwe.inverter"
+      description: ID of the inverter entity
+      example: "sensor.goodwe_inverter"
     work_mode:
       description: 0 - General mode, 1 - Off grid mode, 2 - Backup mode
       example: "0"
