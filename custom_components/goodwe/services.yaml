@@ -3,6 +3,9 @@ set_work_mode:
     USE WITH CAUTION AND AT YOUR OWN RISK !
     This method modifies inverter operational parameter accessible to installers only - the work mode
   fields:
+    entity_id:
+      description: Name of the inverter entity
+      example: "goodwe.inverter"
     work_mode:
       description: 0 - General mode, 1 - Off grid mode, 2 - Backup mode
       example: "0"

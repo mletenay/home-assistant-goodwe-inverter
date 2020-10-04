@@ -475,11 +475,13 @@ async def discover(host: str, port: int = 8899) -> Inverter:
         ).execute(host, port)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
-        software_version = response[58:70].decode("ascii")
         if "ETU" in serial_number:
+            software_version = response[71:83].decode("ascii").strip()
             _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
             return ET(host, port, model_name, serial_number, software_version)
         else:
+            software_version = response[58:70].decode("ascii").strip()
+            # arm_version = response[71:83].decode("ascii").strip()
             _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
             return ES(host, port, model_name, serial_number, software_version)
     except asyncio.exceptions.CancelledError as ex:
