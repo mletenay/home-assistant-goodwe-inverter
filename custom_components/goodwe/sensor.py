@@ -3,7 +3,7 @@ import asyncio
 import logging
 import voluptuous as vol
 from datetime import timedelta
-from .goodwe_inverter import discover, SensorKind
+from .goodwe_inverter import discover, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -13,7 +13,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
@@ -97,11 +96,10 @@ class InverterRefreshJob:
         try:
             inverter_response = await self.entity.inverter.read_runtime_data()
             self.ready.set()
-        except:
-            if now is not None:
-                self.ready.clear()
-                return
-            raise PlatformNotReady
+        except InverterError as ex:
+            _LOGGER.warning("Could not retrieve data from inverter: %s", ex)
+            self.ready.clear()
+            return
         self.entity.update_value(inverter_response)
         for sensor in self.sensors:
             sensor.update_value(inverter_response)
@@ -143,7 +141,12 @@ class InverterEntity(Entity):
     @property
     def name(self):
         """Name of this inverter attribute."""
-        return "Inverter"
+        return "PV Inverter"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "W"
 
     @property
     def icon(self):

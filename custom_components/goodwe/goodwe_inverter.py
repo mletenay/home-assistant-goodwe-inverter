@@ -275,6 +275,10 @@ def _read_battery_mode1(data: bytes, offset: int) -> Optional[str]:
     return _BATTERY_MODES_ET.get(_read_byte(data, offset))
 
 
+class InverterError(Exception):
+    """Indicates error communicating with inverter"""
+
+
 class SensorKind(Enum):
     """Enumeration of sensor kinds"""
 
@@ -343,11 +347,11 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
         if self.on_response_received.done():
             self.transport.close()
         elif self.retry_nr < 4:
-            _LOGGER.debug("Timeout #%d", self.retry_nr)
+            _LOGGER.debug("Re-try #%d", self.retry_nr)
             self.retry_nr += 1
             self.connection_made(self.transport)
         else:
-            _LOGGER.debug("Timeout #%d, closing socket", self.retry_nr)
+            _LOGGER.debug("Re-try #%d, closing socket", self.retry_nr)
             self.transport.close()
 
 
@@ -376,9 +380,13 @@ class ProtocolCommand(NamedTuple):
             if result is not None:
                 return result
             else:
-                raise RuntimeError(
+                raise InverterError(
                     "No response received to '" + self.request.hex() + "' request"
                 )
+        except asyncio.exceptions.CancelledError:
+            raise InverterError(
+                "No valid response received to '" + self.request.hex() + "' request"
+            ) from None
         finally:
             transport.close()
 
@@ -421,13 +429,15 @@ class Inverter:
         """
         raise NotImplementedError()
 
-    async def send_command(self, command: str) -> str:
+    async def send_command(
+        self, command: str, expected_response_length: Tuple[int, ...] = ()
+    ) -> str:
         """
         Send low level udp command (in hex).
         Answer command's raw response data (in hex).
         """
         response = await self._read_from_socket(
-            ProtocolCommand(bytes.fromhex(command), ())
+            ProtocolCommand(bytes.fromhex(command), expected_response_length)
         )
         return response.hex()
 
@@ -463,7 +473,7 @@ class Inverter:
 async def discover(host: str, port: int = 8899) -> Inverter:
     """Contact the inverter at the specified value and answer appropriare Inverter instance
 
-    Raise exception if unable to contact or recognise supported inverter
+    Raise InverterError if unable to contact or recognise supported inverter
     """
     failures = []
     # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
@@ -484,9 +494,7 @@ async def discover(host: str, port: int = 8899) -> Inverter:
             # arm_version = response[71:83].decode("ascii").strip()
             _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
             return ES(host, port, model_name, serial_number, software_version)
-    except asyncio.exceptions.CancelledError as ex:
-        failures.append(ex)
-    except Exception as ex:
+    except InverterError as ex:
         failures.append(ex)
 
     # Probe inverter specific protocols
@@ -502,16 +510,13 @@ async def discover(host: str, port: int = 8899) -> Inverter:
                 i.serial_number,
             )
             return i
-        except asyncio.exceptions.CancelledError as ex:
+        except InverterError as ex:
             failures.append(ex)
-        except Exception as ex:
-            failures.append(ex)
-    msg = (
+    raise InverterError(
         "Unable to connect to the inverter at "
         f"host={host} port={port}, or your inverter is not supported yet.\n"
         f"Failures={str(failures)}"
     )
-    raise RuntimeError(msg)
 
 
 class ET(Inverter):
