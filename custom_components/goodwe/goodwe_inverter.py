@@ -275,6 +275,27 @@ def _read_battery_mode1(data: bytes, offset: int) -> Optional[str]:
     return _BATTERY_MODES_ET.get(_read_byte(data, offset))
 
 
+def _validate_response(data: bytes, response_type: str) -> bool:
+    """
+    Validate the response.
+    data[0:3] is header
+    data[4:5] is response type
+    date[6] is response payload length
+    date[-2:] is checksum (plain sum of response data incl. header)
+    """
+    if (
+        len(data) <= 8
+        or len(data) != data[6] + 9
+        or int(response_type, 16) != _read_bytes2(data[4:6], 0)
+    ):
+        return False
+    else:
+        checksum = 0
+        for each in data[:-2]:
+            checksum += each
+        return checksum == _read_bytes2(data[-2:], 0)
+
+
 class InverterError(Exception):
     """Indicates error communicating with inverter"""
 
@@ -303,12 +324,12 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
     def __init__(
         self,
         request: bytes,
-        response_lenghts: Tuple[int, ...],
+        validator: Callable[[bytes], bool],
         on_response_received: asyncio.futures.Future,
         timeout: int = 2,
     ):
         self.request: bytes = request
-        self.response_lenghts: Tuple[int, ...] = response_lenghts
+        self.validator: Callable[[bytes], bool] = validator
         self.on_response_received: asyncio.futures.Future = on_response_received
         self.transport: asyncio.transports.DatagramTransport
         self.timeout: int = timeout
@@ -328,13 +349,12 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
 
     def datagram_received(self, data: bytes, addr: Tuple[str, int]):
         _LOGGER.debug("Received: '%s'", data.hex())
-        if not self.response_lenghts or len(data) in self.response_lenghts:
+        if self.validator(data):
             self.on_response_received.set_result(data)
             self.transport.close()
         else:
             _LOGGER.debug(
-                "Unexpected response length: expected %s, received: %d",
-                self.response_lenghts,
+                "Invalid response length: %d",
                 len(data),
             )
             self.retry_nr += 1
@@ -359,7 +379,7 @@ class ProtocolCommand(NamedTuple):
     """Definition of inverter protocol command"""
 
     request: bytes
-    expected_response_length: Tuple[int, ...]
+    validator: Callable[[bytes], bool]
 
     async def execute(self, host: str, port: int) -> bytes:
         """
@@ -370,7 +390,7 @@ class ProtocolCommand(NamedTuple):
         on_response_received = loop.create_future()
         transport, _ = await loop.create_datagram_endpoint(
             lambda: _UdpInverterProtocol(
-                self.request, self.expected_response_length, on_response_received
+                self.request, self.validator, on_response_received
             ),
             remote_addr=(host, port),
         )
@@ -430,14 +450,14 @@ class Inverter:
         raise NotImplementedError()
 
     async def send_command(
-        self, command: str, expected_response_length: Tuple[int, ...] = ()
+        self, command: str, validator: Callable[[bytes], bool] = lambda x: True
     ) -> str:
         """
         Send low level udp command (in hex).
         Answer command's raw response data (in hex).
         """
         response = await self._read_from_socket(
-            ProtocolCommand(bytes.fromhex(command), expected_response_length)
+            ProtocolCommand(bytes.fromhex(command), validator)
         )
         return response.hex()
 
@@ -481,7 +501,7 @@ async def discover(host: str, port: int = 8899) -> Inverter:
         _LOGGER.debug("Probing inverter at %s:%s", host, port)
         response = await ProtocolCommand(
             bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
-            (85, 86),
+            lambda x: _validate_response(x, "0182"),
         ).execute(host, port)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
@@ -524,15 +544,15 @@ class ET(Inverter):
 
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1)),
-        (73,),
+        lambda r: len(r) == 73,
     )
     _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7)),
-        (257,),
+        lambda r: len(r) == 257,
     )
     _READ_BATTERY_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1)),
-        (29,),
+        lambda r: len(r) == 29,
     )
 
     __sensors: Tuple[Sensor, ...] = (
@@ -791,15 +811,15 @@ class ES(Inverter):
 
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
-        (85, 86),
+        lambda x: _validate_response(x, "0182"),
     )
     _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45)),
-        (142, 149),
+        lambda x: _validate_response(x, "0186"),
     )
     _SET_WORK_MODE: ProtocolCommand = ProtocolCommand(
         bytes((0xAA, 0x55, 0xC0, 0x7F, 0x03, 0x59, 0x01, 0x00, 0x02, 0x9B)),
-        (10,),
+        lambda x: _validate_response(x, "03D9"),
     )
 
     __sensors: Tuple[Sensor, ...] = (
@@ -1013,9 +1033,7 @@ class ES(Inverter):
             request[7] = work_mode
             request[9] = request[9] + work_mode
             await self._read_from_socket(
-                ProtocolCommand(
-                    bytes(request), self._SET_WORK_MODE.expected_response_length
-                )
+                ProtocolCommand(bytes(request), self._SET_WORK_MODE.validator)
             )
 
     @classmethod
