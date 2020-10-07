@@ -10,8 +10,14 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
-    TEMP_CELSIUS,
     CONF_SCAN_INTERVAL,
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_CURRENT,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_VOLTAGE,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -115,6 +121,7 @@ class InverterEntity(Entity):
         )
         self.inverter = inverter
         self._name_prefix = name_prefix
+        self._uuid = f"{DOMAIN}-{inverter.serial_number}"
         self._value = None
         self._sensor = "ppv"
 
@@ -136,7 +143,7 @@ class InverterEntity(Entity):
     @property
     def unique_id(self):
         """Return unique id."""
-        return f"{DOMAIN}-{self.inverter.serial_number}"
+        return self._uuid
 
     @property
     def name(self):
@@ -162,11 +169,25 @@ class InverterEntity(Entity):
     def device_state_attributes(self):
         """Return the inverter state attributes."""
         data = {
-            "Model": self.inverter.model_name,
-            "Serial number": self.inverter.serial_number,
-            "Software version": self.inverter.software_version,
+            "model": self.inverter.model_name,
+            "serial_number": self.inverter.serial_number,
+            "software_version": self.inverter.software_version,
         }
         return data
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "name": self.name,
+            "identifiers": {
+                (DOMAIN, self.inverter.serial_number),
+                (DOMAIN, self.inverter.host, self.inverter.port),
+            },
+            "model": self.inverter.model_name,
+            "manufacturer": "GoodWe",
+            "sw_version": self.inverter.software_version,
+        }
 
 
 class InverterSensor(Entity):
@@ -182,11 +203,25 @@ class InverterSensor(Entity):
         self._sensor_id = sensor_id
         self._sensor_name = sensor_name
         self._unit = unit
-        if self._unit == "C":
+        if self._unit == "A":
+            self._device_class = DEVICE_CLASS_CURRENT
+        elif self._unit == "V":
+            self._device_class = DEVICE_CLASS_VOLTAGE
+        elif self._unit == "W":
+            self._device_class = DEVICE_CLASS_POWER
+        elif self._unit == "kWh":
+            self._device_class = DEVICE_CLASS_ENERGY
+        elif self._unit == "%" and kind == SensorKind.bat:
+            self._device_class = DEVICE_CLASS_BATTERY
+        elif self._unit == "C":
             self._unit = TEMP_CELSIUS
-        self._icon_name = None
+            self._device_class = DEVICE_CLASS_TEMPERATURE
+        else:
+            self._device_class = None
         if kind is not None:
             self._icon_name = _ICONS[kind]
+        else:
+            self._icon_name = None
         self._value = None
 
     def update_value(self, inverter_response):
@@ -209,6 +244,11 @@ class InverterSensor(Entity):
     def name(self):
         """Name of this inverter attribute."""
         return self._sensor_name
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def unit_of_measurement(self):
