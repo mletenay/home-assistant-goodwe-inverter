@@ -124,6 +124,7 @@ class InverterEntity(Entity):
         self._uuid = f"{DOMAIN}-{inverter.serial_number}"
         self._value = None
         self._sensor = "ppv"
+        self._data = {}
 
     async def set_work_mode(self, work_mode: int):
         """Set the inverter work mode"""
@@ -131,6 +132,7 @@ class InverterEntity(Entity):
 
     def update_value(self, inverter_response):
         """Update the entity value from the response received from inverter"""
+        self._data = inverter_response
         if self._sensor in inverter_response:
             self._value = inverter_response[self._sensor]
             self.async_schedule_update_ha_state()
@@ -164,6 +166,11 @@ class InverterEntity(Entity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def state_attributes(self):
+        """Return the inverter state attributes."""
+        return self._data
 
     @property
     def device_state_attributes(self):
