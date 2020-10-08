@@ -8,15 +8,15 @@ _LOGGER = logging.getLogger(__name__)
 
 _WORK_MODES_ET: Dict[int, str] = {
     0: "Wait Mode",
-    1: "Normal(On-Grid)",
-    2: "Normal(Off-Grid)",
+    1: "Normal (On-Grid)",
+    2: "Normal (Off-Grid)",
     3: "Fault Mode",
     4: "Flash Mode",
     5: "Check Mode",
 }
 
 _BATTERY_MODES_ET: Dict[int, str] = {
-    0: "No battery or battery disconnected",
+    0: "No battery",
     1: "Spare",
     2: "Discharge",
     3: "Charge",
@@ -25,9 +25,9 @@ _BATTERY_MODES_ET: Dict[int, str] = {
 }
 
 _PV_MODES: Dict[int, str] = {
-    0: "Disconnect the inverter and PV panels",
-    1: "No power output PV",
-    2: "Working,PV has a power output",
+    0: "PV panels not connected",
+    1: "PV panels connected, no power",
+    2: "PV panels connected, producing power",
 }
 
 _LOAD_MODES: Dict[int, str] = {
@@ -36,17 +36,17 @@ _LOAD_MODES: Dict[int, str] = {
 }
 
 _WORK_MODES: Dict[int, str] = {
-    0: "Wait for the conditions to generate electricity",
-    1: "The inverter is generating",
-    2: "System abnormalities, while stopping power",
-    3: "System is severely abnormal, 20 seconds after the restart",
+    0: "Waiting",
+    1: "Generating",
+    2: "System anomaly",
+    3: "Malfunction, will restart after 20 seconds",
 }
 
 _ENERGY_MODES: Dict[int, str] = {
     0: "Check Mode",
     1: "Wait Mode",
-    2: "Normal(On-Grid)",
-    4: "Normal(Off-Grid)",
+    2: "Normal (On-Grid)",
+    4: "Normal (Off-Grid)",
     8: "Flash Mode",
     16: "Fault Mode",
     32: "Battery Standby",
@@ -55,9 +55,9 @@ _ENERGY_MODES: Dict[int, str] = {
 }
 
 _GRID_MODES: Dict[int, str] = {
-    0: "Inverter neither send power to grid,nor get power from grid",
-    1: "Inverter sends power to grid",
-    2: "Inverter gets power from grid",
+    0: "Idle",
+    1: "Exporting",
+    2: "Importing",
 }
 
 _SAFETY_COUNTRIES_ET: Dict[int, str] = {
@@ -596,7 +596,9 @@ class ET(Inverter):
             "total_inverter_power", 74, _read_power, "W", "Total Power", SensorKind.ac
         ),
         Sensor("active_power", 78, _read_power, "W", "Active Power", SensorKind.ac),
-        Sensor("grid_in_out", 78, _read_grid_mode, "", "On-grid Mode", SensorKind.ac),
+        Sensor(
+            "grid_in_out", 78, _read_grid_mode, "", "On-grid Mode code", SensorKind.ac
+        ),
         Sensor(
             "grid_in_out_label",
             0,
@@ -684,7 +686,9 @@ class ET(Inverter):
             "Battery Power",
             SensorKind.bat,
         ),
-        Sensor("battery_mode", 168, _read_bytes2, "", "Battery Mode", SensorKind.bat),
+        Sensor(
+            "battery_mode", 168, _read_bytes2, "", "Battery Mode code", SensorKind.bat
+        ),
         Sensor(
             "battery_mode_label",
             168,
@@ -695,7 +699,12 @@ class ET(Inverter):
         ),
         Sensor("xx170", 170, _read_bytes2, "", "Unknown sensor@170", None),
         Sensor(
-            "safety_country", 172, _read_bytes2, "", "Safety Country", SensorKind.ac
+            "safety_country",
+            172,
+            _read_bytes2,
+            "",
+            "Safety Country code",
+            SensorKind.ac,
         ),
         Sensor(
             "safety_country_label",
@@ -705,10 +714,10 @@ class ET(Inverter):
             "Safety Country",
             SensorKind.ac,
         ),
-        Sensor("work_mode", 174, _read_bytes2, "", "Work Mode", None),
+        Sensor("work_mode", 174, _read_bytes2, "", "Work Mode code", None),
         Sensor("work_mode_label", 174, _read_work_mode, "", "Work Mode", None),
         Sensor("xx176", 176, _read_bytes2, "", "Unknown sensor@176", None),
-        Sensor("strwork_mode", 178, _read_bytes4, "", "Error Codes", None),
+        Sensor("strwork_mode", 178, _read_bytes4, "", "Error Codes code", None),
         Sensor("strwork_mode_label", 178, _read_bytes4, "", "Error Codes", None),
         Sensor(
             "e_total", 182, _read_power_k, "kWh", "Total PV Generation", SensorKind.pv
@@ -925,7 +934,7 @@ class ES(Inverter):
             "Battery State of Health",
             SensorKind.bat,
         ),
-        Sensor("battery_mode", 30, _read_byte, "", "Battery Mode", SensorKind.bat),
+        Sensor("battery_mode", 30, _read_byte, "", "Battery Mode code", SensorKind.bat),
         Sensor(
             "battery_mode_label",
             30,
@@ -937,7 +946,7 @@ class ES(Inverter):
         Sensor(
             "battery_warning", 31, _read_bytes2, "", "Battery Warning", SensorKind.bat
         ),
-        Sensor("meter_status", 33, _read_byte, "", "Meter status", SensorKind.ac),
+        Sensor("meter_status", 33, _read_byte, "", "Meter Status code", SensorKind.ac),
         Sensor("vgrid", 34, _read_voltage, "V", "On-grid Voltage", SensorKind.ac),
         Sensor("igrid", 36, _read_current, "A", "On-grid Current", SensorKind.ac),
         Sensor(
@@ -950,15 +959,15 @@ class ES(Inverter):
             SensorKind.ac,
         ),
         Sensor("fgrid", 40, _read_freq, "Hz", "On-grid Frequency", SensorKind.ac),
-        Sensor("grid_mode", 42, _read_byte, "", "Work Mode", SensorKind.ac),
+        Sensor("grid_mode", 42, _read_byte, "", "Work Mode code", SensorKind.ac),
         Sensor("grid_mode_label", 42, _read_work_mode1, "", "Work Mode", SensorKind.ac),
         Sensor("vload", 43, _read_voltage, "V", "Back-up Voltage", SensorKind.ups),
         Sensor("iload", 45, _read_current, "A", "Back-up Current", SensorKind.ups),
         Sensor("pload", 47, _read_power2, "W", "On-grid Power", SensorKind.ac),
         Sensor("fload", 49, _read_freq, "Hz", "Back-up Frequency", SensorKind.ups),
-        Sensor("load_mode", 51, _read_byte, "", "Load Mode", SensorKind.ac),
+        Sensor("load_mode", 51, _read_byte, "", "Load Mode code", SensorKind.ac),
         Sensor("load_mode_label", 51, _read_load_mode1, "", "Load Mode", SensorKind.ac),
-        Sensor("work_mode", 52, _read_byte, "", "Energy Mode", SensorKind.ac),
+        Sensor("work_mode", 52, _read_byte, "", "Energy Mode code", SensorKind.ac),
         Sensor(
             "work_mode_label", 52, _read_energy_mode1, "", "Energy Mode", SensorKind.ac
         ),
@@ -978,7 +987,7 @@ class ES(Inverter):
         Sensor("total_power", 75, _read_power2, "W", "Total Power", None),
         # Effective work mode 77
         # Effective relay control 78-79
-        Sensor("grid_in_out", 80, _read_byte, "", "On-grid Mode", SensorKind.ac),
+        Sensor("grid_in_out", 80, _read_byte, "", "On-grid Mode code", SensorKind.ac),
         Sensor(
             "grid_in_out_label",
             0,
