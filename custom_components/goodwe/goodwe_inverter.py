@@ -717,8 +717,7 @@ class ET(Inverter):
         Sensor("work_mode", 174, _read_bytes2, "", "Work Mode code", None),
         Sensor("work_mode_label", 174, _read_work_mode, "", "Work Mode", None),
         Sensor("xx176", 176, _read_bytes2, "", "Unknown sensor@176", None),
-        Sensor("strwork_mode", 178, _read_bytes4, "", "Error Codes code", None),
-        Sensor("strwork_mode_label", 178, _read_bytes4, "", "Error Codes", None),
+        Sensor("error_codes", 178, _read_bytes4, "", "Error Codes", None),
         Sensor(
             "e_total", 182, _read_power_k, "kWh", "Total PV Generation", SensorKind.pv
         ),
