@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +55,11 @@ _ICONS = {
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    inverter = await discover(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    try:
+        inverter = await discover(config[CONF_IP_ADDRESS], config[CONF_PORT])
+    except InverterError as err:
+        raise PlatformNotReady from err
+
     entity = InverterEntity(inverter, config[CONF_SENSOR_NAME_PREFIX], hass)
 
     refresh_job = InverterRefreshJob(hass, entity)
