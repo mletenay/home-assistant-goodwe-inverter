@@ -554,6 +554,14 @@ class ET(Inverter):
         bytes((0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1)),
         lambda r: len(r) == 29,
     )
+    _GET_WORK_MODE: ProtocolCommand = ProtocolCommand(
+        bytes((0xF7, 0x03, 0xB7, 0x98, 0x00, 0x01, 0x36, 0xC7)),
+        lambda r: len(r) == 9,
+    )
+    _SET_WORK_MODE: ProtocolCommand = ProtocolCommand(
+        bytes((0xF7, 0x06, 0xB7, 0x98, 0x00, 0x00, 0x3B, 0x07)),
+        lambda r: True,
+    )
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 6, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
@@ -819,6 +827,21 @@ class ET(Inverter):
         raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
         data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
         return data
+
+    async def set_work_mode(self, work_mode: int):
+        if work_mode in (0, 1, 2):
+            # modify the work mode parameter at index 7 and checksum at index 8 and 9
+            request = bytearray(self._SET_WORK_MODE.request)
+            request[7] = work_mode
+            if work_mode == 1:
+                request[8] = 0xFA
+                request[9] = 0xC7
+            elif work_mode == 2:
+                request[8] = 0xBA
+                request[9] = 0xC6
+            await self._read_from_socket(
+                ProtocolCommand(bytes(request), self._SET_WORK_MODE.validator)
+            )
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
