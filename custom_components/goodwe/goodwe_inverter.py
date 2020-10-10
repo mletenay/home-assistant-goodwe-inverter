@@ -737,7 +737,7 @@ class ET(Inverter):
             "s_total",
             192,
             _read_power_k2,
-            "kW",
+            "kWh",
             "Total Electricity Sold",
             SensorKind.ac,
         ),
@@ -745,9 +745,8 @@ class ET(Inverter):
         Sensor("xx196", 196, _read_bytes2, "", "Unknown sensor@196", None),
         Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
         Sensor(
-            "s_day", 200, _read_power_k2, "kW", "Today Electricity Sold", SensorKind.ac
+            "s_day", 200, _read_power_k2, "kWh", "Today Electricity Sold", SensorKind.ac
         ),
-        Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
         Sensor("diagnose_result", 240, _read_bytes4, "", "Diag Status", None),
         # ppv1 + ppv2 + pbattery - active_power
         Sensor(
