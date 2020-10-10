@@ -725,9 +725,20 @@ class ET(Inverter):
             "e_day", 186, _read_power_k, "kWh", "Today's PV Generation", SensorKind.pv
         ),
         Sensor("xx190", 190, _read_bytes2, "", "Unknown sensor@190", None),
-        Sensor("xx192", 192, _read_bytes2, "", "Unknown sensor@192", None),
+        Sensor(
+            "s_total",
+            192,
+            _read_power_k2,
+            "kW",
+            "Total Electricity Sold",
+            SensorKind.ac,
+        ),
         Sensor("xx194", 194, _read_bytes2, "", "Unknown sensor@194", None),
         Sensor("xx196", 196, _read_bytes2, "", "Unknown sensor@196", None),
+        Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
+        Sensor(
+            "s_day", 200, _read_power_k2, "kW", "Today Electricity Sold", SensorKind.ac
+        ),
         Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
         Sensor("diagnose_result", 240, _read_bytes4, "", "Diag Status", None),
         # ppv1 + ppv2 + pbattery - active_power
@@ -984,7 +995,9 @@ class ES(Inverter):
         ),
         Sensor("e_load_total", 71, _read_power_k, "kW", "Total Load", None),
         Sensor("total_power", 75, _read_power2, "W", "Total Power", None),
-        # Effective work mode 77
+        Sensor(
+            "effective_work_mode", 77, _read_byte, "", "Effective Work Mode code", None
+        ),
         # Effective relay control 78-79
         Sensor("grid_in_out", 80, _read_byte, "", "On-grid Mode code", SensorKind.ac),
         Sensor(
