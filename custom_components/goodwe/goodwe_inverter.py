@@ -720,8 +720,7 @@ class ET(Inverter):
             "Total Electricity Sold",
             SensorKind.ac,
         ),
-        Sensor("xx194", 194, _read_bytes2, "", "Unknown sensor@194", None),
-        Sensor("xx196", 196, _read_bytes2, "", "Unknown sensor@196", None),
+        Sensor("h_total", 194, _read_bytes4, "", "Hours Total", SensorKind.pv),
         Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
         Sensor(
             "s_day", 200, _read_power_k2, "kWh", "Today Electricity Sold", SensorKind.ac
