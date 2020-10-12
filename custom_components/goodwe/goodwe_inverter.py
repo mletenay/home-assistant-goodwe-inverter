@@ -155,86 +155,65 @@ _SAFETY_COUNTRIES_ET: Dict[int, str] = {
 
 
 def _read_voltage(data: bytes, offset: int) -> float:
-    value = (data[offset] << 8) | data[offset + 1]
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_current(data: bytes, offset: int) -> float:
-    value = (data[offset] << 8) | data[offset + 1]
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     if value > 32768:
-        value = value - 65536
+        value = value - 65535
     return float(value) / 10
 
 
 def _read_power(data: bytes, offset: int) -> int:
-    value = (
-        (data[offset] << 24)
-        | (data[offset + 1] << 16)
-        | (data[offset + 2] << 8)
-        | data[offset + 3]
-    )
+    value = int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
     if value > 32768:
-        value = value - 65536
+        value = value - 65535
     return value
 
 
 def _read_power2(data: bytes, offset: int) -> int:
-    value = (data[offset] << 8) | data[offset + 1]
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     if value > 32768:
-        value = value - 65536
+        value = value - 65535
     return value
 
 
 def _read_power_k(data: bytes, offset: int) -> float:
-    value = (
-        (data[offset] << 24)
-        | (data[offset + 1] << 16)
-        | (data[offset + 2] << 8)
-        | data[offset + 3]
-    )
-    if value > 32768:
-        value = value - 65536
+    value = int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_power_k2(data: bytes, offset: int) -> float:
-    value = (data[offset] << 8) | data[offset + 1]
-    if value > 32768:
-        value = value - 65536
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_freq(data: bytes, offset: int) -> float:
-    value = (data[offset] << 8) | data[offset + 1]
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     return float(value) / 100
 
 
 def _read_temp(data: bytes, offset: int) -> float:
-    value = (data[offset] << 8) | data[offset + 1]
+    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_byte(data: bytes, offset: int) -> int:
-    return data[offset]
+    return int.from_bytes(data[offset : offset + 1], byteorder="big", signed=True)
 
 
 def _read_bytes2(data: bytes, offset: int) -> int:
-    return (data[offset] << 8) | data[offset + 1]
+    return int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
 
 
 def _read_bytes4(data: bytes, offset: int) -> int:
-    return (
-        (data[offset + 0] << 24)
-        | (data[offset + 1] << 16)
-        | (data[offset + 2] << 8)
-        | data[offset + 3]
-    )
+    return int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
 
 
 def _read_grid_mode(data: bytes, offset: int) -> int:
-    value = _read_bytes4(data, offset)
-    if value > 32768:
-        value -= 65535
+    value = _read_power(data, offset)
     if value < -90:
         return 2
     elif value >= 90:
