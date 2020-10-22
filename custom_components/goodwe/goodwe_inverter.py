@@ -990,10 +990,8 @@ class ES(Inverter):
         Sensor(
             "e_day", 67, _read_power_k2, "kWh", "Today's PV Generation", SensorKind.pv
         ),
-        Sensor(
-            "e_load_day", 69, _read_power_k2, "kWh", "Today's Load Consumption", None
-        ),
-        Sensor("e_load_total", 71, _read_power_k, "W", "Total Load", None),
+        Sensor("e_load_day", 69, _read_power_k2, "kWh", "Today's Load", None),
+        Sensor("e_load_total", 71, _read_power_k, "kWh", "Total Load", None),
         Sensor("total_power", 75, _read_power2, "W", "Total Power", None),
         Sensor(
             "effective_work_mode", 77, _read_byte, "", "Effective Work Mode code", None
