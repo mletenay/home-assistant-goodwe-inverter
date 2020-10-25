@@ -469,6 +469,36 @@ class Inverter:
         }
 
 
+async def search_inverters() -> bytes:
+    """Scan the network for inverters
+
+    Raise InverterError if unable to contact any inverter
+    """
+    _LOGGER.debug("Searching inverters by broadcast to port 48899")
+    loop = asyncio.get_running_loop()
+    on_response_received = loop.create_future()
+    transport, _ = await loop.create_datagram_endpoint(
+        lambda: _UdpInverterProtocol(
+            "WIFIKIT-214028-READ".encode("utf-8"),
+            lambda r: True,
+            on_response_received,
+        ),
+        remote_addr=("255.255.255.255", 48899),
+        allow_broadcast=True,
+    )
+    try:
+        await on_response_received
+        result = on_response_received.result()
+        if result is not None:
+            return result
+        else:
+            raise InverterError("No response received to broadcast request")
+    except asyncio.exceptions.CancelledError:
+        raise InverterError("No valid response received to broadcast request") from None
+    finally:
+        transport.close()
+
+
 async def discover(host: str, port: int = 8899) -> Inverter:
     """Contact the inverter at the specified value and answer appropriare Inverter instance
 
