@@ -17,7 +17,7 @@ _WORK_MODES_ET: Dict[int, str] = {
 
 _BATTERY_MODES_ET: Dict[int, str] = {
     0: "No battery",
-    1: "Spare",
+    1: "Standby",
     2: "Discharge",
     3: "Charge",
     4: "To be charged",
@@ -31,15 +31,15 @@ _PV_MODES: Dict[int, str] = {
 }
 
 _LOAD_MODES: Dict[int, str] = {
-    0: "The inverter is connected to a load",
-    1: "Inverter and the load is disconnected",
+    0: "Inverter and the load is disconnected",
+    1: "The inverter is connected to a load",
 }
 
 _WORK_MODES: Dict[int, str] = {
-    0: "Waiting",
-    1: "Generating",
-    2: "System anomaly",
-    3: "Malfunction, will restart after 20 seconds",
+    0: "Inverter Off - Standby",
+    1: "Inverter On",
+    2: "Inverter Abnormal, stopping power",
+    3: "Inverter Severly Abnormal, 20 seconds to restart",
 }
 
 _ENERGY_MODES: Dict[int, str] = {
@@ -1147,11 +1147,11 @@ class ES(Inverter):
 
     async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
         if 0 <= ongrid_battery_dod <= 89:
-            discharge_v = "{:04x}".format(450)
-            discharge_i = "{:04x}".format(1000)
-            dod = 100 - "{:02x}".format(ongrid_battery_dod)
+            discharge_v = "{:04x}".format(1376)
+            discharge_i = "{:04x}".format(256)
+            dod = "{:02x}".format(100 - ongrid_battery_dod)
             await self._read_from_socket(
-                Aa55ProtocolCommand("035205" + discharge_v + discharge_i + dod, "")
+                Aa55ProtocolCommand("023905" + discharge_v + discharge_i + dod, "")
             )
 
     @classmethod
