@@ -489,6 +489,17 @@ class Inverter:
         """
         raise NotImplementedError()
 
+    async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
+        """
+        BEWARE !!!
+        This method modifies On-Grid Battery DoD parameter accessible to installers only.
+        Use with caution and at your own risk !
+
+        Set the On-Grid Battery DoD
+        0% - 89%
+        """
+        raise NotImplementedError()
+
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
         """
@@ -1102,6 +1113,15 @@ class ES(Inverter):
         if work_mode in (0, 1, 2):
             await self._read_from_socket(
                 Aa55ProtocolCommand("035901" + "{:02x}".format(work_mode), "03D9")
+            )
+
+    async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
+        if 0 <= ongrid_battery_dod <= 89:
+            discharge_v = "{:04x}".format(450)
+            discharge_i = "{:04x}".format(1000)
+            dod = "{:02x}".format(ongrid_battery_dod)
+            await self._read_from_socket(
+                Aa55ProtocolCommand("035205" + discharge_v + discharge_i + dod, "")
             )
 
     @classmethod
