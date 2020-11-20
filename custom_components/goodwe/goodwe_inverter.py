@@ -254,27 +254,6 @@ def _read_battery_mode1(data: bytes, offset: int) -> Optional[str]:
     return _BATTERY_MODES_ET.get(_read_byte(data, offset))
 
 
-def _validate_response(data: bytes, response_type: str) -> bool:
-    """
-    Validate the response.
-    data[0:3] is header
-    data[4:5] is response type
-    date[6] is response payload length
-    date[-2:] is checksum (plain sum of response data incl. header)
-    """
-    if (
-        len(data) <= 8
-        or len(data) != data[6] + 9
-        or int(response_type, 16) != _read_bytes2(data[4:6], 0)
-    ):
-        return False
-    else:
-        checksum = 0
-        for each in data[:-2]:
-            checksum += each
-        return checksum == _read_bytes2(data[-2:], 0)
-
-
 class InverterError(Exception):
     """Indicates error communicating with inverter"""
 
@@ -354,11 +333,12 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
             self.transport.close()
 
 
-class ProtocolCommand(NamedTuple):
+class ProtocolCommand:
     """Definition of inverter protocol command"""
 
-    request: bytes
-    validator: Callable[[bytes], bool]
+    def __init__(self, request: bytes, validator: Callable[[bytes], bool]):
+        self.request: bytes = request
+        self.validator: Callable[[bytes], bool] = validator
 
     async def execute(self, host: str, port: int) -> bytes:
         """
@@ -388,6 +368,52 @@ class ProtocolCommand(NamedTuple):
             ) from None
         finally:
             transport.close()
+
+
+class Aa55ProtocolCommand(ProtocolCommand):
+    """
+    Inverter communication protocol based on 0xAA,0x55 kinds of commands.
+    Each comand starts with header of 0xAA, 0x55, 0xC0, 0x7F followed by payload data.
+    It is suffixed with 2 bytes of plain checksum of header+payload.
+    """
+
+    def __init__(self, payload: str, response_type: str):
+        super().__init__(
+            bytes.fromhex(
+                "AA55C07F"
+                + payload
+                + self._checksum(bytes.fromhex("AA55C07F" + payload)).hex()
+            ),
+            lambda x: self._validate_response(x, response_type),
+        )
+
+    @staticmethod
+    def _checksum(data: bytes) -> bytes:
+        checksum = 0
+        for each in data:
+            checksum += each
+        return checksum.to_bytes(2, byteorder="big", signed=False)
+
+    @staticmethod
+    def _validate_response(data: bytes, response_type: str) -> bool:
+        """
+        Validate the response.
+        data[0:3] is header
+        data[4:5] is response type
+        date[6] is response payload length
+        date[-2:] is checksum (plain sum of response data incl. header)
+        """
+        if (
+            len(data) <= 8
+            or len(data) != data[6] + 9
+            or int(response_type, 16) != _read_bytes2(data[4:6], 0)
+        ):
+            return False
+        else:
+            checksum = 0
+            for each in data[:-2]:
+                checksum += each
+            return checksum == _read_bytes2(data[-2:], 0)
 
 
 class Inverter:
@@ -508,10 +534,7 @@ async def discover(host: str, port: int = 8899) -> Inverter:
     # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
     try:
         _LOGGER.debug("Probing inverter at %s:%s", host, port)
-        response = await ProtocolCommand(
-            bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
-            lambda x: _validate_response(x, "0182"),
-        ).execute(host, port)
+        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
         if "ETU" in serial_number:
@@ -858,18 +881,8 @@ class ET(Inverter):
 class ES(Inverter):
     """Class representing inverter of ES/EM family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
-        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x02, 0x00, 0x02, 0x41)),
-        lambda x: _validate_response(x, "0182"),
-    )
-    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ProtocolCommand(
-        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x01, 0x06, 0x00, 0x02, 0x45)),
-        lambda x: _validate_response(x, "0186"),
-    )
-    _SET_WORK_MODE: ProtocolCommand = ProtocolCommand(
-        bytes((0xAA, 0x55, 0xC0, 0x7F, 0x03, 0x59, 0x01, 0x00, 0x02, 0x9B)),
-        lambda x: _validate_response(x, "03D9"),
-    )
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = Aa55ProtocolCommand("010200", "0182")
+    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = Aa55ProtocolCommand("010600", "0186")
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 0, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
@@ -1077,12 +1090,8 @@ class ES(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            # modify the work mode parameter at index 7 and checksum at index 9
-            request = bytearray(self._SET_WORK_MODE.request)
-            request[7] = work_mode
-            request[9] = request[9] + work_mode
             await self._read_from_socket(
-                ProtocolCommand(bytes(request), self._SET_WORK_MODE.validator)
+                Aa55ProtocolCommand("035901" + "{:02x}".format(work_mode), "03D9")
             )
 
     @classmethod
