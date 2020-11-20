@@ -454,6 +454,14 @@ class Inverter:
         """
         raise NotImplementedError()
 
+    async def read_settings_data(self) -> Dict[str, Any]:
+        """
+        Request the settings data from the inverter.
+        Answer dictionary of individual settings and their values.
+        List of supported settings (and their definitions) is provided by settings() method.
+        """
+        raise NotImplementedError()
+
     async def send_command(
         self, command: str, validator: Callable[[bytes], bool] = lambda x: True
     ) -> str:
@@ -504,6 +512,13 @@ class Inverter:
     def sensors(cls) -> Tuple[Sensor, ...]:
         """
         Return tuple of sensor definitions
+        """
+        raise NotImplementedError()
+
+    @classmethod
+    def settings(cls) -> Tuple[Sensor, ...]:
+        """
+        Return tuple of settings definitions
         """
         raise NotImplementedError()
 
@@ -904,6 +919,7 @@ class ES(Inverter):
 
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = Aa55ProtocolCommand("010200", "0182")
     _READ_DEVICE_RUNNING_DATA: ProtocolCommand = Aa55ProtocolCommand("010600", "0186")
+    _READ_DEVICE_SETTINGS_DATA: ProtocolCommand = Aa55ProtocolCommand("010900", "0189")
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 0, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
@@ -1098,6 +1114,15 @@ class ES(Inverter):
         ),
     )
 
+    __settings: Tuple[Sensor, ...] = (
+        Sensor("capacity", 22, _read_bytes2, "", "Capacity", None),
+        Sensor("charge_v", 24, _read_bytes2, "V", "Charge Voltage", None),
+        Sensor("charge_i", 26, _read_bytes2, "A", "Charge Current", None),
+        Sensor("discharge_i", 28, _read_bytes2, "A", "Discharge Current", None),
+        Sensor("discharge_v", 30, _read_bytes2, "V", "Discharge Voltage", None),
+        Sensor("dod", 32, _read_bytes2, "", "Depth of Discharge", None),
+    )
+
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         self.model_name = response[12:22].decode("ascii").rstrip()
@@ -1107,6 +1132,11 @@ class ES(Inverter):
     async def read_runtime_data(self) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
         data = self._map_response(raw_data[7:-2], self.__sensors)
+        return data
+
+    async def read_settings_data(self) -> Dict[str, Any]:
+        raw_data = await self._read_from_socket(self._READ_DEVICE_SETTINGS_DATA)
+        data = self._map_response(raw_data[7:-2], self.__settings)
         return data
 
     async def set_work_mode(self, work_mode: int):
@@ -1127,6 +1157,10 @@ class ES(Inverter):
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
         return cls.__sensors
+
+    @classmethod
+    def settings(cls) -> Tuple[Sensor, ...]:
+        return cls.__settings
 
 
 # registry of supported inverter models
