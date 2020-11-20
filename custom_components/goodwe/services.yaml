@@ -9,3 +9,14 @@ set_work_mode:
     work_mode:
       description: 0 - General mode, 1 - Off grid mode, 2 - Backup mode
       example: "0"
+set_ongrid_battery_dod:
+  description: |
+    USE WITH CAUTION AND AT YOUR OWN RISK !!!
+    This service changes On-Grid Battery DoD accessible to installers only - battery DoD
+  fields:
+    entity_id:
+      description: ID of the inverter entity
+      example: "sensor.goodwe_inverter"
+    ongrid_battery_dod:
+      description: 0 - 89
+      example: "0"

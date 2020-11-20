@@ -31,7 +31,16 @@ ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
 SERVICE_SET_WORK_MODE = "set_work_mode"
 ATTR_WORK_MODE = "work_mode"
 SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_WORK_MODE): cv.positive_int,}
+    {
+        vol.Required(ATTR_WORK_MODE): cv.positive_int,
+    }
+)
+SERVICE_SET_ONGRID_BATTERY_DOD = "set_ongrid_battery_dod"
+ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
+SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,
+    }
 )
 
 CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
@@ -85,6 +94,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         {vol.Required(ATTR_WORK_MODE): vol.Coerce(int)},
         "set_work_mode",
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_ONGRID_BATTERY_DOD,
+        {vol.Required(ATTR_ONGRID_BATTERY_DOD): vol.Coerce(int)},
+        "set_ongrid_battery_dod",
+    )
 
     return True
 
@@ -134,6 +148,10 @@ class InverterEntity(Entity):
     async def set_work_mode(self, work_mode: int):
         """Set the inverter work mode"""
         await self.inverter.set_work_mode(work_mode)
+
+    async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
+        """Set the on grid battery dod"""
+        await self.inverter.set_ongrid_battery_dod(ongrid_battery_dod)
 
     def update_value(self, inverter_response):
         """Update the entity value from the response received from inverter"""

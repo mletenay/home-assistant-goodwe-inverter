@@ -406,7 +406,7 @@ class Aa55ProtocolCommand(ProtocolCommand):
         if (
             len(data) <= 8
             or len(data) != data[6] + 9
-            or int(response_type, 16) != _read_bytes2(data[4:6], 0)
+            or (response_type and int(response_type, 16) != _read_bytes2(data[4:6], 0))
         ):
             return False
         else:
@@ -463,6 +463,16 @@ class Inverter:
         """
         response = await self._read_from_socket(
             ProtocolCommand(bytes.fromhex(command), validator)
+        )
+        return response.hex()
+
+    async def send_aa55_command(self, payload: str, response_type: str = "") -> str:
+        """
+        Send low level udp AA55 type command (payload in hex).
+        Answer command's raw response data (in hex).
+        """
+        response = await self._read_from_socket(
+            Aa55ProtocolCommand(payload, response_type)
         )
         return response.hex()
 
