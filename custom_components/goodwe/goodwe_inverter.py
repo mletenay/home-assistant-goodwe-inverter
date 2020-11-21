@@ -1115,6 +1115,21 @@ class ES(Inverter):
     )
 
     __settings: Tuple[Sensor, ...] = (
+        Sensor(
+            "charge_power_limit", 4, _read_bytes2, "", "Charge Power Limit Value", None
+        ),
+        Sensor(
+            "discharge_power_limit",
+            10,
+            _read_bytes2,
+            "",
+            "Disharge Power Limit Value",
+            None,
+        ),
+        Sensor("relay_control", 13, _read_byte, "", "Relay Control", None),
+        Sensor("off-grid_charge", 15, _read_byte, "", "Off-grid Charge", None),
+        Sensor("shadow_scan", 17, _read_byte, "", "Shadow Scan", None),
+        Sensor("backflow_state", 18, _read_bytes2, "", "Backflow State", None),
         Sensor("capacity", 22, _read_bytes2, "", "Capacity", None),
         Sensor("charge_v", 24, _read_bytes2, "V", "Charge Voltage", None),
         Sensor("charge_i", 26, _read_bytes2, "A", "Charge Current", None),
@@ -1128,6 +1143,15 @@ class ES(Inverter):
             "Depth of Discharge",
             None,
         ),
+        Sensor("battery_activated", 34, _read_bytes2, "", "Battery Activated", None),
+        Sensor("bp_off_grid_charge", 36, _read_bytes2, "", "BP Off-grid Charge", None),
+        Sensor("bp_pv_discharge", 38, _read_bytes2, "", "BP PV Discharge", None),
+        Sensor("bp_bms_protocol", 40, _read_bytes2, "", "BP BMS Protocol", None),
+        Sensor("power_factor", 42, _read_bytes2, "", "Power Factor", None),
+        Sensor("grid_up_limit", 52, _read_bytes2, "", "Grid Up Limit", None),
+        Sensor("soc_protect", 56, _read_bytes2, "", "SoC Protect", None),
+        Sensor("work_mode", 66, _read_bytes2, "", "Work Mode", None),
+        Sensor("grid_quality_check", 68, _read_bytes2, "", "Grid Quality Check", None),
     )
 
     async def read_device_info(self):
