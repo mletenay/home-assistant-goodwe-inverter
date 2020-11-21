@@ -1176,13 +1176,10 @@ class ES(Inverter):
                 Aa55ProtocolCommand("035901" + "{:02x}".format(work_mode), "03D9")
             )
 
-    async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
-        if 0 <= ongrid_battery_dod <= 89:
-            discharge_v = "{:04x}".format(1376)
-            discharge_i = "{:04x}".format(256)
-            dod = "{:02x}".format(100 - ongrid_battery_dod)
+    async def set_ongrid_battery_dod(self, dod: int):
+        if 0 <= dod <= 89:
             await self._read_from_socket(
-                Aa55ProtocolCommand("023905" + discharge_v + discharge_i + dod, "")
+                Aa55ProtocolCommand("023905056001" + "{:04x}".format(100 - dod), "02b9")
             )
 
     @classmethod
