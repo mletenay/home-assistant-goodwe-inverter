@@ -154,6 +154,22 @@ _SAFETY_COUNTRIES_ET: Dict[int, str] = {
 }
 
 
+def _create_crc16_table():
+    """Construct (modbus) CRC-16 table"""
+    table = []
+    for i in range(256):
+        data = i << 1
+        crc = 0
+        for _ in range(8, 0, -1):
+            data >>= 1
+            if (data ^ crc) & 0x0001:
+                crc = (crc >> 1) ^ 0xA001
+            else:
+                crc >>= 1
+        table.append(crc)
+    return tuple(table)
+
+
 def _read_voltage(data: bytes, offset: int) -> float:
     value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
     return float(value) / 10
@@ -416,6 +432,49 @@ class Aa55ProtocolCommand(ProtocolCommand):
             return checksum == _read_bytes2(data[-2:], 0)
 
 
+class EtProtocolCommand(ProtocolCommand):
+    """
+    Inverter communication protocol based on 0xF7 kinds of commands (for ET inverters).
+    Each comand starts with header of 0xF7 followed by payload data.
+    It is suffixed with 2 bytes of Modbus-CRC16 checksum of header+payload.
+    """
+
+    _CRC_16_TABLE = _create_crc16_table()
+
+    def __init__(self, payload: str, response_len: int = 0):
+        super().__init__(
+            bytes.fromhex(
+                "F7" + payload + self._checksum(bytes.fromhex("F7" + payload))
+            ),
+            lambda x: self._validate_response(x, response_len),
+        )
+
+    @classmethod
+    def _checksum(cls, data: bytes) -> str:
+        crc = 0xFFFF
+        for ch in data:
+            crc = (crc >> 8) ^ cls._CRC_16_TABLE[(crc ^ ch) & 0xFF]
+        res = "{:04x}".format(crc)
+        return res[2:] + res[:2]
+
+    @classmethod
+    def _validate_response(cls, data: bytes, response_len: int) -> bool:
+        """
+        Validate the response.
+        data[0:1] is header
+        data[2:3] is response type
+        date[4] is response payload length
+        date[-2:] is crc-16 checksum
+        """
+        if (
+            len(data) <= 4
+            or len(data) != data[4] + 7
+            or (response_len != 0 and response_len != len(data))
+        ):
+            return False
+        return cls._checksum(data[2:-2]) == data[-2:].hex()
+
+
 class Inverter:
     """
     Common superclass for various inverter models implementations.
@@ -610,26 +669,10 @@ async def discover(host: str, port: int = 8899) -> Inverter:
 class ET(Inverter):
     """Class representing inverter of ET family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ProtocolCommand(
-        bytes((0xF7, 0x03, 0x88, 0xB8, 0x00, 0x21, 0x3A, 0xC1)),
-        lambda r: len(r) == 73,
-    )
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ProtocolCommand(
-        bytes((0xF7, 0x03, 0x89, 0x1C, 0x00, 0x7D, 0x7A, 0xE7)),
-        lambda r: len(r) == 257,
-    )
-    _READ_BATTERY_INFO: ProtocolCommand = ProtocolCommand(
-        bytes((0xF7, 0x03, 0x90, 0x88, 0x00, 0x0B, 0xBD, 0xB1)),
-        lambda r: len(r) == 29,
-    )
-    _GET_WORK_MODE: ProtocolCommand = ProtocolCommand(
-        bytes((0xF7, 0x03, 0xB7, 0x98, 0x00, 0x01, 0x36, 0xC7)),
-        lambda r: len(r) == 9,
-    )
-    _SET_WORK_MODE: ProtocolCommand = ProtocolCommand(
-        bytes((0xF7, 0x06, 0xB7, 0x98, 0x00, 0x00, 0x3B, 0x07)),
-        lambda r: True,
-    )
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = EtProtocolCommand("0388b80021", 73)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = EtProtocolCommand("03891c007d", 257)
+    _READ_BATTERY_INFO: ProtocolCommand = EtProtocolCommand("039088000b", 29)
+    _GET_WORK_MODE: ProtocolCommand = EtProtocolCommand("03b7980001", 9)
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 6, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
@@ -896,17 +939,8 @@ class ET(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            # modify the work mode parameter at index 7 and checksum at index 8 and 9
-            request = bytearray(self._SET_WORK_MODE.request)
-            request[7] = work_mode
-            if work_mode == 1:
-                request[8] = 0xFA
-                request[9] = 0xC7
-            elif work_mode == 2:
-                request[8] = 0xBA
-                request[9] = 0xC6
             await self._read_from_socket(
-                ProtocolCommand(bytes(request), self._SET_WORK_MODE.validator)
+                EtProtocolCommand("06b798" + "{:04x}".format(work_mode))
             )
 
     @classmethod
