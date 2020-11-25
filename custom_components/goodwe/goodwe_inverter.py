@@ -416,8 +416,8 @@ class Aa55ProtocolCommand(ProtocolCommand):
         Validate the response.
         data[0:3] is header
         data[4:5] is response type
-        date[6] is response payload length
-        date[-2:] is checksum (plain sum of response data incl. header)
+        data[6] is response payload length
+        data[-2:] is checksum (plain sum of response data incl. header)
         """
         if (
             len(data) <= 8
@@ -463,14 +463,10 @@ class EtProtocolCommand(ProtocolCommand):
         Validate the response.
         data[0:1] is header
         data[2:3] is response type
-        date[4] is response payload length
-        date[-2:] is crc-16 checksum
+        data[4] is response payload length ??
+        data[-2:] is crc-16 checksum
         """
-        if (
-            len(data) <= 4
-            or len(data) != data[4] + 7
-            or (response_len != 0 and response_len != len(data))
-        ):
+        if len(data) <= 4 or (response_len != 0 and response_len != len(data)):
             return False
         return cls._checksum(data[2:-2]) == data[-2:].hex()
 
@@ -941,6 +937,12 @@ class ET(Inverter):
         if work_mode in (0, 1, 2):
             await self._read_from_socket(
                 EtProtocolCommand("06b798" + "{:04x}".format(work_mode))
+            )
+
+    async def set_ongrid_battery_dod(self, dod: int):
+        if 0 <= dod <= 89:
+            await self._read_from_socket(
+                EtProtocolCommand("06b12c" + "{:04x}".format(100 - dod), 10)
             )
 
     @classmethod
