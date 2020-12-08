@@ -123,8 +123,9 @@ class InverterRefreshJob:
             self.ready.set()
         except InverterError as ex:
             _LOGGER.warning("Could not retrieve data from inverter: %s", ex)
+            inverter_response = {}
             self.ready.clear()
-            return
+
         self.entity.update_value(inverter_response)
         for sensor in self.sensors:
             sensor.update_value(inverter_response)
@@ -158,7 +159,9 @@ class InverterEntity(Entity):
         self._data = inverter_response
         if self._sensor in inverter_response:
             self._value = inverter_response[self._sensor]
-            self.async_schedule_update_ha_state()
+        else:
+            self._value = None
+        self.async_schedule_update_ha_state()
 
     @property
     def state(self):
@@ -258,7 +261,9 @@ class InverterSensor(Entity):
         """Update the sensor value from the response received from inverter"""
         if self._sensor_id in inverter_response:
             self._value = inverter_response[self._sensor_id]
-            self.async_schedule_update_ha_state()
+        else:
+            self._value = None
+        self.async_schedule_update_ha_state()
 
     @property
     def state(self):
