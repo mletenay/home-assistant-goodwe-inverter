@@ -46,6 +46,77 @@ sensor:
 
 The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
 
+## Cumulative energy values
+
+The sensor values reported by the inverter are instant measurements.  
+To report summary values like daily/monthly sell or buy (in kWh), these values have to be aggregated over time.  
+(The only exception are the "total/daily" sensors like `e_total`, `e_day` where the inverter itselfs keeps intenal counters.)
+
+[Riemann Sum](https://www.home-assistant.io/integrations/integration/) integration can be used to convert these instant (W) values into cumulative values (Wh).  
+[Utility Meter](https://www.home-assistant.io/integrations/utility_meter) can report these values as human readable statistical values.  
+[Template Sensor](https://www.home-assistant.io/integrations/template/) can be used to separate buy and sell values.
+
+```YAML
+sensor:
+  - platform: template
+    sensors:
+      # Template sensor for values of energy bought (active_power < 0)
+      energy_buy:
+        friendly_name: "Energy Buy"
+        unit_of_measurement: 'W'
+        value_template: >-
+          {% if states('sensor.goodwe_active_power')|float < 0 %}
+            {{ states('sensor.goodwe_active_power')|float * -1 }}
+          {% else %}
+            {{ 0 }}
+          {% endif %}
+      # Template sensor for values of energy sold (active_power > 0)
+      energy_sell:
+        friendly_name: "Energy Sell"
+        unit_of_measurement: 'W'
+        value_template: >-
+          {% if states('sensor.goodwe_active_power')|float > 0 %}
+            {{ states('sensor.goodwe_active_power')|float }}
+          {% else %}
+            {{ 0 }}
+          {% endif %}
+
+  # Sensor for Riemann sum of energy bought (W -> Wh)
+  - platform: integration
+    source: sensor.energy_buy
+    name: energy_buy_sum
+    unit_prefix: k
+    round: 1
+    method: left
+  # Sensor for Riemann sum of energy sold (W -> Wh)
+  - platform: integration
+    source: sensor.energy_sell
+    name: energy_sell_sum
+    unit_prefix: k
+    round: 1
+    method: left
+
+utility_meter:
+  energy_buy_daily:
+    source: sensor.energy_buy_sum
+    cycle: daily
+  energy_buy_monthly:
+    source: sensor.energy_buy_sum
+    cycle: monthly
+  energy_sell_daily:
+    source: sensor.energy_sell_sum
+    cycle: daily
+  energy_sell_monthly:
+    source: sensor.energy_sell_sum
+    cycle: monthly
+  house_consumption_daily:
+    source: sensor.house_consumption_sum
+    cycle: daily
+  house_consumption_monthly:
+    source: sensor.house_consumption_sum
+    cycle: monthly
+```
+
 ## Inverter communication testing
 
 To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script
