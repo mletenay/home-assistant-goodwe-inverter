@@ -667,6 +667,7 @@ class ET(Inverter):
 
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = EtProtocolCommand("0388b80021", 73)
     _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = EtProtocolCommand("03891c007d", 257)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = EtProtocolCommand("038ca00011", 41)
     _READ_BATTERY_INFO: ProtocolCommand = EtProtocolCommand("039088000b", 29)
     _GET_WORK_MODE: ProtocolCommand = EtProtocolCommand("03b7980001", 9)
 
@@ -916,7 +917,27 @@ class ET(Inverter):
         ),
         Sensor(
             "battery_warning", 20, _read_bytes2, "", "Battery Warning", SensorKind.bat
-        ),
+        ),        
+    )
+
+    __sensors2: Tuple[Sensor, ...] = (
+        Sensor("xxx0", 0, _read_bytes2, "", "Unknown sensor2@0", None),
+        Sensor("xxx2", 2, _read_bytes2, "", "Unknown sensor2@2", None),
+        Sensor("xxx4", 4, _read_bytes2, "", "Unknown sensor2@4", None),
+        Sensor("xxx6", 6, _read_bytes2, "", "Unknown sensor2@6", None),
+        Sensor("xxx8", 8, _read_bytes2, "", "Unknown sensor2@8", None),
+        Sensor("xxx10", 10, _read_bytes2, "", "Unknown sensor2@10", None),
+        Sensor("xxx12", 12, _read_bytes2, "", "Unknown sensor2@12", None),
+        Sensor("xxx14", 14, _read_bytes2, "", "Unknown sensor2@14", None),
+        Sensor("xxx16", 16, _read_bytes2, "", "Unknown sensor2@16", None),
+        Sensor("xxx18", 18, _read_bytes2, "", "Unknown sensor2@18", None),
+        Sensor("xxx20", 20, _read_bytes2, "", "Unknown sensor2@20", None),
+        Sensor("xxx22", 22, _read_bytes2, "", "Unknown sensor2@22", None),
+        Sensor("xxx24", 24, _read_bytes2, "", "Unknown sensor2@24", None),
+        Sensor("xxx26", 26, _read_bytes2, "", "Unknown sensor2@26", None),
+        Sensor("xxx28", 28, _read_bytes2, "", "Unknown sensor2@28", None),
+        Sensor("xxx30", 30, _read_bytes2, "", "Unknown sensor2@30", None),
+        Sensor("xxx32", 32, _read_bytes2, "", "Unknown sensor2@32", None),
     )
 
     async def read_device_info(self):
@@ -931,6 +952,8 @@ class ET(Inverter):
         data = self._map_response(raw_data[5:-2], self.__sensors)
         raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
         data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
+        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
+        data.update(self._map_response(raw_data[5:-2], self.__sensors2))
         return data
 
     async def set_work_mode(self, work_mode: int):
@@ -947,7 +970,7 @@ class ET(Inverter):
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors + cls.__sensors_battery
+        return cls.__sensors + cls.__sensors_battery + cls.__sensors2
 
 
 class ES(Inverter):
