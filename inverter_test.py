@@ -14,16 +14,20 @@ logging.basicConfig(
 # Set the appropriate IP address
 IP_ADDRESS = "192.168.1.14"
 
-inverter = asyncio.run(inverter.discover(IP_ADDRESS, 8899))
+PORT = 8899
+TIMEOUT = 2
+RETRIES = 3
+
+inverter = asyncio.run(inverter.discover(IP_ADDRESS, PORT, TIMEOUT, RETRIES))
 response = asyncio.run(inverter.read_runtime_data())
 
 for (sensor, _, _, unit, name, _) in inverter.sensors():
     print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
 
-response = asyncio.run(inverter.read_settings_data())
+#response = asyncio.run(inverter.read_settings_data())
 
-for (sensor, _, _, unit, name, _) in inverter.settings():
-    print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
+#for (sensor, _, _, unit, name, _) in inverter.settings():
+#    print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
 
 # print(asyncio.run(inverter.send_command("F703B798000136C7")))
 # Read settings

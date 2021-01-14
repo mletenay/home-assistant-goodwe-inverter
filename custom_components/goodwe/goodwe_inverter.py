@@ -301,12 +301,14 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
         validator: Callable[[bytes], bool],
         on_response_received: asyncio.futures.Future,
         timeout: int = 2,
+        retries: int = 3
     ):
         self.request: bytes = request
         self.validator: Callable[[bytes], bool] = validator
         self.on_response_received: asyncio.futures.Future = on_response_received
         self.transport: asyncio.transports.DatagramTransport
         self.timeout: int = timeout
+        self.retries: int = retries
         self.retry_nr: int = 1
 
     def connection_made(self, transport: asyncio.transports.DatagramTransport):
@@ -340,7 +342,7 @@ class _UdpInverterProtocol(asyncio.DatagramProtocol):
     def _timeout_heartbeat(self):
         if self.on_response_received.done():
             self.transport.close()
-        elif self.retry_nr < 4:
+        elif self.retry_nr <= self.retries:
             _LOGGER.debug("Re-try #%d", self.retry_nr)
             self.retry_nr += 1
             self.connection_made(self.transport)
@@ -356,16 +358,19 @@ class ProtocolCommand:
         self.request: bytes = request
         self.validator: Callable[[bytes], bool] = validator
 
-    async def execute(self, host: str, port: int) -> bytes:
+    async def execute(self, host: str, port: int, timeout: int = 2, retries: int = 3) -> bytes:
         """
         Execute the udp protocol command on the specified address/port.
+        Since the UDP communication is by definition unreliable, when no (valid) response is received by specified timeout, 
+        the command will be re-tried up to retries times.  
+
         Return raw response data
         """
         loop = asyncio.get_running_loop()
         on_response_received = loop.create_future()
         transport, _ = await loop.create_datagram_endpoint(
             lambda: _UdpInverterProtocol(
-                self.request, self.validator, on_response_received
+                self.request, self.validator, on_response_received, timeout, retries
             ),
             remote_addr=(host, port),
         )
@@ -481,18 +486,22 @@ class Inverter:
         self,
         host: str,
         port: int,
+        timeout: int = 2,
+        retries: int = 3,
         model_name: str = "",
         serial_number: str = "",
         software_version: str = "",
     ):
         self.host = host
         self.port = port
+        self.timeout = timeout
+        self.retries = retries
         self.model_name = model_name
         self.serial_number = serial_number
         self.software_version = software_version
 
     async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
-        return await command.execute(self.host, self.port)
+        return await command.execute(self.host, self.port, self.timeout, self.retries)
 
     async def read_device_info(self):
         """
@@ -616,7 +625,7 @@ async def search_inverters() -> bytes:
         transport.close()
 
 
-async def discover(host: str, port: int = 8899) -> Inverter:
+async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified value and answer appropriare Inverter instance
 
     Raise InverterError if unable to contact or recognise supported inverter
@@ -625,24 +634,24 @@ async def discover(host: str, port: int = 8899) -> Inverter:
     # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
     try:
         _LOGGER.debug("Probing inverter at %s:%s", host, port)
-        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port)
+        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
         if "ETU" in serial_number:
             software_version = response[71:83].decode("ascii").strip()
             _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
-            return ET(host, port, model_name, serial_number, software_version)
+            return ET(host, port, timeout, retries, model_name, serial_number, software_version)
         else:
             software_version = response[58:70].decode("ascii").strip()
             # arm_version = response[71:83].decode("ascii").strip()
             _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
-            return ES(host, port, model_name, serial_number, software_version)
+            return ES(host, port, timeout, retries, model_name, serial_number, software_version)
     except InverterError as ex:
         failures.append(ex)
 
     # Probe inverter specific protocols
     for inverter in REGISTRY:
-        i = inverter(host, port)
+        i = inverter(host, port, timeout, retries)
         try:
             _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
             await i.read_device_info()
