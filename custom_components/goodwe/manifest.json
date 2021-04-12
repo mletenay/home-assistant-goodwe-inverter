@@ -7,5 +7,6 @@
   "codeowners": [
     "@mletenay"
   ],
-  "requirements": []
+  "requirements": [],
+  "version": "1.0.0"
 }
