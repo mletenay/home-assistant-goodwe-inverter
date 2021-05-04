@@ -19,6 +19,12 @@ TIMEOUT = 2
 RETRIES = 3
 
 inverter = asyncio.run(inverter.discover(IP_ADDRESS, PORT, TIMEOUT, RETRIES))
+print(f"Identified inverter\n"
+      f"- Model: {inverter.model_name}\n"
+      f"- SerialNr: {inverter.serial_number}\n"
+      f"- Version: {inverter.software_version}"
+      )
+
 response = asyncio.run(inverter.read_runtime_data())
 
 for (sensor, _, _, unit, name, _) in inverter.sensors():

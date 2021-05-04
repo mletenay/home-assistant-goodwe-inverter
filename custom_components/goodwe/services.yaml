@@ -7,7 +7,7 @@ set_work_mode:
       description: ID of the inverter entity
       example: "sensor.goodwe_inverter"
     work_mode:
-      description: 0 - General mode, 1 - Off grid mode, 2 - Backup mode
+      description: 0 - General mode, 1 - Off grid mode, 2 - Backup mode, 3 - Wait mode
       example: "0"
 set_ongrid_battery_dod:
   description: |
