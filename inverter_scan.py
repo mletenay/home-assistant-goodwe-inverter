@@ -45,7 +45,7 @@ print(f"Located inverter at IP: {result[0]}, mac: {result[1]}, name: {result[2]}
 
 # EM/ES
 try_command("AA55C07F0102000241", result[0])
-# SolarGo ?
+# DT (SolarGo)
 try_command("7F03753100280409", result[0])
 # Omnik v5 ?
 try_command("197d0001000dff045e50303036564657f6e60d", result[0])
