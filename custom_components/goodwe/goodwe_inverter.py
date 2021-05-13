@@ -394,7 +394,7 @@ class ProtocolCommand:
                 raise InverterError(
                     "No response received to '" + self.request.hex() + "' request"
                 )
-        except asyncio.exceptions.CancelledError:
+        except asyncio.CancelledError:
             raise InverterError(
                 "No valid response received to '" + self.request.hex() + "' request"
             ) from None
@@ -628,7 +628,7 @@ async def search_inverters() -> bytes:
             return result
         else:
             raise InverterError("No response received to broadcast request")
-    except asyncio.exceptions.CancelledError:
+    except asyncio.CancelledError:
         raise InverterError("No valid response received to broadcast request") from None
     finally:
         transport.close()
