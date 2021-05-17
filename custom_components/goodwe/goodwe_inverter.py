@@ -1326,7 +1326,7 @@ class DT(Inverter):
         Sensor(
             "pgrid2",
             0,
-            lambda data, _: round(_read_voltage(data, 36) * _read_current(data, 42)),
+            lambda data, _: round(_read_voltage(data, 38) * _read_current(data, 44)),
             "W",
             "On-grid L2 Power",
             SensorKind.ac,
@@ -1334,7 +1334,7 @@ class DT(Inverter):
         Sensor(
             "pgrid3",
             0,
-            lambda data, _: round(_read_voltage(data, 36) * _read_current(data, 42)),
+            lambda data, _: round(_read_voltage(data, 40) * _read_current(data, 46)),
             "W",
             "On-grid L3 Power",
             SensorKind.ac,
