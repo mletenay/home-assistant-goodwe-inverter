@@ -1568,10 +1568,10 @@ class EH(Inverter):
     async def read_runtime_data(self) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
         data = self._map_response(raw_data[5:-2], self.__sensors)
-        raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
-        data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
-        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
-        data.update(self._map_response(raw_data[5:-2], self.__sensors2))
+        # raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
+        # data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
+        # raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
+        # data.update(self._map_response(raw_data[5:-2], self.__sensors2))
         return data
 
     async def set_work_mode(self, work_mode: int):
