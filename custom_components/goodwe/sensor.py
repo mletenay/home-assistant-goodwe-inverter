@@ -3,6 +3,7 @@ import asyncio
 import logging
 import voluptuous as vol
 from datetime import timedelta
+
 from .goodwe_inverter import discover, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -23,6 +24,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util.dt import utc_from_timestamp
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -239,6 +242,8 @@ class InverterSensor(Entity):
         self._uid = uid
         self._sensor_id = sensor_id
         self._sensor_name = sensor_name
+        self._last_reset = utc_from_timestamp(0)
+        self._state_class = "measurement"
         self._unit = unit
         if self._unit == "A":
             self._device_class = DEVICE_CLASS_CURRENT
@@ -248,6 +253,7 @@ class InverterSensor(Entity):
             self._device_class = DEVICE_CLASS_POWER
         elif self._unit == "kWh":
             self._device_class = DEVICE_CLASS_ENERGY
+            
         elif self._unit == "%" and kind == SensorKind.bat:
             self._device_class = DEVICE_CLASS_BATTERY
         elif self._unit == "C":
@@ -288,6 +294,16 @@ class InverterSensor(Entity):
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
+
+    @property
+    def state_class(self):
+        """Return the state class of the sensor."""
+        return self._state_class
+
+    @property
+    def last_reset(self):
+        """Return the last reset of the measurement"""
+        return self._last_reset
 
     @property
     def unit_of_measurement(self):
