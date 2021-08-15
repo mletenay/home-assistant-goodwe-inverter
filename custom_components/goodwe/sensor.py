@@ -7,7 +7,10 @@ from datetime import timedelta
 from .goodwe_inverter import discover, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT
+    )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
@@ -242,8 +245,8 @@ class InverterSensor(Entity):
         self._uid = uid
         self._sensor_id = sensor_id
         self._sensor_name = sensor_name
-        self._last_reset = utc_from_timestamp(0)
-        self._state_class = "measurement"
+        # self._last_reset = utc_from_timestamp(0)
+        # self._state_class = STATE_CLASS_MEASUREMENT
         self._unit = unit
         if self._unit == "A":
             self._device_class = DEVICE_CLASS_CURRENT
