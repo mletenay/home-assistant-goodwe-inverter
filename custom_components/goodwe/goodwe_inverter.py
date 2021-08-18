@@ -1449,7 +1449,7 @@ class DT(Inverter):
 class EH(Inverter):
     """Class representing inverter of EH family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("F70388b800213AC1", 73)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("F70388b800213AC1", 146)
     _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusProtocolCommand("F703891c007d7ae7", 257)
     _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusProtocolCommand("F7038ca0001b3be5", 61)
     _READ_BATTERY_INFO: ProtocolCommand = ModbusProtocolCommand("F7039088000bbdb1", 29)
