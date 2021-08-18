@@ -3,7 +3,7 @@
 # GoodWe solar inverter sensors for Home Assistant
 
 The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.  
-It has been tested on GoodWe ET, ES and EM families of inverters.  
+It has been tested on GoodWe ET, ES, EM and EH families of inverters.  
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
 The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).

@@ -178,61 +178,61 @@ def _create_crc16_table():
 
 
 def _read_voltage(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_current(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return float(value) / 10
 
 
 def _read_power(data: bytes, offset: int) -> int:
-    value = int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 4], byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return value
 
 
 def _read_power2(data: bytes, offset: int) -> int:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return value
 
 
 def _read_power_k(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 4], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_power_k2(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_freq(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     return float(value) / 100
 
 
 def _read_temp(data: bytes, offset: int) -> float:
-    value = int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    value = int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
     return float(value) / 10
 
 
 def _read_byte(data: bytes, offset: int) -> int:
-    return int.from_bytes(data[offset : offset + 1], byteorder="big", signed=True)
+    return int.from_bytes(data[offset: offset + 1], byteorder="big", signed=True)
 
 
 def _read_bytes2(data: bytes, offset: int) -> int:
-    return int.from_bytes(data[offset : offset + 2], byteorder="big", signed=True)
+    return int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
 
 
 def _read_bytes4(data: bytes, offset: int) -> int:
-    return int.from_bytes(data[offset : offset + 4], byteorder="big", signed=True)
+    return int.from_bytes(data[offset: offset + 4], byteorder="big", signed=True)
 
 
 def _read_grid_mode(data: bytes, offset: int) -> int:
@@ -307,12 +307,12 @@ class Sensor(NamedTuple):
 
 class _UdpInverterProtocol(asyncio.DatagramProtocol):
     def __init__(
-        self,
-        request: bytes,
-        validator: Callable[[bytes], bool],
-        on_response_received: asyncio.futures.Future,
-        timeout: int = 2,
-        retries: int = 3
+            self,
+            request: bytes,
+            validator: Callable[[bytes], bool],
+            on_response_received: asyncio.futures.Future,
+            timeout: int = 2,
+            retries: int = 3
     ):
         self.request: bytes = request
         self.validator: Callable[[bytes], bool] = validator
@@ -372,8 +372,8 @@ class ProtocolCommand:
     async def execute(self, host: str, port: int, timeout: int = 2, retries: int = 3) -> bytes:
         """
         Execute the udp protocol command on the specified address/port.
-        Since the UDP communication is by definition unreliable, when no (valid) response is received by specified timeout, 
-        the command will be re-tried up to retries times.  
+        Since the UDP communication is by definition unreliable, when no (valid) response is received by specified
+        timeout, the command will be re-tried up to retries times.
 
         Return raw response data
         """
@@ -436,9 +436,9 @@ class Aa55ProtocolCommand(ProtocolCommand):
         data[-2:] is checksum (plain sum of response data incl. header)
         """
         if (
-            len(data) <= 8
-            or len(data) != data[6] + 9
-            or (response_type and int(response_type, 16) != _read_bytes2(data[4:6], 0))
+                len(data) <= 8
+                or len(data) != data[6] + 9
+                or (response_type and int(response_type, 16) != _read_bytes2(data[4:6], 0))
         ):
             return False
         else:
@@ -492,14 +492,14 @@ class Inverter:
     """
 
     def __init__(
-        self,
-        host: str,
-        port: int,
-        timeout: int = 2,
-        retries: int = 3,
-        model_name: str = "",
-        serial_number: str = "",
-        software_version: str = "",
+            self,
+            host: str,
+            port: int,
+            timeout: int = 2,
+            retries: int = 3,
+            model_name: str = "",
+            serial_number: str = "",
+            software_version: str = "",
     ):
         self.host = host
         self.port = port
@@ -536,7 +536,7 @@ class Inverter:
         raise NotImplementedError()
 
     async def send_command(
-        self, command: str, validator: Callable[[bytes], bool] = lambda x: True
+            self, command: str, validator: Callable[[bytes], bool] = lambda x: True
     ) -> str:
         """
         Send low level udp command (in hex).
@@ -640,7 +640,8 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
     Raise InverterError if unable to contact or recognise supported inverter
     """
     failures = []
-    if ET in REGISTRY or ES in REGISTRY:
+
+    if ET in REGISTRY or ES in REGISTRY or EH in REGISTRY:
         # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
         try:
             _LOGGER.debug("Probing inverter at %s:%s", host, port)
@@ -651,11 +652,17 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
                 software_version = response[71:83].decode("ascii").strip()
                 _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
                 return ET(host, port, timeout, retries, model_name, serial_number, software_version)
-            else:
+            elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
                 software_version = response[58:70].decode("ascii").strip()
                 # arm_version = response[71:83].decode("ascii").strip()
                 _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
                 return ES(host, port, timeout, retries, model_name, serial_number, software_version)
+            elif "EHU" in serial_number:  # TODO: check if version is correct
+                software_version = response[54:66].decode("ascii")
+                _LOGGER.debug("Detected EH inverter %s, S/N:%s", model_name, serial_number)
+                return EH(host, port, timeout, retries, model_name, serial_number, software_version)
+            else:
+                raise NameError("No compatible inverter found")
         except InverterError as ex:
             failures.append(ex)
 
@@ -786,8 +793,8 @@ class ET(Inverter):
             "load_ptotal",
             0,
             lambda data, _: _read_power(data, 126)
-            + _read_power(data, 130)
-            + _read_power(data, 134),
+                            + _read_power(data, 130)
+                            + _read_power(data, 134),
             "W",
             "Load Total",
             SensorKind.ac,
@@ -879,9 +886,9 @@ class ET(Inverter):
             "house_consumption",
             0,
             lambda data, _: _read_power(data, 10)
-            + _read_power(data, 18)
-            + round(_read_voltage(data, 160) * _read_current(data, 162))
-            - _read_power(data, 78),
+                            + _read_power(data, 18)
+                            + round(_read_voltage(data, 160) * _read_current(data, 162))
+                            - _read_power(data, 78),
             "W",
             "House Comsumption",
             SensorKind.ac,
@@ -936,7 +943,7 @@ class ET(Inverter):
         ),
         Sensor(
             "battery_warning", 20, _read_bytes2, "", "Battery Warning", SensorKind.bat
-        ),        
+        ),
     )
 
     __sensors2: Tuple[Sensor, ...] = (
@@ -1028,7 +1035,7 @@ class ES(Inverter):
             "ppv",
             0,
             lambda data, _: round(_read_voltage(data, 0) * _read_current(data, 2))
-            + round(_read_voltage(data, 5) * _read_current(data, 7)),
+                            + round(_read_voltage(data, 5) * _read_current(data, 7)),
             "W",
             "PV Power",
             SensorKind.pv,
@@ -1048,7 +1055,7 @@ class ES(Inverter):
             "ibattery1",
             18,
             lambda data, _: abs(_read_current(data, 18))
-            * (-1 if _read_byte(data, 30) == 3 else 1),
+                            * (-1 if _read_byte(data, 30) == 3 else 1),
             "A",
             "Battery Current",
             SensorKind.bat,
@@ -1060,7 +1067,7 @@ class ES(Inverter):
             lambda data, _: abs(
                 round(_read_voltage(data, 10) * _read_current(data, 18))
             )
-            * (-1 if _read_byte(data, 30) == 3 else 1),
+                            * (-1 if _read_byte(data, 30) == 3 else 1),
             "W",
             "Battery Power",
             SensorKind.bat,
@@ -1121,7 +1128,7 @@ class ES(Inverter):
             "pgrid",
             38,
             lambda data, _: abs(_read_power2(data, 38))
-            * (-1 if _read_byte(data, 80) == 2 else 1),
+                            * (-1 if _read_byte(data, 80) == 2 else 1),
             "W",
             "On-grid Export Power",
             SensorKind.ac,
@@ -1180,12 +1187,12 @@ class ES(Inverter):
             "house_consumption",
             0,
             lambda data, _: round(_read_voltage(data, 0) * _read_current(data, 2))
-            + round(_read_voltage(data, 5) * _read_current(data, 7))
-            + (
-                abs(round(_read_voltage(data, 10) * _read_current(data, 18)))
-                * (-1 if _read_byte(data, 30) == 3 else 1)
-            )
-            - (abs(_read_power2(data, 38)) * (-1 if _read_byte(data, 80) == 2 else 1)),
+                            + round(_read_voltage(data, 5) * _read_current(data, 7))
+                            + (
+                                    abs(round(_read_voltage(data, 10) * _read_current(data, 18)))
+                                    * (-1 if _read_byte(data, 30) == 3 else 1)
+                            )
+                            - (abs(_read_power2(data, 38)) * (-1 if _read_byte(data, 80) == 2 else 1)),
             "W",
             "House Comsumption",
             SensorKind.ac,
@@ -1439,5 +1446,154 @@ class DT(Inverter):
         return cls.__sensors
 
 
+class EH(Inverter):
+    """Class representing inverter of EH family"""
+
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("F70388b800213AC1", 146)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusProtocolCommand("F703891c007d7ae7", 257)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusProtocolCommand("F7038ca0001b3be5", 61)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusProtocolCommand("F7039088000bbdb1", 29)
+    _GET_WORK_MODE: ProtocolCommand = ModbusProtocolCommand("F703b798000136c7", 9)
+
+    __sensors: Tuple[Sensor, ...] = (
+        Sensor("vpv1", 6, _read_voltage, "V", "PV1 Voltage", SensorKind.pv),
+        Sensor("ipv1", 8, _read_current, "A", "PV1 Current", SensorKind.pv),
+        Sensor("ppv1", 10, _read_power, "W", "PV1 Power", SensorKind.pv),
+        Sensor("vpv2", 14, _read_voltage, "V", "PV2 Voltage", SensorKind.pv),
+        Sensor("ipv2", 16, _read_current, "A", "PV2 Current", SensorKind.pv),
+        Sensor("ppv2", 18, _read_power, "W", "PV2 Power", SensorKind.pv),
+        # Sensor("vpv3", 22, _read_voltage, "V", "PV3 Voltage", SensorKind.pv),
+        # Sensor("ipv3", 24, _read_current, "A", "PV3 Current", SensorKind.pv),
+        # Sensor("ppv3", 26, _read_power, "W", "PV3 Power", SensorKind.pv),
+        # Sensor("vpv4", 30, _read_voltage, "V", "PV4 Voltage", SensorKind.pv),
+        # Sensor("ipv4", 32, _read_current, "A", "PV4 Current", SensorKind.pv),
+        # Sensor("ppv4", 34, _read_power, "W", "PV4 Power", SensorKind.pv),
+        # ppv1 + ppv2 + ppv3 + ppv4
+        Sensor("ppv", 0, lambda data, _: _read_power(data, 10) + _read_power(data, 18), "W", "PV Power",
+               SensorKind.pv, ),
+        Sensor("xx38", 38, _read_bytes2, "", "Unknown sensor@38", None),
+        Sensor("xx40", 40, _read_bytes2, "", "Unknown sensor@40", None),
+        Sensor("vgrid", 42, _read_voltage, "V", "On-grid L1 Voltage", SensorKind.ac),
+        Sensor("igrid", 44, _read_current, "A", "On-grid L1 Current", SensorKind.ac),
+        Sensor("fgrid", 46, _read_freq, "Hz", "On-grid L1 Frequency", SensorKind.ac),
+        Sensor("pgrid", 48, _read_power, "W", "On-grid L1 Power", SensorKind.ac),
+        # Sensor("vgrid2", 52, _read_voltage, "V", "On-grid L2 Voltage", SensorKind.ac),
+        # Sensor("igrid2", 54, _read_current, "A", "On-grid L2 Current", SensorKind.ac),
+        # Sensor("fgrid2", 56, _read_freq, "Hz", "On-grid L2 Frequency", SensorKind.ac),
+        # Sensor("pgrid2", 58, _read_power, "W", "On-grid L2 Power", SensorKind.ac),
+        # Sensor("vgrid3", 62, _read_voltage, "V", "On-grid L3 Voltage", SensorKind.ac),
+        # Sensor("igrid3", 64, _read_current, "A", "On-grid L3 Current", SensorKind.ac),
+        # Sensor("fgrid3", 66, _read_freq, "Hz", "On-grid L3 Frequency", SensorKind.ac),
+        # Sensor("pgrid3", 68, _read_power, "W", "On-grid L3 Power", SensorKind.ac),
+        Sensor("xx72", 72, _read_bytes2, "", "Unknown sensor@72", None),
+        Sensor("total_inverter_power", 74, _read_power, "W", "Total Power", SensorKind.ac),
+        Sensor("active_power", 78, _read_power, "W", "Active Power", SensorKind.ac),
+        Sensor("grid_in_out", 78, _read_grid_mode, "", "On-grid Mode code", SensorKind.ac),
+        Sensor("grid_in_out_label", 0, lambda data, _: _GRID_MODES.get(_read_grid_mode(data, 78)), "", "On-grid Mode",
+               SensorKind.ac, ),
+        Sensor("xx82", 82, _read_bytes2, "", "Unknown sensor@82", None),
+        Sensor("xx84", 84, _read_bytes2, "", "Unknown sensor@84", None),
+        Sensor("xx86", 86, _read_bytes2, "", "Unknown sensor@86", None),
+        Sensor("backup_v1", 90, _read_voltage, "V", "Back-up L1 Voltage", SensorKind.ups),
+        Sensor("backup_i1", 92, _read_current, "A", "Back-up L1 Current", SensorKind.ups),
+        Sensor("backup_f1", 94, _read_freq, "Hz", "Back-up L1 Frequency", SensorKind.ups),
+        Sensor("xx96", 96, _read_bytes2, "", "Unknown sensor@96", None),
+        Sensor("backup_p1", 98, _read_power, "W", "Back-up L1 Power", SensorKind.ups),
+        # Sensor("backup_v2", 102, _read_voltage, "V", "Back-up L2 Voltage", SensorKind.ups),
+        # Sensor("backup_i2", 104, _read_current, "A", "Back-up L2 Current", SensorKind.ups),
+        # Sensor("backup_f2", 106, _read_freq, "Hz", "Back-up L2 Frequency", SensorKind.ups),
+        # Sensor("xx108", 108, _read_bytes2, "", "Unknown sensor@108", None),
+        # Sensor("backup_p2", 110, _read_power, "W", "Back-up L2 Power", SensorKind.ups),
+        # Sensor("backup_v3", 114, _read_voltage, "V", "Back-up L3 Voltage", SensorKind.ups),
+        # Sensor("backup_i3", 116, _read_current, "A", "Back-up L3 Current", SensorKind.ups),
+        # Sensor("backup_f3", 118, _read_freq, "Hz", "Back-up L3 Frequency", SensorKind.ups),
+        # Sensor("xx120", 120, _read_bytes2, "", "Unknown sensor@120", None),
+        # Sensor("backup_p3", 122, _read_power, "W", "Back-up L3 Power", SensorKind.ups),
+        Sensor("load_p1", 126, _read_power, "W", "Load L1", SensorKind.ac),
+        # Sensor("load_p2", 130, _read_power, "W", "Load L2", SensorKind.ac),
+        # Sensor("load_p3", 134, _read_power, "W", "Load L3", SensorKind.ac),
+        # load_ptotal = load_p1
+        Sensor("load_ptotal", 0, lambda data, _: _read_power(data, 126), "W", "Load Total", SensorKind.ac, ),
+        Sensor("backup_ptotal", 138, _read_power, "W", "Back-up Power", SensorKind.ups),
+        Sensor("pload", 142, _read_power, "W", "Load", SensorKind.ac),
+        Sensor("xx146", 146, _read_bytes2, "", "Unknown sensor@146", None),
+        Sensor("temperature2", 148, _read_temp, "C", "Inverter Temperature 2", SensorKind.ac, ),
+        Sensor("xx150", 150, _read_bytes2, "", "Unknown sensor@150", None),
+        Sensor("temperature", 152, _read_temp, "C", "Inverter Temperature", SensorKind.ac),
+        Sensor("xx154", 154, _read_bytes2, "", "Unknown sensor@154", None),
+        Sensor("xx156", 156, _read_bytes2, "", "Unknown sensor@156", None),
+        Sensor("xx158", 158, _read_bytes2, "", "Unknown sensor@158", None),
+        Sensor("vbattery1", 160, _read_voltage, "V", "Battery Voltage", SensorKind.bat),
+        Sensor("ibattery1", 162, _read_current, "A", "Battery Current", SensorKind.bat),
+        # round(vbattery1 * ibattery1),
+        Sensor("pbattery1", 0, lambda data, _: round(_read_voltage(data, 160) * _read_current(data, 162)), "W",
+               "Battery Power", SensorKind.bat, ),
+        Sensor("battery_mode", 168, _read_bytes2, "", "Battery Mode code", SensorKind.bat),
+        Sensor("battery_mode_label", 168, _read_battery_mode, "", "Battery Mode", SensorKind.bat, ),
+        Sensor("xx170", 170, _read_bytes2, "", "Unknown sensor@170", None),
+        Sensor("safety_country", 172, _read_bytes2, "", "Safety Country code", SensorKind.ac, ),
+        Sensor("safety_country_label", 172, _read_safety_country, "", "Safety Country", SensorKind.ac, ),
+        Sensor("work_mode", 174, _read_bytes2, "", "Work Mode code", None),
+        Sensor("work_mode_label", 174, _read_work_mode_et, "", "Work Mode", None),
+        Sensor("xx176", 176, _read_bytes2, "", "Unknown sensor@176", None),
+        Sensor("error_codes", 178, _read_bytes4, "", "Error Codes", None),
+        Sensor("e_total", 182, _read_power_k, "kWh", "Total PV Generation", SensorKind.pv),
+        Sensor("e_day", 186, _read_power_k, "kWh", "Today's PV Generation", SensorKind.pv),
+        Sensor("xx190", 190, _read_bytes2, "", "Unknown sensor@190", None),
+        Sensor("s_total", 192, _read_power_k2, "kWh", "Total Electricity Sold??", SensorKind.ac, ),
+        Sensor("h_total", 194, _read_bytes4, "", "Hours Total", SensorKind.pv),
+        Sensor("xx198", 198, _read_bytes2, "", "Unknown sensor@198", None),
+        Sensor("s_day", 200, _read_power_k2, "kWh", "Today Electricity Sold", SensorKind.ac),
+        Sensor("diagnose_result", 240, _read_bytes4, "", "Diag Status", None),
+        # ppv1 + ppv2 + pbattery - active_power
+        Sensor("house_consumption", 0, lambda data, _: _read_power(data, 10)
+                                                       + _read_power(data, 18)
+                                                       + round(_read_voltage(data, 160) * _read_current(data, 162))
+                                                       - _read_power(data, 78), "W", "House Comsumption",
+               SensorKind.ac, ),
+    )
+
+    __sensors_battery: Tuple[Sensor, ...] = (
+        Sensor("battery_bms", 0, _read_bytes2, "", "Battery BMS", SensorKind.bat),
+    )
+
+    __sensors2: Tuple[Sensor, ...] = (
+        Sensor("xxx0", 0, _read_bytes2, "", "Unknown sensor2@0", None),
+    )
+
+    async def read_device_info(self):
+        response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
+        response = response[5:-2]
+        self.model_name = response[22:32].decode("ascii").rstrip()
+        self.serial_number = response[6:22].decode("ascii")
+        self.software_version = response[54:66].decode("ascii")
+
+    async def read_runtime_data(self) -> Dict[str, Any]:
+        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
+        data = self._map_response(raw_data[5:-2], self.__sensors)
+        # raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
+        # data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
+        # raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
+        # data.update(self._map_response(raw_data[5:-2], self.__sensors2))
+        return data
+
+    async def set_work_mode(self, work_mode: int):
+        if work_mode in (0, 1, 2):
+            await self._read_from_socket(
+                ModbusProtocolCommand("F706b798" + "{:04x}".format(work_mode))
+            )
+
+    async def set_ongrid_battery_dod(self, dod: int):
+        if 0 <= dod <= 89:
+            await self._read_from_socket(
+                ModbusProtocolCommand("F706b12c" + "{:04x}".format(100 - dod), 10)
+            )
+
+    @classmethod
+    def sensors(cls) -> Tuple[Sensor, ...]:
+        return cls.__sensors + cls.__sensors_battery + cls.__sensors2
+
+
 # registry of supported inverter models
-REGISTRY = [ES, ET, DT]
+# TODO: it breaks when EH is not first with EH inverter
+REGISTRY = [EH, ET, DT, ES]

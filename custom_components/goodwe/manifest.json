@@ -5,7 +5,8 @@
   "issue_tracker": "https://github.com/mletenay/home-assistant-goodwe-inverter/issues",
   "dependencies": [],
   "codeowners": [
-    "@mletenay"
+    "@mletenay",
+    "@fizcris"
   ],
   "requirements": [],
   "iot_class": "local_polling",

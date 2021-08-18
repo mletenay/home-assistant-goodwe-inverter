@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 
 # Set the appropriate IP address
-IP_ADDRESS = "192.168.1.14"
+IP_ADDRESS = "192.168.0.48"
 
 PORT = 8899
 TIMEOUT = 2
