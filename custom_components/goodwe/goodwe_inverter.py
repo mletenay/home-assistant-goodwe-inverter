@@ -394,7 +394,7 @@ class ProtocolCommand:
                 raise InverterError(
                     "No response received to '" + self.request.hex() + "' request"
                 )
-        except asyncio.exceptions.CancelledError:
+        except asyncio.CancelledError:
             raise InverterError(
                 "No valid response received to '" + self.request.hex() + "' request"
             ) from None
@@ -628,7 +628,7 @@ async def search_inverters() -> bytes:
             return result
         else:
             raise InverterError("No response received to broadcast request")
-    except asyncio.exceptions.CancelledError:
+    except asyncio.CancelledError:
         raise InverterError("No valid response received to broadcast request") from None
     finally:
         transport.close()
@@ -640,28 +640,31 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
     Raise InverterError if unable to contact or recognise supported inverter
     """
     failures = []
-    # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
-    try:
-        _LOGGER.debug("Probing inverter at %s:%s", host, port)
-        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
-        model_name = response[12:22].decode("ascii").rstrip()
-        serial_number = response[38:54].decode("ascii")
-        if "ETU" in serial_number:
-            software_version = response[71:83].decode("ascii").strip()
-            _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
-            return ET(host, port, timeout, retries, model_name, serial_number, software_version)
-        elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
-            software_version = response[58:70].decode("ascii").strip()
-            # arm_version = response[71:83].decode("ascii").strip()
-            _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
-            return ES(host, port, timeout, retries, model_name, serial_number, software_version)
-        elif "EHU" in serial_number:  # TODO: check if version is correct
-            software_version = response[54:66].decode("ascii")
-            # _LOGGER.debug("Software_version: %s", software_version)
-        else:
-            raise NameError("No compatible inverter found")
-    except InverterError as ex:
-        failures.append(ex)
+
+    if ET in REGISTRY or ES in REGISTRY or EH in REGISTRY:
+        # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
+        try:
+            _LOGGER.debug("Probing inverter at %s:%s", host, port)
+            response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
+            model_name = response[12:22].decode("ascii").rstrip()
+            serial_number = response[38:54].decode("ascii")
+            if "ETU" in serial_number:
+                software_version = response[71:83].decode("ascii").strip()
+                _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
+                return ET(host, port, timeout, retries, model_name, serial_number, software_version)
+            elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
+                software_version = response[58:70].decode("ascii").strip()
+                # arm_version = response[71:83].decode("ascii").strip()
+                _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
+                return ES(host, port, timeout, retries, model_name, serial_number, software_version)
+            elif "EHU" in serial_number:  # TODO: check if version is correct
+                software_version = response[54:66].decode("ascii")
+                _LOGGER.debug("Detected EH inverter %s, S/N:%s", model_name, serial_number)
+                return EH(host, port, timeout, retries, model_name, serial_number, software_version)
+            else:
+                raise NameError("No compatible inverter found")
+        except InverterError as ex:
+            failures.append(ex)
 
     # Probe inverter specific protocols
     for inverter in REGISTRY:
@@ -1331,7 +1334,7 @@ class DT(Inverter):
         Sensor(
             "pgrid2",
             0,
-            lambda data, _: round(_read_voltage(data, 36) * _read_current(data, 42)),
+            lambda data, _: round(_read_voltage(data, 38) * _read_current(data, 44)),
             "W",
             "On-grid L2 Power",
             SensorKind.ac,
@@ -1339,7 +1342,7 @@ class DT(Inverter):
         Sensor(
             "pgrid3",
             0,
-            lambda data, _: round(_read_voltage(data, 36) * _read_current(data, 42)),
+            lambda data, _: round(_read_voltage(data, 40) * _read_current(data, 46)),
             "W",
             "On-grid L3 Power",
             SensorKind.ac,
