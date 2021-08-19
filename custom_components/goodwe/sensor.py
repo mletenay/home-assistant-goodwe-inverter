@@ -9,7 +9,9 @@ from .goodwe_inverter import discover, InverterError, SensorKind
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    )
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
@@ -20,6 +22,8 @@ from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     TEMP_CELSIUS,
 )
 from homeassistant.helpers.entity import Entity
@@ -74,7 +78,12 @@ _ICONS = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
     try:
-        inverter = await discover(config[CONF_IP_ADDRESS], config[CONF_PORT], config[CONF_NETWORK_TIMEOUT], config[CONF_NETWORK_RETRIES])
+        inverter = await discover(
+            config[CONF_IP_ADDRESS],
+            config[CONF_PORT],
+            config[CONF_NETWORK_TIMEOUT],
+            config[CONF_NETWORK_RETRIES],
+        )
     except InverterError as err:
         raise PlatformNotReady from err
 
@@ -232,7 +241,7 @@ class InverterEntity(Entity):
         }
 
 
-class InverterSensor(Entity):
+class InverterSensor(SensorEntity):
     """Class for a sensor."""
 
     def __init__(self, uid, sensor_id, sensor_name, unit, kind, hass):
@@ -245,24 +254,34 @@ class InverterSensor(Entity):
         self._sensor_id = sensor_id
         self._sensor_name = sensor_name
         # self._last_reset = utc_from_timestamp(0)
-        # self._state_class = STATE_CLASS_MEASUREMENT
-        self._unit = unit
-        if self._unit == "A":
-            self._device_class = DEVICE_CLASS_CURRENT
-        elif self._unit == "V":
-            self._device_class = DEVICE_CLASS_VOLTAGE
-        elif self._unit == "W":
-            self._device_class = DEVICE_CLASS_POWER
-        elif self._unit == "kWh":
-            self._device_class = DEVICE_CLASS_ENERGY
-            
-        elif self._unit == "%" and kind == SensorKind.bat:
-            self._device_class = DEVICE_CLASS_BATTERY
-        elif self._unit == "C":
+        if unit == "A":
+            self._unit = ELECTRIC_CURRENT_AMPERE
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_CURRENT
+        elif unit == "V":
+            self._unit = ELECTRIC_POTENTIAL_VOLT
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_VOLTAGE
+        elif unit == "W":
+            self._unit = unit
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_POWER
+        elif unit == "kWh":
+            self._unit = unit
+            self._attr_device_class = DEVICE_CLASS_ENERGY
+        elif unit == "%" and kind == SensorKind.bat:
+            self._unit = unit
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_BATTERY
+        elif unit == "C":
             self._unit = TEMP_CELSIUS
-            self._device_class = DEVICE_CLASS_TEMPERATURE
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_TEMPERATURE
         else:
-            self._device_class = None
+            self._unit = unit
+            self._attr_state_class = None
+            self._attr_device_class = None
+
         if kind is not None:
             self._icon_name = _ICONS[kind]
         else:
@@ -291,21 +310,6 @@ class InverterSensor(Entity):
     def name(self):
         """Name of this inverter attribute."""
         return self._sensor_name
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def state_class(self):
-        """Return the state class of the sensor."""
-        return self._state_class
-
-    @property
-    def last_reset(self):
-        """Return the last reset of the measurement"""
-        return self._last_reset
 
     @property
     def unit_of_measurement(self):
