@@ -30,7 +30,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -268,7 +268,9 @@ class InverterSensor(SensorEntity):
             self._attr_device_class = DEVICE_CLASS_POWER
         elif unit == "kWh":
             self._unit = unit
+            self._attr_state_class = STATE_CLASS_MEASUREMENT  # will be replaced with STATE_CLASS_TOTAL_INCREASING
             self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_last_reset = utc_from_timestamp(0)
         elif unit == "%" and kind == SensorKind.bat:
             self._unit = unit
             self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -290,10 +292,18 @@ class InverterSensor(SensorEntity):
 
     def update_value(self, inverter_response):
         """Update the sensor value from the response received from inverter"""
+        old_value = self._value
         if self._sensor_id in inverter_response:
             self._value = inverter_response[self._sensor_id]
         else:
             self._value = None
+        if (
+            self._unit == "kWh"
+            and old_value
+            and self._value
+            and (old_value > self._value)
+        ):
+            self._attr_last_reset = utcnow()
         self.async_schedule_update_ha_state()
 
     @property
