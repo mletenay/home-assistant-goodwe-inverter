@@ -10,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    #    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -269,7 +269,7 @@ class InverterSensor(SensorEntity):
         elif unit == "kWh":
             self._unit = ENERGY_KILO_WATT_HOUR
             self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        #            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         elif unit == "%" and kind == SensorKind.bat:
             self._unit = unit
             self._attr_device_class = DEVICE_CLASS_BATTERY
