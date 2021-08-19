@@ -661,8 +661,6 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
                 software_version = response[54:66].decode("ascii")
                 _LOGGER.debug("Detected EH inverter %s, S/N:%s", model_name, serial_number)
                 return EH(host, port, timeout, retries, model_name, serial_number, software_version)
-            else:
-                raise NameError("No compatible inverter found")
         except InverterError as ex:
             failures.append(ex)
 
