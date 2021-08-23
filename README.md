@@ -2,8 +2,8 @@
 
 # GoodWe solar inverter sensors for Home Assistant
 
-The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.  
-It has been tested on GoodWe ET, ES, EM and EH families of inverters.  
+The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.
+It has been tested on GoodWe ET, EH, ES, EM, DT, D-NS and XS families of inverters.
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
 The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).
@@ -44,23 +44,26 @@ sensor:
     #network_timeout: 2
     #network_retries: 3
     #scan_interval: 30
+    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS or None to detect inverter type automatically
     #sensor_name_prefix: GoodWe
 ```
 
+The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS can be specified.
+
 The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
-the command will be re-tried up to `network_retries` times.  
+the command will be re-tried up to `network_retries` times.
 The default values (2 secs / 3 times) are fine for most cases, but they can be increased to achieve better stability on less reliable networks.
 
 The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
 
 ## Cumulative energy values
 
-The sensor values reported by the inverter are instant measurements.  
-To report summary values like daily/monthly sell or buy (in kWh), these values have to be aggregated over time.  
+The sensor values reported by the inverter are instant measurements.
+To report summary values like daily/monthly sell or buy (in kWh), these values have to be aggregated over time.
 (The only exception are the "total/daily" sensors like `e_total`, `e_day` where the inverter itselfs keeps intenal counters.)
 
-[Riemann Sum](https://www.home-assistant.io/integrations/integration/) integration can be used to convert these instant (W) values into cumulative values (Wh).  
-[Utility Meter](https://www.home-assistant.io/integrations/utility_meter) can report these values as human readable statistical values.  
+[Riemann Sum](https://www.home-assistant.io/integrations/integration/) integration can be used to convert these instant (W) values into cumulative values (Wh).
+[Utility Meter](https://www.home-assistant.io/integrations/utility_meter) can report these values as human readable statistical values.
 [Template Sensor](https://www.home-assistant.io/integrations/template/) can be used to separate buy and sell values.
 
 ```YAML
@@ -124,11 +127,12 @@ utility_meter:
     cycle: monthly
 ```
 
-## Inverter communication testing
+## Inverter discovery and communication testing
 
-To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script
+To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script in your python (3.7+) environment.
+The `inverter_scan.py` script can be used to discover inverter(s) on your local network.
 
 ## References and inspiration
-
+- https://github.com/marcelblijleven/goodwe
 - https://github.com/home-assistant/core/tree/dev/homeassistant/components/solax
 - https://github.com/robbinjanssen/home-assistant-omnik-inverter

@@ -12,27 +12,30 @@ logging.basicConfig(
 )
 
 # Set the appropriate IP address
-IP_ADDRESS = "192.168.0.48"
+IP_ADDRESS = "192.168.1.14"
 
 PORT = 8899
+# One of ET, EH, ES, EM, DT, NS, XS or None to detect inverter family automatically
+FAMILY = "ET"
 TIMEOUT = 2
 RETRIES = 3
 
-inverter = asyncio.run(inverter.discover(IP_ADDRESS, PORT, TIMEOUT, RETRIES))
-print(f"Identified inverter\n"
-      f"- Model: {inverter.model_name}\n"
-      f"- SerialNr: {inverter.serial_number}\n"
-      f"- Version: {inverter.software_version}"
-      )
+inverter = asyncio.run(inverter.connect(IP_ADDRESS, PORT, FAMILY, TIMEOUT, RETRIES))
+print(
+    f"Identified inverter\n"
+    f"- Model: {inverter.model_name}\n"
+    f"- SerialNr: {inverter.serial_number}\n"
+    f"- Version: {inverter.software_version}"
+)
 
 response = asyncio.run(inverter.read_runtime_data())
 
 for (sensor, _, _, unit, name, _) in inverter.sensors():
     print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
 
-#response = asyncio.run(inverter.read_settings_data())
+# response = asyncio.run(inverter.read_settings_data())
 
-#for (sensor, _, _, unit, name, _) in inverter.settings():
+# for (sensor, _, _, unit, name, _) in inverter.settings():
 #    print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
 
 # print(asyncio.run(inverter.send_command("F703B798000136C7")))

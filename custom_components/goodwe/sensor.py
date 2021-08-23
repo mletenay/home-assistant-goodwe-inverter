@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from datetime import timedelta
 
-from .goodwe_inverter import discover, InverterError, SensorKind
+from .goodwe_inverter import connect, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
@@ -52,6 +52,7 @@ SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
+CONF_INVERTER_TYPE = "inverter_type"
 CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
 CONF_NETWORK_TIMEOUT = "network_timeout"
 CONF_NETWORK_RETRIES = "network_retries"
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_PORT, default=8899): cv.port,
+        vol.Optional(CONF_INVERTER_TYPE, default=""): cv.string,
         vol.Optional(CONF_NETWORK_TIMEOUT, default=2): cv.positive_int,
         vol.Optional(CONF_NETWORK_RETRIES, default=3): cv.positive_int,
         vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=30)): cv.time_period,
@@ -78,9 +80,10 @@ _ICONS = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
     try:
-        inverter = await discover(
+        inverter = await connect(
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
+            config[CONF_INVERTER_TYPE],
             config[CONF_NETWORK_TIMEOUT],
             config[CONF_NETWORK_RETRIES],
         )

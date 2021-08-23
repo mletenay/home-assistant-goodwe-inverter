@@ -634,6 +634,30 @@ async def search_inverters() -> bytes:
         transport.close()
 
 
+async def connect(host: str, port: int = 8899, family: str = None, timeout: int = 2, retries: int = 3) -> Inverter:
+    """Contact the inverter at the specified host/port and answer appropriate Inverter instance.
+    To improve performance, it is recommended to provide the inverter family name,
+    however it it is not explicitly provided, the code will try do detect the family automatically.
+    Supported inverter family names are ET, EH, ES, EM, DT, NS, XS
+    Raise InverterError if unable to contact or recognise supported inverter
+    """
+    if "ET" == family:
+        inverter = ET(host, port, timeout, retries)
+    elif "EH" == family:
+        inverter = EH(host, port, timeout, retries)
+    elif "ES" == family or "EM" == family:
+        inverter = ES(host, port, timeout, retries)
+    elif "DT" == family or "NS" == family or "XS" == family:
+        inverter = DT(host, port, timeout, retries)
+    else:
+        return await discover(host, port, timeout, retries)
+
+    _LOGGER.debug(f"Connecting to {family} family inverter at {host}:{port}")
+    await inverter.read_device_info()
+    _LOGGER.debug(f"Connected to inverter {inverter.model_name}, S/N:{inverter.serial_number}")
+    return inverter
+
+
 async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified value and answer appropriate Inverter instance
 
@@ -641,31 +665,30 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
     """
     failures = []
 
-    if ET in REGISTRY or ES in REGISTRY or EH in REGISTRY:
-        # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
-        try:
-            _LOGGER.debug("Probing inverter at %s:%s", host, port)
-            response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
-            model_name = response[12:22].decode("ascii").rstrip()
-            serial_number = response[38:54].decode("ascii")
-            if "ETU" in serial_number:
-                software_version = response[71:83].decode("ascii").strip()
-                _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
-                return ET(host, port, timeout, retries, model_name, serial_number, software_version)
-            elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
-                software_version = response[58:70].decode("ascii").strip()
-                # arm_version = response[71:83].decode("ascii").strip()
-                _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
-                return ES(host, port, timeout, retries, model_name, serial_number, software_version)
-            elif "EHU" in serial_number:  # TODO: check if version is correct
-                software_version = response[54:66].decode("ascii")
-                _LOGGER.debug("Detected EH inverter %s, S/N:%s", model_name, serial_number)
-                return EH(host, port, timeout, retries, model_name, serial_number, software_version)
-        except InverterError as ex:
-            failures.append(ex)
+    # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
+    try:
+        _LOGGER.debug("Probing inverter at %s:%s", host, port)
+        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
+        model_name = response[12:22].decode("ascii").rstrip()
+        serial_number = response[38:54].decode("ascii")
+        if "ETU" in serial_number:
+            software_version = response[71:83].decode("ascii").strip()
+            _LOGGER.debug("Detected ET inverter %s, S/N:%s", model_name, serial_number)
+            return ET(host, port, timeout, retries, model_name, serial_number, software_version)
+        elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
+            software_version = response[58:70].decode("ascii").strip()
+            # arm_version = response[71:83].decode("ascii").strip()
+            _LOGGER.debug("Detected ES inverter %s, S/N:%s", model_name, serial_number)
+            return ES(host, port, timeout, retries, model_name, serial_number, software_version)
+        elif "EHU" in serial_number:  # TODO: check if version is correct
+            software_version = response[54:66].decode("ascii")
+            _LOGGER.debug("Detected EH inverter %s, S/N:%s", model_name, serial_number)
+            return EH(host, port, timeout, retries, model_name, serial_number, software_version)
+    except InverterError as ex:
+        failures.append(ex)
 
     # Probe inverter specific protocols
-    for inverter in REGISTRY:
+    for inverter in _SUPPORTED_PROTOCOLS:
         i = inverter(host, port, timeout, retries)
         try:
             _LOGGER.debug("Probing %s inverter at %s:%s", inverter.__name__, host, port)
@@ -1592,6 +1615,6 @@ class EH(Inverter):
         return cls.__sensors + cls.__sensors_battery + cls.__sensors2
 
 
-# registry of supported inverter models
-# TODO: it breaks when EH is not first with EH inverter
-REGISTRY = [EH, ET, DT, ES]
+# registry of supported inverter protocols
+# TODO: it breaks when EH is not first with EH inverter during discovery
+_SUPPORTED_PROTOCOLS = [EH, ET, DT, ES]
