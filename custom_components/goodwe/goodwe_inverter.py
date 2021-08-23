@@ -519,11 +519,14 @@ class Inverter:
         """
         raise NotImplementedError()
 
-    async def read_runtime_data(self) -> Dict[str, Any]:
+    async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         """
         Request the runtime data from the inverter.
         Answer dictionary of individual sensors and their values.
         List of supported sensors (and their definitions) is provided by sensors() method.
+
+        If include_unknown_sensors parameter is set to True, return  all runtime values,
+        including those "xx*" sensors whose meaning is not yet identified.
         """
         raise NotImplementedError()
 
@@ -596,12 +599,13 @@ class Inverter:
         raise NotImplementedError()
 
     @staticmethod
-    def _map_response(resp_data: bytes, sensors: Tuple[Sensor, ...]) -> Dict[str, Any]:
+    def _map_response(resp_data: bytes, sensors: Tuple[Sensor, ...], incl_xx: bool = True) -> Dict[str, Any]:
         """Process the response data and return dictionary with runtime values"""
-        return {
-            sensor_id: fn(resp_data, offset)
-            for (sensor_id, offset, fn, _, name, _) in sensors
-        }
+        result = {}
+        for (sensor_id, offset, fn, _, name, _) in sensors:
+            if incl_xx or not sensor_id.startswith("xx"):
+                result[sensor_id] = fn(resp_data, offset)
+        return result
 
 
 async def search_inverters() -> bytes:
@@ -994,13 +998,14 @@ class ET(Inverter):
         self.serial_number = response[6:22].decode("ascii")
         self.software_version = response[54:66].decode("ascii")
 
-    async def read_runtime_data(self) -> Dict[str, Any]:
+    async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
-        data = self._map_response(raw_data[5:-2], self.__sensors)
+        data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
         raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
-        data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
-        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
-        data.update(self._map_response(raw_data[5:-2], self.__sensors2))
+        data.update(self._map_response(raw_data[5:-2], self.__sensors_battery, include_unknown_sensors))
+        if include_unknown_sensors:  # all sensors in RUNNING_DATA2 request are not yet know at the moment
+            raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
+            data.update(self._map_response(raw_data[5:-2], self.__sensors2, include_unknown_sensors))
         return data
 
     async def set_work_mode(self, work_mode: int):
@@ -1266,9 +1271,9 @@ class ES(Inverter):
         self.serial_number = response[38:54].decode("ascii")
         self.software_version = response[58:70].decode("ascii")
 
-    async def read_runtime_data(self) -> Dict[str, Any]:
+    async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
-        data = self._map_response(raw_data[7:-2], self.__sensors)
+        data = self._map_response(raw_data[7:-2], self.__sensors, include_unknown_sensors)
         return data
 
     async def read_settings_data(self) -> Dict[str, Any]:
@@ -1443,9 +1448,9 @@ class DT(Inverter):
             int.from_bytes(response[70:72], byteorder='big'),
         )
 
-    async def read_runtime_data(self) -> Dict[str, Any]:
+    async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
-        data = self._map_response(raw_data[5:-2], self.__sensors)
+        data = self._map_response(raw_data[5:-2], self.__sensors), include_unknown_sensors
 
         return data
 
@@ -1589,13 +1594,11 @@ class EH(Inverter):
         self.serial_number = response[6:22].decode("ascii")
         self.software_version = response[54:66].decode("ascii")
 
-    async def read_runtime_data(self) -> Dict[str, Any]:
+    async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
-        data = self._map_response(raw_data[5:-2], self.__sensors)
+        data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
         # raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
-        # data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
-        # raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
-        # data.update(self._map_response(raw_data[5:-2], self.__sensors2))
+        # data.update(self._map_response(raw_data[5:-2], self.__sensors_battery, include_unknown_sensors))
         return data
 
     async def set_work_mode(self, work_mode: int):

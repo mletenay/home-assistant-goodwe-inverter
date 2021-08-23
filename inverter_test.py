@@ -31,7 +31,8 @@ print(
 response = asyncio.run(inverter.read_runtime_data())
 
 for (sensor, _, _, unit, name, _) in inverter.sensors():
-    print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
+    if sensor in response:
+        print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
 
 # response = asyncio.run(inverter.read_settings_data())
 
