@@ -1450,8 +1450,7 @@ class DT(Inverter):
 
     async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
-        data = self._map_response(raw_data[5:-2], self.__sensors), include_unknown_sensors
-
+        data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
         return data
 
     async def set_ongrid_battery_dod(self, dod: int):
