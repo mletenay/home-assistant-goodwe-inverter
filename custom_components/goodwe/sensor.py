@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from datetime import timedelta
 
-from .goodwe_inverter import connect, InverterError, SensorKind
+from .goodwe.goodwe import connect, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
@@ -72,10 +72,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _ICONS = {
-    SensorKind.pv: "mdi:solar-power",
-    SensorKind.ac: "mdi:power-plug-outline",
-    SensorKind.ups: "mdi:power-plug-off-outline",
-    SensorKind.bat: "mdi:battery-high",
+    SensorKind.PV: "mdi:solar-power",
+    SensorKind.AC: "mdi:power-plug-outline",
+    SensorKind.UPS: "mdi:power-plug-off-outline",
+    SensorKind.BAT: "mdi:battery-high",
 }
 
 
@@ -285,7 +285,7 @@ class InverterSensor(SensorEntity):
             self._attr_state_class = STATE_CLASS_MEASUREMENT  # will be replaced with STATE_CLASS_TOTAL_INCREASING
             self._attr_device_class = DEVICE_CLASS_ENERGY
             self._attr_last_reset = utc_from_timestamp(0)
-        elif unit == "%" and kind == SensorKind.bat:
+        elif unit == "%" and kind == SensorKind.BAT:
             self._unit = unit
             self._attr_state_class = STATE_CLASS_MEASUREMENT
             self._attr_device_class = DEVICE_CLASS_BATTERY
