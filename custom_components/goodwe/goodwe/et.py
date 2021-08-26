@@ -21,14 +21,16 @@ class ET(Inverter):
     _READ_ETU_ADVANCED_PARAM5: ProtocolCommand = ModbusReadCommand(0xb126, 0x000a, 27)
     _READ_ETU_BATTERY_SOC_SWITCH: ProtocolCommand = ModbusReadCommand(0xb98c, 0x0001, 9)
 
+    # Modbus registers from offset 0x891c (35100), count 0x7d (125)
     __sensors: Tuple[Sensor, ...] = (
+        Timestamp("timestamp", 0, "Timestamp"),
         Voltage("vpv1", 6, "PV1 Voltage", Kind.PV),
         Current("ipv1", 8, "PV1 Current", Kind.PV),
         Power4("ppv1", 10, "PV1 Power", Kind.PV),
         Voltage("vpv2", 14, "PV2 Voltage", Kind.PV),
         Current("ipv2", 16, "PV2 Current", Kind.PV),
         Power4("ppv2", 18, "PV2 Power", Kind.PV),
-        # Voltage("vpv3", 22, "PV3 Voltage", Kind.PV),
+        # Voltage("vpv3", 22, "PV3 Voltage", Kind.PV), # modbus35111
         # Current("ipv3", 24, "PV3 Current", Kind.PV),
         # Power4("ppv3", 26, "PV3 Power", Kind.PV),
         # Voltage("vpv4", 30, "PV4 Voltage", Kind.PV),
@@ -38,7 +40,7 @@ class ET(Inverter):
         Calculated("ppv", 0, lambda data, _: read_power(data, 10) + read_power(data, 18), "PV Power", "W", Kind.PV),
         Integer("xx38", 38, "Unknown sensor@38"),
         Integer("xx40", 40, "Unknown sensor@40"),
-        Voltage("vgrid", 42, "On-grid L1 Voltage", Kind.AC),
+        Voltage("vgrid", 42, "On-grid L1 Voltage", Kind.AC), # modbus 35121
         Current("igrid", 44, "On-grid L1 Current", Kind.AC),
         Frequency("fgrid", 46, "On-grid L1 Frequency", Kind.AC),
         Power4("pgrid", 48, "On-grid L1 Power", Kind.AC),
@@ -56,23 +58,22 @@ class ET(Inverter):
         Calculated("grid_in_out", 78, lambda data, _: read_grid_mode(data, 78), "On-grid Mode code", "", Kind.AC),
         Calculated("grid_in_out_label", 0, lambda data, _: GRID_MODES.get(read_grid_mode(data, 78)), "On-grid Mode",
                    "", Kind.AC),
-        Integer("xx82", 82, "Unknown sensor@82"),
-        Integer("xx84", 84, "Unknown sensor@84"),
-        Integer("xx86", 86, "Unknown sensor@86"),
-        Voltage("backup_v1", 90, "Back-up L1 Voltage", Kind.UPS),
+        Power4("reactive_power", 82, "Reactive Power", Kind.AC),
+        Power4("apparent_power", 86, "Apparent Power", Kind.AC),
+        Voltage("backup_v1", 90, "Back-up L1 Voltage", Kind.UPS), # modbus 35145
         Current("backup_i1", 92, "Back-up L1 Current", Kind.UPS),
         Frequency("backup_f1", 94, "Back-up L1 Frequency", Kind.UPS),
-        Integer("xx96", 96, "Unknown sensor@96"),
+        Integer("load_mode1", 96, "Load Mode L1"),
         Power4("backup_p1", 98, "Back-up L1 Power", Kind.UPS),
         Voltage("backup_v2", 102, "Back-up L2 Voltage", Kind.UPS),
         Current("backup_i2", 104, "Back-up L2 Current", Kind.UPS),
         Frequency("backup_f2", 106, "Back-up L2 Frequency", Kind.UPS),
-        Integer("xx108", 108, "Unknown sensor@108"),
+        Integer("load_mode2", 108, "Load Mode L2"),
         Power4("backup_p2", 110, "Back-up L2 Power", Kind.UPS),
         Voltage("backup_v3", 114, "Back-up L3 Voltage", Kind.UPS),
         Current("backup_i3", 116, "Back-up L3 Current", Kind.UPS),
         Frequency("backup_f3", 118, "Back-up L3 Frequency", Kind.UPS),
-        Integer("xx120", 120, "Unknown sensor@120"),
+        Integer("load_mode3", 120, "Load Mode L3"),
         Power4("backup_p3", 122, "Back-up L3 Power", Kind.UPS),
         Power4("load_p1", 126, "Load L1", Kind.AC),
         Power4("load_p2", 130, "Load L2", Kind.AC),
@@ -83,14 +84,14 @@ class ET(Inverter):
                    "Load Total", "W", Kind.AC),
         Power4("backup_ptotal", 138, "Back-up Power", Kind.UPS),
         Power4("pload", 142, "Load", Kind.AC),
-        Integer("xx146", 146, "Unknown sensor@146"),
+        Integer("ups_load", 146, "Ups Load", "%", Kind.UPS),
         Temp("temperature2", 148, "Inverter Temperature 2", Kind.AC),
         Integer("xx150", 150, "Unknown sensor@150"),
         Temp("temperature", 152, "Inverter Temperature", Kind.AC),
         Integer("xx154", 154, "Unknown sensor@154"),
         Integer("xx156", 156, "Unknown sensor@156"),
         Integer("xx158", 158, "Unknown sensor@158"),
-        Voltage("vbattery1", 160, "Battery Voltage", Kind.BAT),
+        Voltage("vbattery1", 160, "Battery Voltage", Kind.BAT), # modbus 35180
         Current("ibattery1", 162, "Battery Current", Kind.BAT),
         # round(vbattery1 * ibattery1),
         Calculated("pbattery1", 0,
@@ -98,12 +99,12 @@ class ET(Inverter):
                    "Battery Power", "W", Kind.BAT),
         Integer("battery_mode", 168, "Battery Mode code", "", Kind.BAT),
         Enum2("battery_mode_label", 168, BATTERY_MODES_ET, "Battery Mode", "", Kind.BAT),
-        Integer("xx170", 170, "Unknown sensor@170"),
+        Integer("warning_code", 170, "Warning code"),
         Integer("safety_country", 172, "Safety Country code", "", Kind.AC),
         Enum2("safety_country_label", 172, SAFETY_COUNTRIES_ET, "Safety Country", "", Kind.AC),
         Integer("work_mode", 174, "Work Mode code"),
         Enum2("work_mode_label", 174, WORK_MODES_ET, "Work Mode"),
-        Integer("xx176", 176, "Unknown sensor@176"),
+        Integer("operation_mode", 176, "Operation Mode code"),
         Long("error_codes", 178, "Error Codes"),
         Energy4("e_total", 182, "Total PV Generation", Kind.PV),
         Energy4("e_day", 186, "Today's PV Generation", Kind.PV),
@@ -120,34 +121,38 @@ class ET(Inverter):
                    "House Comsumption", "W", Kind.AC),
     )
 
+    # Modbus registers from offset 0x9088 (37000), count 0x0b (11)
     __sensors_battery: Tuple[Sensor, ...] = (
         Integer("battery_bms", 0, "Battery BMS", "", Kind.BAT),
         Integer("battery_index", 2, "Battery Index", "", Kind.BAT),
+        Integer("battery_status", 4, "Battery Status", "", Kind.BAT),
         Temp("battery_temperature", 6, "Battery Temperature", Kind.BAT),
         Integer("battery_charge_limit", 8, "Battery Charge Limit", "A", Kind.BAT),
         Integer("battery_discharge_limit", 10, "Battery Discharge Limit", "A", Kind.BAT),
-        Integer("battery_status", 12, "Battery Status", "", Kind.BAT),
+        # Integer("battery_bms_bytes", 12, "Battery BMS bytes", "", Kind.BAT),
         Integer("battery_soc", 14, "Battery State of Charge", "%", Kind.BAT),
         Integer("battery_soh", 16, "Battery State of Health", "%", Kind.BAT),
         Integer("battery_warning", 20, "Battery Warning", "", Kind.BAT),
     )
 
+    # Modbus registers from offset 0x8ca0 (36000), count 0x11 (17)
     __sensors2: Tuple[Sensor, ...] = (
         Integer("xxx0", 0, "Unknown sensor2@0"),
         Integer("xxx2", 2, "Unknown sensor2@2"),
         Integer("xxx4", 4, "Unknown sensor2@4"),
-        Integer("xxx6", 6, "Unknown sensor2@6"),
-        Integer("xxx8", 8, "Unknown sensor2@8"),
-        Integer("xxx10", 10, "Unknown sensor2@10"),
-        Integer("xxx12", 12, "Unknown sensor2@12"),
-        Integer("xxx14", 14, "Unknown sensor2@14"),
+        Integer("meter_test_status", 6, "Meter Test Status"),
+        Integer("meter_comm_status", 8, "Meter Communication Status"),
+        Power("active_power1", 10, "Active Power L1", Kind.AC), # modbus 36005
+        Power("active_power2", 12, "Active Power L2", Kind.AC),
+        Power("active_power3", 14, "Active Power L3", Kind.AC),
+        # 16 = sum of 10,12 and 14 = active power
         Integer("xxx16", 16, "Unknown sensor2@16"),
         Integer("xxx18", 18, "Unknown sensor2@18"),
         Integer("xxx20", 20, "Unknown sensor2@20"),
         Integer("xxx22", 22, "Unknown sensor2@22"),
         Integer("xxx24", 24, "Unknown sensor2@24"),
-        Integer("xxx26", 26, "Unknown sensor2@26"),
-        Integer("xxx28", 28, "Unknown sensor2@28"),
+        Integer("xxx26", 26, "Unknown sensor2@26"), # METER_POWER_FACTOR ?
+        Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),
         Integer("xxx30", 30, "Unknown sensor2@30"),
         Integer("xxx32", 32, "Unknown sensor2@32"),
     )
