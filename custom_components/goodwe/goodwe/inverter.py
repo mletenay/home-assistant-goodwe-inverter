@@ -1,6 +1,7 @@
 import io
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, NamedTuple, Tuple, Optional
+from typing import Any, Callable, Dict, Tuple, Optional
 
 from .protocol import ProtocolCommand
 
@@ -22,15 +23,19 @@ class SensorKind(Enum):
     BAT = 4
 
 
-class Sensor(NamedTuple):
+@dataclass
+class Sensor:
     """Definition of inverter sensor and its attributes"""
 
-    id: str
+    id_: str
     offset: int
-    getter: Callable[[io.BytesIO, int], Any]
-    unit: str
     name: str
+    unit: str
     kind: Optional[SensorKind]
+
+    def read(self, data: io.BytesIO):
+        """Read the sensor value from data"""
+        raise NotImplementedError()
 
 
 class Inverter:
@@ -138,7 +143,7 @@ class Inverter:
         """Process the response data and return dictionary with runtime values"""
         with io.BytesIO(resp_data) as buffer:
             result = {}
-            for (sensor_id, offset, fn, _, name, _) in sensors:
-                if incl_xx or not sensor_id.startswith("xx"):
-                    result[sensor_id] = fn(buffer, offset)
+            for sensor in sensors:
+                if incl_xx or not sensor.id_.startswith("xx"):
+                    result[sensor.id_] = sensor.read(buffer)
             return result

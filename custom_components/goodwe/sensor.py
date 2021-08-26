@@ -106,11 +106,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
     # Add individual inverter sensor entities
-    for (sensor_id, _, _, unit, name, kind) in inverter.sensors():
-        uid = f"{DOMAIN}-{sensor_id}-{inverter.serial_number}"
-        sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {name}".strip()
+    for sensor in inverter.sensors():
+        uid = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
+        sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {sensor.name}".strip()
         refresh_job.sensors.append(
-            InverterSensor(uid, sensor_id, sensor_name, unit, kind, hass)
+            InverterSensor(uid, sensor.id_, sensor_name, sensor.unit, sensor.kind, hass)
         )
     async_add_entities(refresh_job.sensors)
 
