@@ -2,15 +2,15 @@ from typing import Any, Tuple
 
 from .inverter import Inverter, Sensor
 from .inverter import SensorKind as Kind
-from .protocol import ProtocolCommand, ModbusProtocolCommand
+from .protocol import ProtocolCommand, ModbusReadCommand, ModbusWriteCommand
 from .utils import *
 
 
 class DT(Inverter):
     """Class representing inverter of DT, D-NS and XS families"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("7F0375310028", 87)
-    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusProtocolCommand("7F0375940049", 153)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x7531, 0x0028, 87)
+    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x7594, 0x0049, 153)
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("timestamp", 0, read_datetime, "", "Timestamp", None),
@@ -117,7 +117,6 @@ class DT(Inverter):
     async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
         data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
-
         return data
 
     async def set_ongrid_battery_dod(self, dod: int):
@@ -125,9 +124,9 @@ class DT(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode == 0:
-            await self._read_from_socket(ModbusProtocolCommand("7F069D8B0000"))
+            await self._read_from_socket(ModbusWriteCommand(0x9d8b, 0))
         elif work_mode == 3:
-            await self._read_from_socket(ModbusProtocolCommand("7F069D8A0000"))
+            await self._read_from_socket(ModbusWriteCommand(0x9d8a, 0))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

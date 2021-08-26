@@ -2,7 +2,7 @@ import io
 from enum import Enum
 from typing import Any, Callable, Dict, NamedTuple, Tuple, Optional
 
-from .protocol import ProtocolCommand, Aa55ProtocolCommand, ModbusProtocolCommand
+from .protocol import ProtocolCommand
 
 
 class SensorKind(Enum):
@@ -87,36 +87,13 @@ class Inverter:
         raise NotImplementedError()
 
     async def send_command(
-            self, command: str, validator: Callable[[bytes], bool] = lambda x: True
-    ) -> str:
+            self, command: bytes, validator: Callable[[bytes], bool] = lambda x: True
+    ) -> bytes:
         """
-        Send low level udp command (in hex).
-        Answer command's raw response data (in hex).
+        Send low level udp command (as bytes).
+        Answer command's raw response data.
         """
-        response = await self._read_from_socket(
-            ProtocolCommand(bytes.fromhex(command), validator)
-        )
-        return response.hex()
-
-    async def send_aa55_command(self, payload: str, response_type: str = "") -> str:
-        """
-        Send low level udp AA55 type command (payload in hex).
-        Answer command's raw response data (in hex).
-        """
-        response = await self._read_from_socket(
-            Aa55ProtocolCommand(payload, response_type)
-        )
-        return response.hex()
-
-    async def send_modbus_command(self, payload: str, response_len: int) -> str:
-        """
-        Send low level udp modbus type command (payload in hex).
-        Answer command's raw response data (in hex).
-        """
-        response = await self._read_from_socket(
-            ModbusProtocolCommand(payload, response_len)
-        )
-        return response.hex()
+        return await self._read_from_socket(ProtocolCommand(command, validator))
 
     async def set_work_mode(self, work_mode: int):
         """

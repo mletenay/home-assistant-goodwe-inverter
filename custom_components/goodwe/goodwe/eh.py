@@ -2,18 +2,18 @@ from typing import Any, Tuple
 
 from .inverter import Inverter, Sensor
 from .inverter import SensorKind as Kind
-from .protocol import ProtocolCommand, ModbusProtocolCommand
+from .protocol import ProtocolCommand, ModbusReadCommand, ModbusWriteCommand
 from .utils import *
 
 
 class EH(Inverter):
     """Class representing inverter of EH family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("F70388b800213AC1", 146)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusProtocolCommand("F703891c007d7ae7", 257)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusProtocolCommand("F7038ca0001b3be5", 61)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusProtocolCommand("F7039088000bbdb1", 29)
-    _GET_WORK_MODE: ProtocolCommand = ModbusProtocolCommand("F703b798000136c7", 9)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021, 146)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x001b, 61)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b,  29)
+    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001, 9)
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 6, read_voltage, "V", "PV1 Voltage", Kind.PV),
@@ -131,15 +131,11 @@ class EH(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            await self._read_from_socket(
-                ModbusProtocolCommand("F706b798" + "{:04x}".format(work_mode))
-            )
+            await self._read_from_socket(ModbusWriteCommand(0xb798, work_mode))
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(
-                ModbusProtocolCommand("F706b12c" + "{:04x}".format(100 - dod), 10)
-            )
+            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod, 10))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

@@ -151,19 +151,3 @@ def read_energy_mode1(buffer: io.BytesIO, offset: int) -> Optional[str]:
 def read_battery_mode1(buffer: io.BytesIO, offset: int) -> Optional[str]:
     """Retrieve 'battery mode label' value from buffer at given position"""
     return BATTERY_MODES_ET.get(read_byte(buffer, offset))
-
-
-def create_crc16_table() -> tuple:
-    """Construct (modbus) CRC-16 table"""
-    table = []
-    for i in range(256):
-        buffer = i << 1
-        crc = 0
-        for _ in range(8, 0, -1):
-            buffer >>= 1
-            if (buffer ^ crc) & 0x0001:
-                crc = (crc >> 1) ^ 0xA001
-            else:
-                crc >>= 1
-        table.append(crc)
-    return tuple(table)

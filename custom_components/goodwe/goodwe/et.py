@@ -2,24 +2,24 @@ from typing import Any, Tuple
 
 from .inverter import Inverter, Sensor
 from .inverter import SensorKind as Kind
-from .protocol import ProtocolCommand, ModbusProtocolCommand
+from .protocol import ProtocolCommand, ModbusReadCommand, ModbusWriteCommand
 from .utils import *
 
 
 class ET(Inverter):
     """Class representing inverter of ET family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusProtocolCommand("F70388b80021", 73)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusProtocolCommand("F703891c007d", 257)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusProtocolCommand("F7038ca00011", 41)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusProtocolCommand("F7039088000b", 29)
-    _GET_WORK_MODE: ProtocolCommand = ModbusProtocolCommand("F703b7980001", 9)
-    _READ_ETU_ADVANCED_PARAM1: ProtocolCommand = ModbusProtocolCommand("F703b98c000b", 29)
-    _READ_ETU_ADVANCED_PARAM2: ProtocolCommand = ModbusProtocolCommand("F703b0c30001", 0)
-    _READ_ETU_ADVANCED_PARAM3: ProtocolCommand = ModbusProtocolCommand("F703b0c00007", 21)
-    _READ_ETU_ADVANCED_PARAM4: ProtocolCommand = ModbusProtocolCommand("F703b1aa0001", 9)
-    _READ_ETU_ADVANCED_PARAM5: ProtocolCommand = ModbusProtocolCommand("F703b126000a", 27)
-    _READ_ETU_BATTERY_SOC_SWITCH: ProtocolCommand = ModbusProtocolCommand("F703b98c0001", 9)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021, 73)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x0011, 41)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b, 29)
+    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001, 9)
+    _READ_ETU_ADVANCED_PARAM1: ProtocolCommand = ModbusReadCommand(0xb98c, 0x000b, 29)
+    _READ_ETU_ADVANCED_PARAM2: ProtocolCommand = ModbusReadCommand(0xb0c3, 0x0001, 0)
+    _READ_ETU_ADVANCED_PARAM3: ProtocolCommand = ModbusReadCommand(0xb0c0, 0x0007, 21)
+    _READ_ETU_ADVANCED_PARAM4: ProtocolCommand = ModbusReadCommand(0xb1aa, 0x0001, 9)
+    _READ_ETU_ADVANCED_PARAM5: ProtocolCommand = ModbusReadCommand(0xb126, 0x000a, 27)
+    _READ_ETU_BATTERY_SOC_SWITCH: ProtocolCommand = ModbusReadCommand(0xb98c, 0x0001, 9)
 
     __sensors: Tuple[Sensor, ...] = (
         Sensor("vpv1", 6, read_voltage, "V", "PV1 Voltage", Kind.PV),
@@ -216,15 +216,11 @@ class ET(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            await self._read_from_socket(
-                ModbusProtocolCommand("F706b798" + "{:04x}".format(work_mode))
-            )
+            await self._read_from_socket(ModbusWriteCommand(0xb798, work_mode))
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(
-                ModbusProtocolCommand("F706b12c" + "{:04x}".format(100 - dod), 10)
-            )
+            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod, 10))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

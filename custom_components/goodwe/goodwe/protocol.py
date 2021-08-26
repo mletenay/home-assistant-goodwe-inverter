@@ -3,7 +3,8 @@ import logging
 from typing import Tuple, Optional, Callable
 
 from .exceptions import MaxRetriesException, RequestFailedException
-from .utils import create_crc16_table
+from .modbus import append_modbus_checksum, create_modbus_request, validate_modbus_response, MODBUS_READ_CMD, \
+    MODBUS_WRITE_CMD
 
 logger = logging.getLogger(__name__)
 
@@ -152,52 +153,48 @@ class Aa55ProtocolCommand(ProtocolCommand):
         if (
                 len(data) <= 8
                 or len(data) != data[6] + 9
-                or (response_type and int(response_type, 16) != _read_bytes2(data[4:6], 0))
+                or (response_type and int(response_type, 16) != int.from_bytes(data[4:6], byteorder="big", signed=True))
         ):
             return False
         else:
             checksum = 0
             for each in data[:-2]:
                 checksum += each
-            return checksum == _read_bytes2(data[-2:], 0)
+            return checksum == int.from_bytes(data[-2:], byteorder="big", signed=True)
 
 
 class ModbusProtocolCommand(ProtocolCommand):
     """
-    Inverter communication protocol, suffixes each payload with 2 bytes of Modbus-CRC16 checksum of the payload.
+    Inverter modbus communication protocol accepting string based payload (including header).
+    Modbus-CRC16 checksum will be appended.
     """
-
-    _CRC_16_TABLE = create_crc16_table()
 
     def __init__(self, payload: str, response_len: int = 0):
         super().__init__(
-            bytes.fromhex(
-                payload + self._checksum(bytes.fromhex(payload))
-            ),
-            lambda x: self._validate_response(x, response_len),
+            append_modbus_checksum(payload),
+            lambda x: validate_modbus_response(x, response_len),
         )
 
-    @classmethod
-    def _checksum(cls, data: bytes) -> str:
-        crc = 0xFFFF
-        for ch in data:
-            crc = (crc >> 8) ^ cls._CRC_16_TABLE[(crc ^ ch) & 0xFF]
-        res = "{:04x}".format(crc)
-        return res[2:] + res[:2]
 
-    @classmethod
-    def _validate_response(cls, data: bytes, response_len: int) -> bool:
-        """
-        Validate the response.
-        data[0:1] is header
-        data[2:3] is response type
-        data[4] is response payload length ??
-        data[-2:] is crc-16 checksum
-        """
-        if len(data) <= 4 or (response_len != 0 and response_len != len(data)):
-            return False
-        return cls._checksum(data[2:-2]) == data[-2:].hex()
+class ModbusReadCommand(ProtocolCommand):
+    """
+    Inverter modbus READ command for retrieving <count> modbus registers starting at register # <offset>
+    """
+
+    def __init__(self, offset: int, count: int, response_len: int = 0):
+        super().__init__(
+            create_modbus_request(MODBUS_READ_CMD, offset, count),
+            lambda x: validate_modbus_response(x, response_len),
+        )
 
 
-def _read_bytes2(data: bytes, offset: int) -> int:
-    return int.from_bytes(data[offset: offset + 2], byteorder="big", signed=True)
+class ModbusWriteCommand(ProtocolCommand):
+    """
+    Inverter modbus WRITE command setting to modbus register # <register> value <value>
+    """
+
+    def __init__(self, register: int, value: int, response_len: int = 0):
+        super().__init__(
+            create_modbus_request(MODBUS_WRITE_CMD, register, value),
+            lambda x: validate_modbus_response(x, response_len),
+        )
