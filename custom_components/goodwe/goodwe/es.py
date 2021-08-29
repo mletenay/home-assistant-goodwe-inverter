@@ -135,6 +135,10 @@ class ES(Inverter):
         data = self._map_response(raw_data[7:-2], self.__sensors, include_unknown_sensors)
         return data
 
+    async def read_settings(self, setting_id: str) -> Any:
+        all_settings = await self.read_settings_data()
+        return all_settings.get(setting_id)
+
     async def read_settings_data(self) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_SETTINGS_DATA)
         data = self._map_response(raw_data[7:-2], self.__settings)

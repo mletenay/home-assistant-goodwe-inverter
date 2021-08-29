@@ -22,7 +22,7 @@ async def connect(host: str, port: int = 8899, family: str = None, timeout: int 
     To improve performance, it is recommended to provide the inverter family name,
     however it it is not explicitly provided, the code will try do detect the family automatically.
 
-    Supported inverter family names are ET, EH, ES, EM, DT, NS, XS
+    Supported inverter family names are ET, EH, ES, EM, DT, NS, XS, BP
 
     Raise InverterError if unable to contact or recognise supported inverter
     """
@@ -30,7 +30,7 @@ async def connect(host: str, port: int = 8899, family: str = None, timeout: int 
         inverter = ET(host, port, timeout, retries)
     elif "EH" == family:
         inverter = EH(host, port, timeout, retries)
-    elif "ES" == family or "EM" == family:
+    elif "ES" == family or "EM" == family or "BP" == family:
         inverter = ES(host, port, timeout, retries)
     elif "DT" == family or "NS" == family or "XS" == family:
         inverter = DT(host, port, timeout, retries)
@@ -90,7 +90,7 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
             software_version = response[71:83].decode("ascii").strip()
             logger.debug(f"Detected ET inverter {model_name}, S/N:{serial_number}")
             return ET(host, port, timeout, retries, model_name, serial_number, software_version)
-        elif "ESU" in serial_number:  # TODO: check if ESU is indeed in the seriual number
+        elif "ESU" in serial_number or "EMU" in serial_number or "BPU" in serial_number or "BPS" in serial_number:
             software_version = response[58:70].decode("ascii").strip()
             # arm_version = response[71:83].decode("ascii").strip()
             logger.debug(f"Detected ES inverter {model_name}, S/N:{serial_number}")

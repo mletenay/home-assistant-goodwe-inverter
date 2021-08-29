@@ -3,7 +3,7 @@
 ## GoodWe solar inverter sensors for Home Assistant
 
 The component retrieves data from GoodWe solar inverter connected to local network and presents them as sensors in Home Assistant.
-GoodWe ET, EH, ES, EM, DT, D-NS and XS families of inverters are supported, other types may work too.
+GoodWe ET, EH, ES, EM, DT, D-NS, XS and BP families of inverters are supported, other types may work too.
 
 ## Configuration
 
@@ -15,12 +15,12 @@ sensor:
     #network_timeout: 2
     #network_retries: 3
     #scan_interval: 30
-    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS or None to detect inverter type automatically
+    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
     #sensor_name_prefix: GoodWe
     #include_unknown_sensors: false
 ```
 
-The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS can be specified.
+The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS, BP can be specified.
 
 The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
 the command will be re-tried up to `network_retries` times.

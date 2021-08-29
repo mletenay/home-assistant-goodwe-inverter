@@ -12,8 +12,8 @@ class Voltage(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "V", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_voltage(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_voltage(data)
 
 
 class Current(Sensor):
@@ -22,8 +22,8 @@ class Current(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "A", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_current(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_current(data)
 
 
 class Frequency(Sensor):
@@ -32,8 +32,8 @@ class Frequency(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "Hz", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_freq(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_freq(data)
 
 
 class Power(Sensor):
@@ -42,8 +42,8 @@ class Power(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "W", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power2(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power2(data)
 
 
 class Power4(Sensor):
@@ -52,8 +52,8 @@ class Power4(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "W", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power(data)
 
 
 class PowerK(Sensor):
@@ -62,8 +62,8 @@ class PowerK(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "kW", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power_k2(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power_k2(data)
 
 
 class PowerK4(Sensor):
@@ -72,8 +72,8 @@ class PowerK4(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "kW", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power_k(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power_k(data)
 
 
 class Energy(Sensor):
@@ -82,8 +82,8 @@ class Energy(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "kWh", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power_k2(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power_k2(data)
 
 
 class Energy4(Sensor):
@@ -92,8 +92,8 @@ class Energy4(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind]):
         super().__init__(id_, offset, name, "kWh", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_power_k(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_power_k(data)
 
 
 class Temp(Sensor):
@@ -102,8 +102,8 @@ class Temp(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, "C", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_temp(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_temp(data)
 
 
 class Byte(Sensor):
@@ -112,8 +112,8 @@ class Byte(Sensor):
     def __init__(self, id_: str, offset: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, unit, kind)
 
-    def read(self, data: io.BytesIO):
-        return read_byte(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_byte(data)
 
 
 class Integer(Sensor):
@@ -122,8 +122,8 @@ class Integer(Sensor):
     def __init__(self, id_: str, offset: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, unit, kind)
 
-    def read(self, data: io.BytesIO):
-        return read_bytes2(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_bytes2(data)
 
 
 class Long(Sensor):
@@ -132,8 +132,8 @@ class Long(Sensor):
     def __init__(self, id_: str, offset: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, unit, kind)
 
-    def read(self, data: io.BytesIO):
-        return read_bytes4(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_bytes4(data)
 
 
 class Timestamp(Sensor):
@@ -142,8 +142,8 @@ class Timestamp(Sensor):
     def __init__(self, id_: str, offset: int, name: str, kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, "", kind)
 
-    def read(self, data: io.BytesIO):
-        return read_datetime(data, self.offset)
+    def read_value(self, data: io.BytesIO):
+        return read_datetime(data)
 
 
 class Enum(Sensor):
@@ -154,8 +154,8 @@ class Enum(Sensor):
         super().__init__(id_, offset, name, unit, kind)
         self.labels: Dict = labels
 
-    def read(self, data: io.BytesIO):
-        return self.labels.get(read_byte(data, self.offset))
+    def read_value(self, data: io.BytesIO):
+        return self.labels.get(read_byte(data))
 
 
 class Enum2(Sensor):
@@ -166,8 +166,8 @@ class Enum2(Sensor):
         super().__init__(id_, offset, name, unit, kind)
         self.labels: Dict = labels
 
-    def read(self, data: io.BytesIO):
-        return self.labels.get(read_bytes2(data, self.offset))
+    def read_value(self, data: io.BytesIO):
+        return self.labels.get(read_bytes2(data))
 
 
 class Calculated(Sensor):
@@ -178,93 +178,109 @@ class Calculated(Sensor):
         super().__init__(id_, offset, name, unit, kind)
         self._getter: Callable[[io.BytesIO, int], Any] = getter
 
+    def read_value(self, data: io.BytesIO) -> Any:
+        raise NotImplementedError()
+
     def read(self, data: io.BytesIO):
+        data.seek(self.offset)
         return self._getter(data, self.offset)
 
 
-def read_byte(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve single byte (signed int) value from buffer at given position"""
-    buffer.seek(offset)
+def read_byte(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve single byte (signed int) value from buffer"""
+    if offset:
+        buffer.seek(offset)
     return int.from_bytes(buffer.read(1), byteorder="big", signed=True)
 
 
-def read_bytes2(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve 2 byte (signed int) value from buffer at given position"""
-    buffer.seek(offset)
+def read_bytes2(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve 2 byte (signed int) value from buffer"""
+    if offset:
+        buffer.seek(offset)
     return int.from_bytes(buffer.read(2), byteorder="big", signed=True)
 
 
-def read_bytes4(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve 4 byte (signed int) value from buffer at given position"""
-    buffer.seek(offset)
+def read_bytes4(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve 4 byte (signed int) value from buffer"""
+    if offset:
+        buffer.seek(offset)
     return int.from_bytes(buffer.read(4), byteorder="big", signed=True)
 
 
-def read_voltage(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve voltage [V] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_voltage(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve voltage [V] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     return float(value) / 10
 
 
-def read_current(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve current [A] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_current(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve current [A] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return float(value) / 10
 
 
-def read_power(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve power [W] value (4 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_power(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve power [W] value (4 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(4), byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return value
 
 
-def read_power2(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve power [W] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_power2(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve power [W] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     if value > 32768:
         value = value - 65535
     return value
 
 
-def read_power_k(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve power [kW] value (4 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_power_k(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve power [kW] value (4 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(4), byteorder="big", signed=True)
     return float(value) / 10
 
 
-def read_power_k2(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve power [kW] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_power_k2(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve power [kW] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     return float(value) / 10
 
 
-def read_freq(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve frequency [Hz] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_freq(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve frequency [Hz] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     return float(value) / 100
 
 
-def read_temp(buffer: io.BytesIO, offset: int) -> float:
-    """Retrieve temperature [C] value (2 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_temp(buffer: io.BytesIO, offset: int = None) -> float:
+    """Retrieve temperature [C] value (2 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     return float(value) / 10
 
 
-def read_datetime(buffer: io.BytesIO, offset: int) -> datetime:
-    """Retrieve datetime value (6 bytes) from buffer at given position"""
-    buffer.seek(offset)
+def read_datetime(buffer: io.BytesIO, offset: int = None) -> datetime:
+    """Retrieve datetime value (6 bytes) from buffer"""
+    if offset:
+        buffer.seek(offset)
     year = 2000 + int.from_bytes(buffer.read(1), byteorder='big')
     month = int.from_bytes(buffer.read(1), byteorder='big')
     day = int.from_bytes(buffer.read(1), byteorder='big')
@@ -274,8 +290,8 @@ def read_datetime(buffer: io.BytesIO, offset: int) -> datetime:
     return datetime(year=year, month=month, day=day, hour=hour, minute=minute, second=second)
 
 
-def read_grid_mode(buffer: io.BytesIO, offset: int) -> int:
-    """Retrieve 'grid mode' sign value from buffer at given position"""
+def read_grid_mode(buffer: io.BytesIO, offset: int = None) -> int:
+    """Retrieve 'grid mode' sign value from buffer"""
     value = read_power(buffer, offset)
     if value < -90:
         return 2
@@ -283,3 +299,8 @@ def read_grid_mode(buffer: io.BytesIO, offset: int) -> int:
         return 1
     else:
         return 0
+
+
+def read_unsigned_int(data: bytes, offset: int) -> int:
+    """Retrieve 2 byte (unsigned int) value from bytes at specified offset"""
+    return int.from_bytes(data[offset:offset + 2], byteorder="big", signed=False)

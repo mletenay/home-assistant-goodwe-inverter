@@ -33,9 +33,14 @@ class Sensor:
     unit: str
     kind: Optional[SensorKind]
 
-    def read(self, data: io.BytesIO):
-        """Read the sensor value from data"""
+    def read_value(self, data: io.BytesIO) -> Any:
+        """Read the sensor value from data at current position"""
         raise NotImplementedError()
+
+    def read(self, data: io.BytesIO) -> Any:
+        """Read the sensor value from data (at sensor offset)"""
+        data.seek(self.offset)
+        return self.read_value(data)
 
 
 class Inverter:
@@ -61,6 +66,15 @@ class Inverter:
         self.model_name = model_name
         self.serial_number = serial_number
         self.software_version = software_version
+        self.modbus_version: int = None
+        self.rated_power: int = None
+        self.ac_output_type: int = None
+        self.dsp1_sw_version: int = None
+        self.dsp2_sw_version: int = None
+        self.dsp_spn_version: int = None
+        self.arm_sw_version: int = None
+        self.arm_svn_version: int = None
+        self.arm_version: str = None
 
     async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
         return await command.execute(self.host, self.port, self.timeout, self.retries)
@@ -80,6 +94,24 @@ class Inverter:
 
         If include_unknown_sensors parameter is set to True, return all runtime values,
         including those "xx*" sensors whose meaning is not yet identified.
+        """
+        raise NotImplementedError()
+
+    async def read_settings(self, setting_id: str) -> Any:
+        """
+        Read the value of specific inverter settings/configuration parameter.
+        Setting must be in list provided by settings() method, otherwise ValueError is raised.
+        """
+        raise NotImplementedError()
+
+    async def write_settings(self, setting_id: str, value: Any):
+        """
+        Set the value of specific inverter settings/configuration parameter.
+        Setting must be in list provided by settings() method, otherwise ValueError is raised.
+
+        BEWARE !!!
+        This method modifies inverter operational parameter (usually accessible to installers only).
+        Use with caution and at your own risk !
         """
         raise NotImplementedError()
 

@@ -119,9 +119,17 @@ class ProtocolCommand:
 
 class Aa55ProtocolCommand(ProtocolCommand):
     """
-    Inverter communication protocol based on 0xAA,0x55 kinds of commands.
-    Each comand starts with header of 0xAA, 0x55, 0xC0, 0x7F followed by payload data.
+    Inverter communication protocol seen mostly on older generations of inverters.
+    Quite probably it is some variation of the protocol used on RS-485 serial link,
+    extended/adapted to UDP transport layer.
+
+    Each request starts with header of 0xAA, 0x55, then 0xC0, 0x7F (probably some sort of address/command)
+    followed by actual payload data.
     It is suffixed with 2 bytes of plain checksum of header+payload.
+
+    Response starts again with 0xAA, 0x55, then 0x7F, 0xC0.
+    5-6th bytes are some response type, byte 7 is length of the response payload.
+    The last 2 bytes are again plain checksum of header+payload.
     """
 
     def __init__(self, payload: str, response_type: str):
@@ -165,8 +173,25 @@ class Aa55ProtocolCommand(ProtocolCommand):
 
 class ModbusProtocolCommand(ProtocolCommand):
     """
-    Inverter modbus communication protocol accepting string based payload (including header).
-    Modbus-CRC16 checksum will be appended.
+    Inverter communication protocol seen on newer generation of inverters, based on Modbus
+    protocol over UDP transport layer.
+    The modbus communication is rather simple, there are "registers" at specified addresses/offsets,
+    each represented by 2 bytes. The protocol may query/update individual or range of these registers.
+    Each register represents some measured value or operational settings.
+    It's inverter implementation specific which register means what.
+    Some values may span more registers (i.e. 4bytes measurement value over 2 registers).
+
+    Every request usually starts with 0xF7 (which is some inverter modbus address, the default value is 0xF7,
+    but in theory can be changed).
+    Second byte is the modbus command - 0x03 read multiple, 0x06 write single, 0x09 write multiple.
+    Bytes 3-4 represent the register address (or start of range)
+    Bytes 5-6 represent the command parameter (range size or actual value for write).
+    Last 2 bytes of request is the CRC-16 (modbus flavor) of the request.
+
+    Responses seem to always start with 0xAA, 0x55, then the 0xF7 and modbus command.
+    (If the command fails, the highest bit of command is set to 1 ?)
+    Next byte is response payload length, then the actual payload.
+    Last 2 bytes of response is again the CRC-16 of the response.
     """
 
     def __init__(self, payload: str, response_len: int = 0):

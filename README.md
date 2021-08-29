@@ -3,7 +3,7 @@
 # GoodWe solar inverter sensors for Home Assistant
 
 The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.
-It has been tested on GoodWe ET, EH, ES, EM, DT, D-NS and XS families of inverters.
+It has been tested on GoodWe ET, EH, ES, EM, DT, D-NS, XS and BP families of inverters.
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
 The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).
@@ -26,8 +26,8 @@ This is how your custom_components directory should look like:
 ```bash
 custom_components
 ├── goodwe
+│   ├── goodwe/*
 │   ├── __init__.py
-│   ├── goodwe_inverter.py
 │   ├── manifest.json
 │   └── sensor.py
 ```
@@ -44,12 +44,12 @@ sensor:
     #network_timeout: 2
     #network_retries: 3
     #scan_interval: 30
-    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS or None to detect inverter type automatically
+    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
     #sensor_name_prefix: GoodWe
     #include_unknown_sensors: false
 ```
 
-The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS can be specified.
+The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS, BP can be specified.
 
 The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
 the command will be re-tried up to `network_retries` times.

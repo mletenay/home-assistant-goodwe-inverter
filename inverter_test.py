@@ -3,7 +3,7 @@ import asyncio
 import logging
 import sys
 
-import custom_components.goodwe.goodwe_inverter as inverter
+import custom_components.goodwe.goodwe.goodwe as inverter
 
 logging.basicConfig(
     format="%(asctime)-15s %(funcName)s(%(lineno)d) - %(levelname)s: %(message)s",
@@ -15,7 +15,7 @@ logging.basicConfig(
 IP_ADDRESS = "192.168.1.14"
 
 PORT = 8899
-# One of ET, EH, ES, EM, DT, NS, XS or None to detect inverter family automatically
+# One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter family automatically
 FAMILY = "ET"
 TIMEOUT = 2
 RETRIES = 3
@@ -30,9 +30,9 @@ print(
 
 response = asyncio.run(inverter.read_runtime_data())
 
-for (sensor, _, _, unit, name, _) in inverter.sensors():
-    if sensor in response:
-        print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
+for sensor in inverter.sensors():
+    if sensor.id_ in response:
+        print(f"{sensor.id_}: \t\t {sensor.name} = {response[sensor.id_]} {sensor.unit}")
 
 # response = asyncio.run(inverter.read_settings_data())
 

@@ -118,9 +118,18 @@ class EH(Inverter):
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[12:22]
-        self.model_name = response[12:22].decode("ascii").rstrip()
+        self.modbus_version = read_unsigned_int(response, 0)
+        self.rated_power = read_unsigned_int(response, 2)
+        self.ac_output_type = read_unsigned_int(response, 4)
         self.serial_number = response[6:22].decode("ascii")
-        self.software_version = response[54:66].decode("ascii")
+        self.model_name = response[22:32].decode("ascii").rstrip()
+        self.dsp1_sw_version = read_unsigned_int(response, 32)
+        self.dsp2_sw_version = read_unsigned_int(response, 34)
+        self.dsp_spn_version = read_unsigned_int(response, 36)
+        self.arm_sw_version = read_unsigned_int(response, 38)
+        self.arm_svn_version = read_unsigned_int(response, 40)
+        self.software_version = response[42:54].decode("ascii")
+        self.arm_version = response[54:66].decode("ascii")
 
     async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
