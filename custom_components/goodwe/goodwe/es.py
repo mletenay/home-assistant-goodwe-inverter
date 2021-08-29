@@ -79,7 +79,7 @@ class ES(Inverter):
         Energy4("e_load_total", 71, "Total Load", Kind.AC),
         Power("total_power", 75, "Total Power", Kind.AC),
         Byte("effective_work_mode", 77, "Effective Work Mode code"),
-        # Effective relay control 78-79
+        Integer("effective_relay_control", 78, "Effective Relay Control", "", None),
         Byte("grid_in_out", 80, "On-grid Mode code", "", Kind.AC),
         Calculated("grid_in_out_label", 0,
                    lambda data, _: GRID_MODES.get(read_byte(data, 80)),
@@ -89,6 +89,9 @@ class ES(Inverter):
         Calculated("plant_power", 0,
                    lambda data, _: round(read_power2(data, 47) + read_power2(data, 81)),
                    "Plant Power", "W", Kind.AC),
+        Integer("xx83", 83, "Unknown sensor@83"),
+        Integer("xx85", 85, "Unknown sensor@85"),
+        Integer("xx87", 87, "Unknown sensor@87"),
         Long("diagnose_result", 89, "Diag Status"),
         # ppv1 + ppv2 + pbattery - pgrid
         Calculated("house_consumption", 0,

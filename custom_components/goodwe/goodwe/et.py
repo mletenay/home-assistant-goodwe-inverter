@@ -10,8 +10,8 @@ class ET(Inverter):
     """Class representing inverter of ET family"""
 
     _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021, 73)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x0011, 41)
+    _READ_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
+    _READ_METER_DATA: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x0011, 41)
     _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b, 29)
     _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001, 9)
 
@@ -79,12 +79,12 @@ class ET(Inverter):
         Power4("backup_ptotal", 138, "Back-up Power", Kind.UPS),
         Power4("pload", 142, "Load", Kind.AC),
         Integer("ups_load", 146, "Ups Load", "%", Kind.UPS),
-        Temp("temperature2", 148, "Inverter Temperature 2", Kind.AC),
-        Integer("xx150", 150, "Unknown sensor@150"),
-        Temp("temperature", 152, "Inverter Temperature", Kind.AC),
+        Temp("temperature_air", 148, "Inverter Temperature (Air))", Kind.AC),
+        Temp("temperature_module", 150, "Inverter Temperature (Module)"),
+        Temp("temperature", 152, "Inverter Temperature (Radiator)", Kind.AC),
         Integer("xx154", 154, "Unknown sensor@154"),
-        Integer("xx156", 156, "Unknown sensor@156"),
-        Integer("xx158", 158, "Unknown sensor@158"),
+        Voltage("bus_voltage", 156, "Bus Voltage", None),
+        Voltage("nbus_voltage", 158, "NBus Voltage", None),
         Voltage("vbattery1", 160, "Battery Voltage", Kind.BAT),  # modbus 35180
         Current("ibattery1", 162, "Battery Current", Kind.BAT),
         # round(vbattery1 * ibattery1),
@@ -102,11 +102,17 @@ class ET(Inverter):
         Long("error_codes", 178, "Error Codes"),
         Energy4("e_total", 182, "Total PV Generation", Kind.PV),
         Energy4("e_day", 186, "Today's PV Generation", Kind.PV),
-        Integer("xx190", 190, "Unknown sensor@190"),
-        Energy("s_total", 192, "Total Electricity Sold", Kind.AC),
+        Energy4("e_total_exp", 190, "Total Energy (export)", Kind.AC),
         Long("h_total", 194, "Hours Total", "h", Kind.PV),
-        Integer("xx198", 198, "Unknown sensor@198"),
-        Energy("s_day", 200, "Today Electricity Sold", Kind.AC),
+        Energy("e_day_exp", 198, "Today Energy (export)", Kind.AC),
+        Energy4("e_total_imp", 200, "Total Energy (import)", Kind.AC),
+        Energy("e_day_imp", 204, "Today Energy (import)", Kind.AC),
+        Energy4("e_load_total", 206, "Total Load", Kind.AC),
+        Energy("e_load_day", 210, "Today Load", Kind.AC),
+        Energy4("e_bat_charge_total", 212, "Total Battery Charge", Kind.BAT),
+        Energy("e_bat_charge_day", 216, "Today Battery Charge", Kind.BAT),
+        Energy4("e_bat_discharge_total", 218, "Total Battery Discharge", Kind.BAT),
+        Energy("e_bat_discharge_day", 222, "Today Battery Discharge", Kind.BAT),
         Long("diagnose_result", 240, "Diag Status"),
         # ppv1 + ppv2 + pbattery - active_power
         Calculated("house_consumption", 0,
@@ -129,23 +135,23 @@ class ET(Inverter):
         Integer("battery_warning", 20, "Battery Warning", "", Kind.BAT),
     )
 
-    # Modbus registers from offset 0x8ca0 (36000), count 0x11 (17)
-    __sensors2: Tuple[Sensor, ...] = (
+    # Inverter's meter data
+    # Modbus registers from offset 0x8ca0 (36000), count 0x13 (19)
+    __sensors_meter: Tuple[Sensor, ...] = (
         Integer("xxx0", 0, "Unknown sensor2@0"),
-        Integer("xxx2", 2, "Unknown sensor2@2"),
-        Integer("xxx4", 4, "Unknown sensor2@4"),
+        Integer("rssi", 2, "RSSI"),
+        Integer("manufacture_code", 4, "Manufacture Code"),
         Integer("meter_test_status", 6, "Meter Test Status"),
         Integer("meter_comm_status", 8, "Meter Communication Status"),
         Power("active_power1", 10, "Active Power L1", Kind.AC),  # modbus 36005
         Power("active_power2", 12, "Active Power L2", Kind.AC),
         Power("active_power3", 14, "Active Power L3", Kind.AC),
-        # 16 = sum of 10,12 and 14 = active power
-        Integer("xxx16", 16, "Unknown sensor2@16"),
-        Integer("xxx18", 18, "Unknown sensor2@18"),
-        Integer("xxx20", 20, "Unknown sensor2@20"),
-        Integer("xxx22", 22, "Unknown sensor2@22"),
-        Integer("xxx24", 24, "Unknown sensor2@24"),
-        Integer("xxx26", 26, "Unknown sensor2@26"),  # METER_POWER_FACTOR ?
+        Integer("active_power_total", 16, "Active Power Total"),
+        Integer("reactive_power_total", 18, "Reactive Power Total"),
+        Integer("meter_power_factor1", 20, "Meter Power Factor L1"),
+        Integer("meter_power_factor2", 22, "Meter Power Factor L2"),
+        Integer("meter_power_factor3", 24, "Meter Power Factor L3"),
+        Integer("meter_power_factor", 26, "Meter Power Factor"),
         Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),
         Integer("xxx30", 30, "Unknown sensor2@30"),
         Integer("xxx32", 32, "Unknown sensor2@32"),
@@ -192,13 +198,12 @@ class ET(Inverter):
         self.arm_version = response[54:66].decode("ascii")
 
     async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
-        raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA1)
+        raw_data = await self._read_from_socket(self._READ_RUNNING_DATA)
         data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
         raw_data = await self._read_from_socket(self._READ_BATTERY_INFO)
         data.update(self._map_response(raw_data[5:-2], self.__sensors_battery, include_unknown_sensors))
-        if include_unknown_sensors:  # all sensors in RUNNING_DATA2 request are not yet know at the moment
-            raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA2)
-            data.update(self._map_response(raw_data[5:-2], self.__sensors2, include_unknown_sensors))
+        raw_data = await self._read_from_socket(self._READ_METER_DATA)
+        data.update(self._map_response(raw_data[5:-2], self.__sensors_meter, include_unknown_sensors))
         return data
 
     async def read_settings(self, setting_id: str) -> Any:
@@ -224,7 +229,7 @@ class ET(Inverter):
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors + cls.__sensors_battery + cls.__sensors2
+        return cls.__sensors + cls.__sensors_battery + cls.__sensors_meter
 
     @classmethod
     def settings(cls) -> Tuple[Sensor, ...]:
