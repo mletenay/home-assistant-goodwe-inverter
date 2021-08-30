@@ -9,11 +9,11 @@ from .sensor import *
 class EH(Inverter):
     """Class representing inverter of EH family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021, 146)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x001b, 61)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b, 29)
-    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001, 9)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x001b)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b)
+    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001)
 
     __sensors: Tuple[Sensor, ...] = (
         Voltage("vpv1", 6, "PV1 Voltage", Kind.PV),
@@ -123,7 +123,7 @@ class EH(Inverter):
 
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
-        response = response[12:22]
+        response = response[5:-2]
         self.modbus_version = read_unsigned_int(response, 0)
         self.rated_power = read_unsigned_int(response, 2)
         self.ac_output_type = read_unsigned_int(response, 4)
@@ -150,7 +150,7 @@ class EH(Inverter):
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod, 10))
+            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

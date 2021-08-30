@@ -9,11 +9,11 @@ from .sensor import *
 class ET(Inverter):
     """Class representing inverter of ET family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021, 73)
-    _READ_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d, 257)
-    _READ_METER_DATA: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x0011, 41)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b, 29)
-    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001, 9)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021)
+    _READ_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d)
+    _READ_METER_DATA: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x0011)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b)
+    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001)
 
     # Modbus registers from offset 0x891c (35100), count 0x7d (125)
     __sensors: Tuple[Sensor, ...] = (
@@ -208,7 +208,7 @@ class ET(Inverter):
 
     async def read_settings(self, setting_id: str) -> Any:
         setting = {s.id_: s for s in self.settings()}.get(setting_id)
-        raw_data = await self._read_from_socket(ModbusReadCommand(setting.offset, 1, 9))
+        raw_data = await self._read_from_socket(ModbusReadCommand(setting.offset, 1))
         with io.BytesIO(raw_data[5:-2]) as buffer:
             return setting.read_value(buffer)
 
@@ -225,7 +225,7 @@ class ET(Inverter):
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod, 10))
+            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

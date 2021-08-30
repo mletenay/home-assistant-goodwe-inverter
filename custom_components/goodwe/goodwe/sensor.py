@@ -220,8 +220,6 @@ def read_current(buffer: io.BytesIO, offset: int = None) -> float:
     if offset:
         buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
-    if value > 32768:
-        value = value - 65535
     return float(value) / 10
 
 
@@ -240,8 +238,6 @@ def read_power2(buffer: io.BytesIO, offset: int = None) -> int:
     if offset:
         buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
-    if value > 32768:
-        value = value - 65535
     return value
 
 

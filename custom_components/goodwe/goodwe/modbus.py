@@ -1,4 +1,8 @@
+import logging
+
 from typing import Union
+
+logger = logging.getLogger(__name__)
 
 # default inverter modbus address
 _INVERTER_ADDRESS = 0xf7
@@ -69,14 +73,19 @@ def append_modbus_checksum(payload: str) -> bytes:
     return bytes(data)
 
 
-def validate_modbus_response(data: bytes, response_len: int) -> bool:
+def validate_modbus_response(data: bytes) -> bool:
     """
     Validate the modbus response.
     data[0:1] is header
     data[2:3] is response type
-    data[4] is response payload length ??
+    data[4] is response payload length
     data[-2:] is crc-16 checksum
     """
-    if len(data) <= 4 or (response_len != 0 and response_len != len(data)):
+    if len(data) <= 4 or (data[4] > len(data) - 7):
+        logger.debug(f'Response has unexpected length: {len(data)}, expected {data[4] + 7}.')
         return False
-    return _modbus_checksum(data[2:-2]) == ((data[-1] << 8) + data[-2])
+    checksum_offset = data[4] + 5
+    if _modbus_checksum(data[2:checksum_offset]) != ((data[checksum_offset + 1] << 8) + data[checksum_offset]):
+        logger.debug(f'Response CRC-16 checksum does not match.')
+        return False
+    return True

@@ -163,12 +163,17 @@ class Aa55ProtocolCommand(ProtocolCommand):
                 or len(data) != data[6] + 9
                 or (response_type and int(response_type, 16) != int.from_bytes(data[4:6], byteorder="big", signed=True))
         ):
+            logger.debug(f'Response has unexpected length: {len(data)}, expected {data[6] + 9}.')
             return False
         else:
             checksum = 0
             for each in data[:-2]:
                 checksum += each
-            return checksum == int.from_bytes(data[-2:], byteorder="big", signed=True)
+            if checksum != int.from_bytes(data[-2:], byteorder="big", signed=True):
+                logger.debug(f'Response checksum does not match.')
+                return False
+            return True
+
 
 
 class ModbusProtocolCommand(ProtocolCommand):
@@ -194,10 +199,10 @@ class ModbusProtocolCommand(ProtocolCommand):
     Last 2 bytes of response is again the CRC-16 of the response.
     """
 
-    def __init__(self, payload: str, response_len: int = 0):
+    def __init__(self, payload: str):
         super().__init__(
             append_modbus_checksum(payload),
-            lambda x: validate_modbus_response(x, response_len),
+            lambda x: validate_modbus_response(x),
         )
 
 
@@ -206,10 +211,10 @@ class ModbusReadCommand(ProtocolCommand):
     Inverter modbus READ command for retrieving <count> modbus registers starting at register # <offset>
     """
 
-    def __init__(self, offset: int, count: int, response_len: int = 0):
+    def __init__(self, offset: int, count: int):
         super().__init__(
             create_modbus_request(MODBUS_READ_CMD, offset, count),
-            lambda x: validate_modbus_response(x, response_len),
+            lambda x: validate_modbus_response(x),
         )
 
 
@@ -218,8 +223,8 @@ class ModbusWriteCommand(ProtocolCommand):
     Inverter modbus WRITE command setting to modbus register # <register> value <value>
     """
 
-    def __init__(self, register: int, value: int, response_len: int = 0):
+    def __init__(self, register: int, value: int):
         super().__init__(
             create_modbus_request(MODBUS_WRITE_CMD, register, value),
-            lambda x: validate_modbus_response(x, response_len),
+            lambda x: validate_modbus_response(x),
         )
