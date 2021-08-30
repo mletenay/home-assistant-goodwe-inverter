@@ -130,6 +130,17 @@ utility_meter:
     cycle: monthly
 ```
 
+## Troubleshooting
+
+If you observe any problems or cannot make it work with your inverter at all, try to increase logging level of the component and check the log files.
+
+```YAML
+logger:
+  default: warning
+  logs:
+    custom_components.goodwe: debug
+```
+
 ## Inverter discovery and communication testing
 
 To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script in your python (3.7+) environment.
