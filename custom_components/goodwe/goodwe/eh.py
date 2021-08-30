@@ -9,11 +9,11 @@ from .sensor import *
 class EH(Inverter):
     """Class representing inverter of EH family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x88b8, 0x0021)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0x891c, 0x007d)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0x8ca0, 0x001b)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0x9088, 0x000b)
-    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xb798, 0x0001)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0xf7, 0x88b8, 0x0021)
+    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0xf7, 0x891c, 0x007d)
+    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0xf7, 0x8ca0, 0x001b)
+    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0xf7, 0x9088, 0x000b)
+    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xf7, 0xb798, 0x0001)
 
     __sensors: Tuple[Sensor, ...] = (
         Voltage("vpv1", 6, "PV1 Voltage", Kind.PV),
@@ -146,11 +146,11 @@ class EH(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            await self._read_from_socket(ModbusWriteCommand(0xb798, work_mode))
+            await self._read_from_socket(ModbusWriteCommand(0xf7, 0xb798, work_mode))
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(ModbusWriteCommand(0xb12c, 100 - dod))
+            await self._read_from_socket(ModbusWriteCommand(0xf7, 0xb12c, 100 - dod))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

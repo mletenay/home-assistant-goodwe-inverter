@@ -8,9 +8,8 @@ from .sensor import *
 
 class DT(Inverter):
     """Class representing inverter of DT, D-NS and XS families"""
-
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x7531, 0x0028)
-    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x7594, 0x0049)
+    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x7f, 0x7531, 0x0028)
+    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x7f, 0x7594, 0x0049)
 
     __sensors: Tuple[Sensor, ...] = (
         Timestamp("timestamp", 0, "Timestamp"),
@@ -124,9 +123,9 @@ class DT(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode == 0:
-            await self._read_from_socket(ModbusWriteCommand(0x9d8b, 0))
+            await self._read_from_socket(ModbusWriteCommand(0x7f, 0x9d8b, 0))
         elif work_mode == 3:
-            await self._read_from_socket(ModbusWriteCommand(0x9d8a, 0))
+            await self._read_from_socket(ModbusWriteCommand(0x7f, 0x9d8a, 0))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

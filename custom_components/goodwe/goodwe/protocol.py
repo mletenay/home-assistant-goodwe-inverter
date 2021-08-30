@@ -3,8 +3,7 @@ import logging
 from typing import Tuple, Optional, Callable
 
 from .exceptions import MaxRetriesException, RequestFailedException
-from .modbus import append_modbus_checksum, create_modbus_request, validate_modbus_response, MODBUS_READ_CMD, \
-    MODBUS_WRITE_CMD
+from .modbus import create_modbus_request, validate_modbus_response, MODBUS_READ_CMD, MODBUS_WRITE_CMD
 
 logger = logging.getLogger(__name__)
 
@@ -199,32 +198,26 @@ class ModbusProtocolCommand(ProtocolCommand):
     Last 2 bytes of response is again the CRC-16 of the response.
     """
 
-    def __init__(self, payload: str):
+    def __init__(self, dst: int, cmd: int, offset: int, value: int):
         super().__init__(
-            append_modbus_checksum(payload),
+            create_modbus_request(dst, cmd, offset, value),
             lambda x: validate_modbus_response(x),
         )
 
 
-class ModbusReadCommand(ProtocolCommand):
+class ModbusReadCommand(ModbusProtocolCommand):
     """
     Inverter modbus READ command for retrieving <count> modbus registers starting at register # <offset>
     """
 
-    def __init__(self, offset: int, count: int):
-        super().__init__(
-            create_modbus_request(MODBUS_READ_CMD, offset, count),
-            lambda x: validate_modbus_response(x),
-        )
+    def __init__(self, dst: int, offset: int, count: int):
+        super().__init__(dst, MODBUS_READ_CMD, offset, count)
 
 
-class ModbusWriteCommand(ProtocolCommand):
+class ModbusWriteCommand(ModbusProtocolCommand):
     """
     Inverter modbus WRITE command setting to modbus register # <register> value <value>
     """
 
-    def __init__(self, register: int, value: int):
-        super().__init__(
-            create_modbus_request(MODBUS_WRITE_CMD, register, value),
-            lambda x: validate_modbus_response(x),
-        )
+    def __init__(self, dst: int, register: int, value: int):
+        super().__init__(dst, MODBUS_WRITE_CMD, register, value)
