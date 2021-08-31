@@ -121,6 +121,33 @@ class EH(Inverter):
         Integer("battery_bms", 0, "Battery BMS", "", Kind.BAT),
     )
 
+    # Modbus registers of inverter settings, offsets are modbus register addresses
+    __settings: Tuple[Sensor, ...] = (
+        Integer("cold_start", 45248, "Cold Start", "", Kind.AC),
+        Integer("shadow_scan", 45251, "Shadow Scan", "", Kind.PV),
+        Integer("backup_supply", 45252, "Backup Supply", "", Kind.UPS),
+        Integer("sensitivity_check", 45246, "Sensitivity Check Mode", "", Kind.AC),
+
+        Integer("battery_capacity", 45350, "Battery Capacity", "Ah", Kind.BAT),
+        Integer("battery_modules", 45351, "Battery Modules", "", Kind.BAT),
+        Voltage("battery_charge_voltage", 45352, "Battery Charge Voltage", Kind.BAT),
+        Current("battery_charge_current", 45353, "Battery Charge Current", Kind.BAT),
+        Voltage("battery_discharge_voltage", 45354, "Battery Discharge Voltage", Kind.BAT),
+        Current("battery_discharge_current", 45355, "Battery Discharge Current", Kind.BAT),
+        Integer("battery_discharge_depth", 45356, "Battery Discharge Depth", "%", Kind.BAT),
+        Voltage("battery_discharge_voltage_offline", 45357, "Battery Discharge Voltage (off-line)", Kind.BAT),
+        Integer("battery_discharge_depth_offline", 45358, "Battery Discharge Depth (off-line)", "%", Kind.BAT),
+
+        Integer("power_factor", 45482, "Power Factor"),
+
+        Integer("work_mode", 47000, "Work Mode", "", Kind.AC),
+
+        Integer("battery_soc_protection", 47500, "Battery SoC Protection", "", Kind.BAT),
+
+        Integer("grid_export", 47509, "Grid Export Enabled", "", Kind.AC),
+        Integer("grid_export_limit", 47510, "Grid Export Limit", "W", Kind.AC),
+    )
+
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
@@ -144,14 +171,46 @@ class EH(Inverter):
         # data.update(self._map_response(raw_data[5:-2], self.__sensors_battery))
         return data
 
+    async def read_settings(self, setting_id: str) -> Any:
+        setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
+        if not setting:
+            raise ValueError(f'Unknown setting "{setting_id}"')
+        raw_data = await self._read_from_socket(ModbusReadCommand(0xf7, setting.offset, 1))
+        with io.BytesIO(raw_data[5:-2]) as buffer:
+            return setting.read_value(buffer)
+
+    async def write_settings(self, setting_id: str, value: Any):
+        setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
+        if not setting:
+            raise ValueError(f'Unknown setting "{setting_id}"')
+        raw_value = setting.encode_value(value)
+        if len(raw_value) > 2:
+            raise NotImplementedError()
+        value = int.from_bytes(raw_value, byteorder="big", signed=True)
+        await self._read_from_socket(ModbusWriteCommand(0xf7, setting.offset, value))
+
+    async def read_settings_data(self) -> Dict[str, Any]:
+        data = {}
+        for setting in self.settings():
+            value = await self.read_settings(setting.id_)
+            data[setting.id_] = value
+        return data
+
+    async def set_grid_export_limit(self, export_limit: int):
+        return await self.write_settings('grid_export_limit', export_limit)
+
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
-            await self._read_from_socket(ModbusWriteCommand(0xf7, 0xb798, work_mode))
+            return await self.write_settings('work_mode', work_mode)
 
     async def set_ongrid_battery_dod(self, dod: int):
         if 0 <= dod <= 89:
-            await self._read_from_socket(ModbusWriteCommand(0xf7, 0xb12c, 100 - dod))
+            return await self.write_settings('battery_discharge_depth', 100 - dod)
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
         return cls.__sensors + cls.__sensors_battery
+
+    @classmethod
+    def settings(cls) -> Tuple[Sensor, ...]:
+        return cls.__settings

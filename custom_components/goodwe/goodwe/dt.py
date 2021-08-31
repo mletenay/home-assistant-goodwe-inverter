@@ -71,10 +71,8 @@ class DT(Inverter):
         Integer("xx84", 84, "Unknown sensor@84"),
         Integer("xx86", 86, "Unknown sensor@86"),
         Energy("e_day", 88, "Today's PV Generation", Kind.PV),
-        Integer("xx90", 90, "Unknown sensor@90"),
-        Energy("e_total", 92, "Total PV Generation", Kind.PV),
-        Integer("xx94", 94, "Unknown sensor@94"),
-        Integer("h_total", 96, "Hours Total", "h", Kind.PV),
+        Energy4("e_total", 90, "Total PV Generation", Kind.PV),
+        Long("h_total", 94, "Hours Total", "h", Kind.PV),
         Integer("safety_country", 98, "Safety Country code", "", Kind.AC),
         Enum2("safety_country_label", 98, SAFETY_COUNTRIES_ET, "Safety Country", "", Kind.AC),
         Integer("xx100", 100, "Unknown sensor@100"),
@@ -102,6 +100,11 @@ class DT(Inverter):
         Integer("xx144", 144, "Unknown sensor@144"),
     )
 
+    # Modbus registers of inverter settings, offsets are modbus register addresses
+    __settings: Tuple[Sensor, ...] = (
+        Integer("work_mode", 40331, "Work Mode", "", Kind.AC),
+    )
+
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
@@ -118,6 +121,31 @@ class DT(Inverter):
         data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
         return data
 
+    async def read_settings(self, setting_id: str) -> Any:
+        setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
+        if not setting:
+            raise ValueError(f'Unknown setting "{setting_id}"')
+        raw_data = await self._read_from_socket(ModbusReadCommand(0x7f, setting.offset, 1))
+        with io.BytesIO(raw_data[5:-2]) as buffer:
+            return setting.read_value(buffer)
+
+    async def write_settings(self, setting_id: str, value: Any):
+        setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
+        if not setting:
+            raise ValueError(f'Unknown setting "{setting_id}"')
+        raw_value = setting.encode_value(value)
+        if len(raw_value) > 2:
+            raise NotImplementedError()
+        value = int.from_bytes(raw_value, byteorder="big", signed=True)
+        await self._read_from_socket(ModbusWriteCommand(0x7f, setting.offset, value))
+
+    async def read_settings_data(self) -> Dict[str, Any]:
+        data = {}
+        for setting in self.settings():
+            value = await self.read_settings(setting.id_)
+            data[setting.id_] = value
+        return data
+
     async def set_ongrid_battery_dod(self, dod: int):
         pass
 
@@ -130,3 +158,7 @@ class DT(Inverter):
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:
         return cls.__sensors
+
+    @classmethod
+    def settings(cls) -> Tuple[Sensor, ...]:
+        return cls.__settings

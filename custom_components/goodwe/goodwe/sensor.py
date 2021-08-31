@@ -15,6 +15,9 @@ class Voltage(Sensor):
     def read_value(self, data: io.BytesIO):
         return read_voltage(data)
 
+    def encode_value(self, value: Any) -> bytes:
+        return encode_voltage(value)
+
 
 class Current(Sensor):
     """Sensor representing current [A] value encoded in 2 bytes"""
@@ -24,6 +27,9 @@ class Current(Sensor):
 
     def read_value(self, data: io.BytesIO):
         return read_current(data)
+
+    def encode_value(self, value: Any) -> bytes:
+        return encode_current(value)
 
 
 class Frequency(Sensor):
@@ -115,6 +121,9 @@ class Byte(Sensor):
     def read_value(self, data: io.BytesIO):
         return read_byte(data)
 
+    def encode_value(self, value: Any) -> bytes:
+        return int.to_bytes(int(value), length=1, byteorder="big", signed=True)
+
 
 class Integer(Sensor):
     """Sensor representing signed int value encoded in 2 bytes"""
@@ -125,6 +134,9 @@ class Integer(Sensor):
     def read_value(self, data: io.BytesIO):
         return read_bytes2(data)
 
+    def encode_value(self, value: Any) -> bytes:
+        return int.to_bytes(int(value), length=2, byteorder="big", signed=True)
+
 
 class Long(Sensor):
     """Sensor representing signed int value encoded in 4 bytes"""
@@ -134,6 +146,9 @@ class Long(Sensor):
 
     def read_value(self, data: io.BytesIO):
         return read_bytes4(data)
+
+    def encode_value(self, value: Any) -> bytes:
+        return int.to_bytes(int(value), length=4, byteorder="big", signed=True)
 
 
 class Timestamp(Sensor):
@@ -215,12 +230,22 @@ def read_voltage(buffer: io.BytesIO, offset: int = None) -> float:
     return float(value) / 10
 
 
+def encode_voltage(value: Any) -> bytes:
+    """Encode voltage value to raw (2 bytes) payload"""
+    return int.to_bytes(int(value * 10), length=2, byteorder="big", signed=True)
+
+
 def read_current(buffer: io.BytesIO, offset: int = None) -> float:
     """Retrieve current [A] value (2 bytes) from buffer"""
     if offset:
         buffer.seek(offset)
     value = int.from_bytes(buffer.read(2), byteorder="big", signed=True)
     return float(value) / 10
+
+
+def encode_current(value: Any) -> bytes:
+    """Encode current value to raw (2 bytes) payload"""
+    return int.to_bytes(int(value * 10), length=2, byteorder="big", signed=True)
 
 
 def read_power(buffer: io.BytesIO, offset: int = None) -> int:

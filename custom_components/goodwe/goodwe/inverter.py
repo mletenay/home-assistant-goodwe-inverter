@@ -42,6 +42,9 @@ class Sensor:
         data.seek(self.offset)
         return self.read_value(data)
 
+    def encode_value(self, value: Any) -> bytes:
+        """Encode the (setting mostly) value to (usually) 2 byte raw register value"""
+        raise NotImplementedError()
 
 class Inverter:
     """
@@ -131,6 +134,16 @@ class Inverter:
         Answer command's raw response data.
         """
         return await self._read_from_socket(ProtocolCommand(command, validator))
+
+    async def set_grid_export_limit(self, export_limit: int):
+        """
+        BEWARE !!!
+        This method modifies inverter operational parameter accessible to installers only.
+        Use with caution and at your own risk !
+
+        Set the grid export limit in W
+        """
+        raise NotImplementedError()
 
     async def set_work_mode(self, work_mode: int):
         """
