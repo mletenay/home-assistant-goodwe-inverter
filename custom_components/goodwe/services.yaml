@@ -1,7 +1,8 @@
 set_work_mode:
   description: |
     USE WITH CAUTION AND AT YOUR OWN RISK !!!
-    This service modifies inverter operational parameter accessible to installers only - the work mode
+    This service modifies inverter operational parameter, usually accessible to installers only.
+    Set the inverter work_mode.
   fields:
     entity_id:
       description: ID of the inverter entity
@@ -12,11 +13,24 @@ set_work_mode:
 set_ongrid_battery_dod:
   description: |
     USE WITH CAUTION AND AT YOUR OWN RISK !!!
-    This service changes On-Grid Battery DoD accessible to installers only - battery DoD
+    This service modifies inverter operational parameter, usually accessible to installers only.
+    Set the battery depth of discharge (on-grid)
   fields:
     entity_id:
       description: ID of the inverter entity
       example: "sensor.goodwe_inverter"
     ongrid_battery_dod:
-      description: 0 - 89
+      description: 0 - 89, Depth of Discharge %
+      example: "0"
+set_grid_export_limit:
+  description: |
+    USE WITH CAUTION AND AT YOUR OWN RISK !!!
+    This service modifies inverter operational parameter, usually accessible to installers only.
+    Set the grid export limit (in W)
+  fields:
+    entity_id:
+      description: ID of the inverter entity
+      example: "sensor.goodwe_inverter"
+    grid_export_limit:
+      description: 0 - 10000, Grid export limit in W
       example: "0"

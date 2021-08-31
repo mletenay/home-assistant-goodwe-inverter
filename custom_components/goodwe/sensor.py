@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "goodwe"
 ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
+
 SERVICE_SET_WORK_MODE = "set_work_mode"
 ATTR_WORK_MODE = "work_mode"
 SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
@@ -49,6 +50,13 @@ ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
 SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,
+    }
+)
+SERVICE_SET_GRID_EXPORT_LIMIT = "set_grid_export_limit"
+ATTR_GRID_EXPORT_LIMIT = "grid_export_limit"
+SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,
     }
 )
 
@@ -127,6 +135,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         {vol.Required(ATTR_ONGRID_BATTERY_DOD): vol.Coerce(int)},
         "set_ongrid_battery_dod",
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_GRID_EXPORT_LIMIT,
+        {vol.Required(ATTR_GRID_EXPORT_LIMIT): vol.Coerce(int)},
+        "set_grid_export_limit",
+    )
 
     return True
 
@@ -183,8 +196,12 @@ class InverterEntity(Entity):
         await self.inverter.set_work_mode(work_mode)
 
     async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
-        """Set the on grid battery dod"""
+        """Set the on-grid battery dod"""
         await self.inverter.set_ongrid_battery_dod(ongrid_battery_dod)
+
+    async def set_grid_export_limit(self, grid_export_limit: int):
+        """Set the grid export limit"""
+        await self.inverter.set_grid_export_limit(grid_export_limit)
 
     def update_value(self, inverter_response):
         """Update the entity value from the response received from inverter"""
