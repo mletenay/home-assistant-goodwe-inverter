@@ -148,10 +148,10 @@ class ET(Inverter):
         Power("active_power3", 14, "Active Power L3", Kind.AC),
         Integer("active_power_total", 16, "Active Power Total"),
         Integer("reactive_power_total", 18, "Reactive Power Total"),
-        Integer("meter_power_factor1", 20, "Meter Power Factor L1"),
-        Integer("meter_power_factor2", 22, "Meter Power Factor L2"),
-        Integer("meter_power_factor3", 24, "Meter Power Factor L3"),
-        Integer("meter_power_factor", 26, "Meter Power Factor"),
+        Decimal("meter_power_factor1", 20, 100, "Meter Power Factor L1"),
+        Decimal("meter_power_factor2", 22, 100, "Meter Power Factor L2"),
+        Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3"),
+        Decimal("meter_power_factor", 26, 100, "Meter Power Factor"),
         Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),
         Integer("xxx30", 30, "Unknown sensor2@30"),
         Integer("xxx32", 32, "Unknown sensor2@32"),
@@ -174,7 +174,7 @@ class ET(Inverter):
         Voltage("battery_discharge_voltage_offline", 45357, "Battery Discharge Voltage (off-line)", Kind.BAT),
         Integer("battery_discharge_depth_offline", 45358, "Battery Discharge Depth (off-line)", "%", Kind.BAT),
 
-        Integer("power_factor", 45482, "Power Factor"),
+        Decimal("power_factor", 45482, 100, "Power Factor"),
 
         Integer("work_mode", 47000, "Work Mode", "", Kind.AC),
 

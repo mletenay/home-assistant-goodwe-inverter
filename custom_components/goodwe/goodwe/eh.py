@@ -138,7 +138,7 @@ class EH(Inverter):
         Voltage("battery_discharge_voltage_offline", 45357, "Battery Discharge Voltage (off-line)", Kind.BAT),
         Integer("battery_discharge_depth_offline", 45358, "Battery Discharge Depth (off-line)", "%", Kind.BAT),
 
-        Integer("power_factor", 45482, "Power Factor"),
+        Decimal("power_factor", 45482, 100, "Power Factor"),
 
         Integer("work_mode", 47000, "Work Mode", "", Kind.AC),
 
