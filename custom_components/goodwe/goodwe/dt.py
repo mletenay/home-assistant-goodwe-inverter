@@ -8,8 +8,6 @@ from .sensor import *
 
 class DT(Inverter):
     """Class representing inverter of DT, D-NS and XS families"""
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0x7f, 0x7531, 0x0028)
-    _READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(0x7f, 0x7594, 0x0049)
 
     __sensors: Tuple[Sensor, ...] = (
         Timestamp("timestamp", 0, "Timestamp"),
@@ -105,6 +103,14 @@ class DT(Inverter):
         Integer("work_mode", 40331, "Work Mode", "", Kind.AC),
     )
 
+    def __init__(self, host: str, port: int, comm_addr: int = None, timeout: int = 2, retries: int = 3):
+        super().__init__(host, port, comm_addr, timeout, retries)
+        if not self.comm_addr:
+            # Set the default inverter address
+            self.comm_addr = 0x7f
+        self._READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x7531, 0x0028)
+        self._READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x7594, 0x0049)
+
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
@@ -125,7 +131,7 @@ class DT(Inverter):
         setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
         if not setting:
             raise ValueError(f'Unknown setting "{setting_id}"')
-        raw_data = await self._read_from_socket(ModbusReadCommand(0x7f, setting.offset, 1))
+        raw_data = await self._read_from_socket(ModbusReadCommand(self.comm_addr, setting.offset, 1))
         with io.BytesIO(raw_data[5:-2]) as buffer:
             return setting.read_value(buffer)
 
@@ -137,7 +143,7 @@ class DT(Inverter):
         if len(raw_value) > 2:
             raise NotImplementedError()
         value = int.from_bytes(raw_value, byteorder="big", signed=True)
-        await self._read_from_socket(ModbusWriteCommand(0x7f, setting.offset, value))
+        await self._read_from_socket(ModbusWriteCommand(self.comm_addr, setting.offset, value))
 
     async def read_settings_data(self) -> Dict[str, Any]:
         data = {}
@@ -151,9 +157,9 @@ class DT(Inverter):
 
     async def set_work_mode(self, work_mode: int):
         if work_mode == 0:
-            await self._read_from_socket(ModbusWriteCommand(0x7f, 0x9d8b, 0))
+            await self._read_from_socket(ModbusWriteCommand(self.comm_addr, 0x9d8b, 0))
         elif work_mode == 3:
-            await self._read_from_socket(ModbusWriteCommand(0x7f, 0x9d8a, 0))
+            await self._read_from_socket(ModbusWriteCommand(self.comm_addr, 0x9d8a, 0))
 
     @classmethod
     def sensors(cls) -> Tuple[Sensor, ...]:

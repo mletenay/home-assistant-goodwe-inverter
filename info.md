@@ -16,11 +16,15 @@ sensor:
     #network_retries: 3
     #scan_interval: 30
     #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
+    #comm_address: 247           # Inverter communication address, 247 for ET/EH inverters 127 for DT/D-NS/XS inverters
     #sensor_name_prefix: GoodWe
     #include_unknown_sensors: false
 ```
 
 The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS, BP can be specified.
+
+Usually there is no need to explicitly specify inverter's communication address and default values will be applied (0xF7 for ET/EH inverters, 0x7F for DT/D-NS/XS inverters).
+In case the inverter was configured to non-stadard value, the `comm_address` should be set accordingly.
 
 The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
 the command will be re-tried up to `network_retries` times.

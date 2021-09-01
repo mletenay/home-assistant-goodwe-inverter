@@ -62,6 +62,7 @@ SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
 
 CONF_INCLUDE_UNKNOWN_SENSORS = "include_unknown_sensors"
 CONF_INVERTER_TYPE = "inverter_type"
+CONF_COMM_ADDRESS = "comm_address"
 CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
 CONF_NETWORK_TIMEOUT = "network_timeout"
 CONF_NETWORK_RETRIES = "network_retries"
@@ -71,7 +72,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Optional(CONF_PORT, default=8899): cv.port,
         vol.Optional(CONF_INCLUDE_UNKNOWN_SENSORS, default=False): cv.boolean,
-        vol.Optional(CONF_INVERTER_TYPE, default=""): cv.string,
+        vol.Optional(CONF_INVERTER_TYPE): cv.string,
+        vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,
         vol.Optional(CONF_NETWORK_TIMEOUT, default=2): cv.positive_int,
         vol.Optional(CONF_NETWORK_RETRIES, default=3): cv.positive_int,
         vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=30)): cv.time_period,
@@ -93,7 +95,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         inverter = await connect(
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
-            config[CONF_INVERTER_TYPE],
+            config.get(CONF_INVERTER_TYPE),
+            config.get(CONF_COMM_ADDRESS),
             config[CONF_NETWORK_TIMEOUT],
             config[CONF_NETWORK_RETRIES],
         )

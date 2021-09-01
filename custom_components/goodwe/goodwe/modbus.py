@@ -37,7 +37,7 @@ def _modbus_checksum(data: Union[bytearray, bytes]) -> int:
     return crc
 
 
-def create_modbus_request(dst: int, cmd: int, offset: int, value: int) -> bytes:
+def create_modbus_request(comm_addr: int, cmd: int, offset: int, value: int) -> bytes:
     """
     Create modbus request.
     data[0] is inverter address
@@ -47,7 +47,7 @@ def create_modbus_request(dst: int, cmd: int, offset: int, value: int) -> bytes:
     data[6:7] is crc-16 checksum
     """
     data: bytearray = bytearray(6)
-    data[0] = dst
+    data[0] = comm_addr
     data[1] = cmd
     data[2] = (offset >> 8) & 0xFF
     data[3] = offset & 0xFF

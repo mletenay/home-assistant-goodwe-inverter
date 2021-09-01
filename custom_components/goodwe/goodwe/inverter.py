@@ -46,29 +46,21 @@ class Sensor:
         """Encode the (setting mostly) value to (usually) 2 byte raw register value"""
         raise NotImplementedError()
 
+
 class Inverter:
     """
     Common superclass for various inverter models implementations.
     Represents the inverter state and its basic behavior
     """
-
-    def __init__(
-            self,
-            host: str,
-            port: int,
-            timeout: int = 2,
-            retries: int = 3,
-            model_name: str = "",
-            serial_number: str = "",
-            software_version: str = "",
-    ):
+    def __init__(self, host: str, port: int, comm_addr: int = None, timeout: int = 2, retries: int = 3):
         self.host = host
         self.port = port
+        self.comm_addr = comm_addr
         self.timeout = timeout
         self.retries = retries
-        self.model_name = model_name
-        self.serial_number = serial_number
-        self.software_version = software_version
+        self.model_name: str = None
+        self.serial_number: str = None
+        self.software_version: str = None
         self.modbus_version: int = None
         self.rated_power: int = None
         self.ac_output_type: int = None

@@ -9,12 +9,6 @@ from .sensor import *
 class EH(Inverter):
     """Class representing inverter of EH family"""
 
-    _READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(0xf7, 0x88b8, 0x0021)
-    _READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(0xf7, 0x891c, 0x007d)
-    _READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(0xf7, 0x8ca0, 0x001b)
-    _READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(0xf7, 0x9088, 0x000b)
-    _GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(0xf7, 0xb798, 0x0001)
-
     __sensors: Tuple[Sensor, ...] = (
         Voltage("vpv1", 6, "PV1 Voltage", Kind.PV),
         Current("ipv1", 8, "PV1 Current", Kind.PV),
@@ -148,6 +142,18 @@ class EH(Inverter):
         Integer("grid_export_limit", 47510, "Grid Export Limit", "W", Kind.AC),
     )
 
+    def __init__(self, host: str, port: int, comm_addr: int = None, timeout: int = 2, retries: int = 3):
+        super().__init__(host, port, comm_addr, timeout, retries)
+        if not self.comm_addr:
+            # Set the default inverter address
+            self.comm_addr = 0xf7
+
+        self._READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x88b8, 0x0021)
+        self._READ_DEVICE_RUNNING_DATA1: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x891c, 0x007d)
+        self._READ_DEVICE_RUNNING_DATA2: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x8ca0, 0x001b)
+        self._READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x9088, 0x000b)
+        self._GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0xb798, 0x0001)
+
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
@@ -175,7 +181,7 @@ class EH(Inverter):
         setting: Sensor = {s.id_: s for s in self.settings()}.get(setting_id)
         if not setting:
             raise ValueError(f'Unknown setting "{setting_id}"')
-        raw_data = await self._read_from_socket(ModbusReadCommand(0xf7, setting.offset, 1))
+        raw_data = await self._read_from_socket(ModbusReadCommand(self.comm_addr, setting.offset, 1))
         with io.BytesIO(raw_data[5:-2]) as buffer:
             return setting.read_value(buffer)
 
@@ -187,7 +193,7 @@ class EH(Inverter):
         if len(raw_value) > 2:
             raise NotImplementedError()
         value = int.from_bytes(raw_value, byteorder="big", signed=True)
-        await self._read_from_socket(ModbusWriteCommand(0xf7, setting.offset, value))
+        await self._read_from_socket(ModbusWriteCommand(self.comm_addr, setting.offset, value))
 
     async def read_settings_data(self) -> Dict[str, Any]:
         data = {}

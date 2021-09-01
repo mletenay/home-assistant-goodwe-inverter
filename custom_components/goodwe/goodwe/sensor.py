@@ -151,6 +151,20 @@ class Long(Sensor):
         return int.to_bytes(int(value), length=4, byteorder="big", signed=True)
 
 
+class Decimal(Sensor):
+    """Sensor representing signed decimal value encoded in 2 bytes"""
+
+    def __init__(self, id_: str, offset: int, scale: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
+        super().__init__(id_, offset, name, unit, kind)
+        self.scale = scale
+
+    def read_value(self, data: io.BytesIO):
+        return read_decimal2(data, self.scale)
+
+    def encode_value(self, value: Any) -> bytes:
+        return int.to_bytes(int(value * self.scale), length=2, byteorder="big", signed=True)
+
+
 class Timestamp(Sensor):
     """Sensor representing datetime value encoded in 6 bytes"""
 
@@ -220,6 +234,13 @@ def read_bytes4(buffer: io.BytesIO, offset: int = None) -> int:
     if offset:
         buffer.seek(offset)
     return int.from_bytes(buffer.read(4), byteorder="big", signed=True)
+
+
+def read_decimal2(buffer: io.BytesIO, scale: int, offset: int = None) -> float:
+    """Retrieve 2 byte (signed float) value from buffer"""
+    if offset:
+        buffer.seek(offset)
+    return float(int.from_bytes(buffer.read(2), byteorder="big", signed=True)) / scale
 
 
 def read_voltage(buffer: io.BytesIO, offset: int = None) -> float:

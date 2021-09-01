@@ -68,7 +68,7 @@ class UdpInverterProtocol(asyncio.DatagramProtocol):
             self.transport.close()
         elif self._retries < self._max_retries:
             self._retries += 1
-            logger.debug(f'Retry #{self._retries + 1} of {self._max_retries}')
+            logger.debug(f'Retry #{self._retries} of {self._max_retries}')
             self._send_request()
         else:
             logger.debug(f'Max number of retries ({self._max_retries}) reached, closing socket')
@@ -174,7 +174,6 @@ class Aa55ProtocolCommand(ProtocolCommand):
             return True
 
 
-
 class ModbusProtocolCommand(ProtocolCommand):
     """
     Inverter communication protocol seen on newer generation of inverters, based on Modbus
@@ -185,22 +184,21 @@ class ModbusProtocolCommand(ProtocolCommand):
     It's inverter implementation specific which register means what.
     Some values may span more registers (i.e. 4bytes measurement value over 2 registers).
 
-    Every request usually starts with 0xF7 (which is some inverter modbus address, the default value is 0xF7,
-    but in theory can be changed).
+    Every request usually starts with communication address (usually 0xF7, but can be changed).
     Second byte is the modbus command - 0x03 read multiple, 0x06 write single, 0x09 write multiple.
     Bytes 3-4 represent the register address (or start of range)
     Bytes 5-6 represent the command parameter (range size or actual value for write).
     Last 2 bytes of request is the CRC-16 (modbus flavor) of the request.
 
-    Responses seem to always start with 0xAA, 0x55, then the 0xF7 and modbus command.
+    Responses seem to always start with 0xAA, 0x55, then the comm_addr and modbus command.
     (If the command fails, the highest bit of command is set to 1 ?)
-    Next byte is response payload length, then the actual payload.
+    For read requests, next byte is response payload length, then the actual payload.
     Last 2 bytes of response is again the CRC-16 of the response.
     """
 
-    def __init__(self, dst: int, cmd: int, offset: int, value: int):
+    def __init__(self, comm_addr: int, cmd: int, offset: int, value: int):
         super().__init__(
-            create_modbus_request(dst, cmd, offset, value),
+            create_modbus_request(comm_addr, cmd, offset, value),
             lambda x: validate_modbus_response(x),
         )
 
@@ -210,8 +208,8 @@ class ModbusReadCommand(ModbusProtocolCommand):
     Inverter modbus READ command for retrieving <count> modbus registers starting at register # <offset>
     """
 
-    def __init__(self, dst: int, offset: int, count: int):
-        super().__init__(dst, MODBUS_READ_CMD, offset, count)
+    def __init__(self, comm_addr: int, offset: int, count: int):
+        super().__init__(comm_addr, MODBUS_READ_CMD, offset, count)
 
 
 class ModbusWriteCommand(ModbusProtocolCommand):
@@ -219,5 +217,5 @@ class ModbusWriteCommand(ModbusProtocolCommand):
     Inverter modbus WRITE command setting to modbus register # <register> value <value>
     """
 
-    def __init__(self, dst: int, register: int, value: int):
-        super().__init__(dst, MODBUS_WRITE_CMD, register, value)
+    def __init__(self, comm_addr: int, register: int, value: int):
+        super().__init__(comm_addr, MODBUS_WRITE_CMD, register, value)

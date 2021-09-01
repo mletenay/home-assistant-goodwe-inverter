@@ -17,23 +17,25 @@ logger = logging.getLogger(__name__)
 _SUPPORTED_PROTOCOLS = [EH, ET, DT, ES]
 
 
-async def connect(host: str, port: int = 8899, family: str = None, timeout: int = 2, retries: int = 3) -> Inverter:
+async def connect(host: str, port: int = 8899, family: str = None, comm_addr: int = None, timeout: int = 2, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified host/port and answer appropriate Inverter instance.
     To improve performance, it is recommended to provide the inverter family name,
     however it it is not explicitly provided, the code will try do detect the family automatically.
 
-    Supported inverter family names are ET, EH, ES, EM, DT, NS, XS, BP
+    Supported inverter family names are ET, EH, ES, EM, DT, NS, XS, BP.
 
-    Raise InverterError if unable to contact or recognise supported inverter
+    Inverter communication address may be explicitly passed, if not the usual default value
+    will be used (0xf7 for ET/EH inverters, 0x7f for DT/D-NS/XS inverters).
+    Raise InverterError if unable to contact or recognise supported inverter.
     """
     if "ET" == family:
-        inverter = ET(host, port, timeout, retries)
+        inverter = ET(host, port, comm_addr, timeout, retries)
     elif "EH" == family:
-        inverter = EH(host, port, timeout, retries)
+        inverter = EH(host, port, comm_addr, timeout, retries)
     elif "ES" == family or "EM" == family or "BP" == family:
-        inverter = ES(host, port, timeout, retries)
+        inverter = ES(host, port, comm_addr, timeout, retries)
     elif "DT" == family or "NS" == family or "XS" == family:
-        inverter = DT(host, port, timeout, retries)
+        inverter = DT(host, port, comm_addr, timeout, retries)
     else:
         return await discover(host, port, timeout, retries)
 
@@ -87,24 +89,26 @@ async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int =
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
         if "ETU" in serial_number:
-            software_version = response[71:83].decode("ascii").strip()
             logger.debug(f"Detected ET inverter {model_name}, S/N:{serial_number}")
-            return ET(host, port, timeout, retries, model_name, serial_number, software_version)
+            i = ET(host, port, None, timeout, retries)
+            await i.read_device_info()
+            return i
         elif "ESU" in serial_number or "EMU" in serial_number or "BPU" in serial_number or "BPS" in serial_number:
-            software_version = response[58:70].decode("ascii").strip()
-            # arm_version = response[71:83].decode("ascii").strip()
-            logger.debug(f"Detected ES inverter {model_name}, S/N:{serial_number}")
-            return ES(host, port, timeout, retries, model_name, serial_number, software_version)
-        elif "EHU" in serial_number:  # TODO: check if version is correct
-            software_version = response[54:66].decode("ascii")
+            logger.debug(f"Detected ES/EM/BP inverter {model_name}, S/N:{serial_number}")
+            i = ES(host, port, None, timeout, retries)
+            await i.read_device_info()
+            return i
+        elif "EHU" in serial_number:
             logger.debug(f"Detected EH inverter {model_name}, S/N:{serial_number}")
-            return EH(host, port, timeout, retries, model_name, serial_number, software_version)
+            i = EH(host, port, None, timeout, retries)
+            await i.read_device_info()
+            return i
     except InverterError as ex:
         failures.append(ex)
 
     # Probe inverter specific protocols
     for inverter in _SUPPORTED_PROTOCOLS:
-        i = inverter(host, port, timeout, retries)
+        i = inverter(host, port, None, timeout, retries)
         try:
             logger.debug(f"Probing {inverter.__name__} inverter at {host}:{port}")
             await i.read_device_info()
