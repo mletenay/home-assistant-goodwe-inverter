@@ -115,7 +115,7 @@ class ET(Inverter):
                    "House Comsumption", "W", Kind.AC),
     )
 
-    # Modbus registers from offset 0x9088 (37000), count 0x0b (11)
+    # Modbus registers from offset 0x9088 (37000)
     __sensors_battery: Tuple[Sensor, ...] = (
         Integer("battery_bms", 0, "Battery BMS", "", Kind.BAT),
         Integer("battery_index", 2, "Battery Index", "", Kind.BAT),
@@ -123,20 +123,34 @@ class ET(Inverter):
         Temp("battery_temperature", 6, "Battery Temperature", Kind.BAT),
         Integer("battery_charge_limit", 8, "Battery Charge Limit", "A", Kind.BAT),
         Integer("battery_discharge_limit", 10, "Battery Discharge Limit", "A", Kind.BAT),
-        # Integer("battery_bms_bytes", 12, "Battery BMS bytes", "", Kind.BAT),
+        Integer("battery_error_l", 12, "Battery Error L", "", Kind.BAT),
         Integer("battery_soc", 14, "Battery State of Charge", "%", Kind.BAT),
         Integer("battery_soh", 16, "Battery State of Health", "%", Kind.BAT),
-        Integer("battery_warning", 20, "Battery Warning", "", Kind.BAT),
+        Integer("battery_modules", 18, "Battery Modules", "", Kind.BAT),  # modbus 37009
+        Integer("battery_warning_l", 20, "Battery Warning L", "", Kind.BAT),
+        Integer("battery_protocol", 22, "Battery Protocol", "", Kind.BAT),
+        Integer("battery_error_h", 24, "Battery Error H", "", Kind.BAT),
+        Integer("battery_warning_h", 28, "Battery Warning H", "", Kind.BAT),
+        Integer("battery_sw_version", 30, "Battery Software Version", "", Kind.BAT),
+        Integer("battery_hw_version", 32, "Battery Hardware Version", "", Kind.BAT),
+        Integer("battery_max_cell_temp_id", 34, "Battery Max Cell Temperature ID", "", Kind.BAT),
+        Integer("battery_min_cell_temp_id", 36, "Battery Min Cell Temperature ID", "", Kind.BAT),
+        Integer("battery_max_cell_voltage_id", 38, "Battery Max Cell Voltage ID", "", Kind.BAT),
+        Integer("battery_min_cell_voltage_id", 40, "Battery Min Cell Voltage ID", "", Kind.BAT),
+        Temp("battery_max_cell_temp", 42, "Battery Max Cell Temperature", Kind.BAT),
+        Temp("battery_min_cell_temp", 44, "Battery Min Cell Temperature", Kind.BAT),
+        Voltage("battery_max_cell_voltage", 46, "Battery Max Cell Voltage", Kind.BAT),
+        Voltage("battery_min_cell_voltage", 48, "Battery Min Cell Voltage", Kind.BAT),
     )
 
     # Inverter's meter data
     # Modbus registers from offset 0x8ca0 (36000), count 0x13 (19)
     __sensors_meter: Tuple[Sensor, ...] = (
-        Integer("xxx0", 0, "Unknown sensor2@0"),
+        Integer("commode", 0, "Commode"),
         Integer("rssi", 2, "RSSI"),
         Integer("manufacture_code", 4, "Manufacture Code"),
-        Integer("meter_test_status", 6, "Meter Test Status"),
-        Integer("meter_comm_status", 8, "Meter Communication Status"),
+        Integer("meter_test_status", 6, "Meter Test Status"),  # 1: correct，2: reverse，3: incorrect，0: not checked
+        Integer("meter_comm_status", 8, "Meter Communication Status"),  # 1 OK, 0 NotOK
         Power("active_power1", 10, "Active Power L1", Kind.AC),  # modbus 36005
         Power("active_power2", 12, "Active Power L2", Kind.AC),
         Power("active_power3", 14, "Active Power L3", Kind.AC),
@@ -147,10 +161,9 @@ class ET(Inverter):
         Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3"),
         Decimal("meter_power_factor", 26, 100, "Meter Power Factor"),
         Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),
-        Integer("xxx30", 30, "Unknown sensor2@30"),
-        Integer("xxx32", 32, "Unknown sensor2@32"),
+        Energy("meter_e_total_exp", 30, "Meter Total Energy (export)", Kind.AC),
+        Energy("meter_e_total_imp", 32, "Meter Total Energy (import)", Kind.AC),
     )
-
     # Modbus registers of inverter settings, offsets are modbus register addresses
     __settings: Tuple[Sensor, ...] = (
         Integer("cold_start", 45248, "Cold Start", "", Kind.AC),
@@ -186,15 +199,16 @@ class ET(Inverter):
         self._READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x88b8, 0x0021)
         self._READ_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x891c, 0x007d)
         self._READ_METER_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x8ca0, 0x0011)
-        self._READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x9088, 0x000b)
+        self._READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x9088, 0x0018)
         self._GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0xb798, 0x0001)
 
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
         response = response[5:-2]
+        # Modbus registers from offset (35000)
         self.modbus_version = read_unsigned_int(response, 0)
         self.rated_power = read_unsigned_int(response, 2)
-        self.ac_output_type = read_unsigned_int(response, 4)
+        self.ac_output_type = read_unsigned_int(response, 4)  # 0: 1-phase, 1: 3-phase (4 wire), 2: 3-phase (3 wire)
         self.serial_number = response[6:22].decode("ascii")
         self.model_name = response[22:32].decode("ascii").rstrip()
         self.dsp1_sw_version = read_unsigned_int(response, 32)
@@ -240,7 +254,8 @@ class ET(Inverter):
         return data
 
     async def set_grid_export_limit(self, export_limit: int):
-        return await self.write_settings('grid_export_limit', export_limit)
+        if export_limit >= 0 or export_limit <= 10000:
+            return await self.write_settings('grid_export_limit', export_limit)
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):

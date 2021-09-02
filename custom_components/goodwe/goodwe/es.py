@@ -147,6 +147,12 @@ class ES(Inverter):
         data = self._map_response(raw_data[7:-2], self.__settings)
         return data
 
+    async def set_grid_export_limit(self, export_limit: int):
+        if export_limit >= 0 or export_limit <= 10000:
+            await self._read_from_socket(
+                Aa55ProtocolCommand("033502" + "{:02x}".format(export_limit), "03b5")
+            )
+
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
             await self._read_from_socket(

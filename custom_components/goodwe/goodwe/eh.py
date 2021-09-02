@@ -203,7 +203,8 @@ class EH(Inverter):
         return data
 
     async def set_grid_export_limit(self, export_limit: int):
-        return await self.write_settings('grid_export_limit', export_limit)
+        if export_limit >= 0 or export_limit <= 10000:
+            return await self.write_settings('grid_export_limit', export_limit)
 
     async def set_work_mode(self, work_mode: int):
         if work_mode in (0, 1, 2):
