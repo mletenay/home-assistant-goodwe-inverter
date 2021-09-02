@@ -28,13 +28,12 @@ class UdpInverterProtocol(asyncio.DatagramProtocol):
 
     def connection_made(self, transport: asyncio.DatagramTransport) -> None:
         """On connection made"""
-        logger.debug(f'Connection made to address {transport.get_extra_info("peername")}')
         self.transport = transport
         self._send_request()
 
     def _send_request(self) -> None:
         """Send message via transport"""
-        logger.debug(f'Sent: {self.request.hex()}')
+        logger.debug(f'Sent: {self.request.hex()} to {self.transport.get_extra_info("peername")}')
         self.transport.sendto(self.request)
         asyncio.get_event_loop().call_later(self._retry_timeout, self.retry_mechanism)
 
