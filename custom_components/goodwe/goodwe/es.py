@@ -14,7 +14,7 @@ class ES(Inverter):
     _READ_DEVICE_SETTINGS_DATA: ProtocolCommand = Aa55ProtocolCommand("010900", "0189")
 
     __sensors: Tuple[Sensor, ...] = (
-        Voltage("vpv1", 0, "PV1 Voltage", Kind.PV),
+        Voltage("vpv1", 0, "PV1 Voltage", Kind.PV), # modbus 0x500
         Current("ipv1", 2, "PV1 Current", Kind.PV),
         Calculated("ppv1", 0, lambda data, _: round(read_voltage(data, 0) * read_current(data, 2)), "PV1 Power", "W",
                    Kind.PV),
@@ -30,9 +30,9 @@ class ES(Inverter):
                    lambda data, _: round(read_voltage(data, 0) * read_current(data, 2)) + round(
                        read_voltage(data, 5) * read_current(data, 7)),
                    "PV Power", "W", Kind.PV),
-        Voltage("vbattery1", 10, "Battery Voltage", Kind.BAT),
+        Voltage("vbattery1", 10, "Battery Voltage", Kind.BAT),  # modbus 0x506
         # Voltage("vbattery2", 12, "Battery Voltage 2", Kind.BAT),
-        # Voltage("vbattery3", 14, "Battery Voltage 3", Kind.BAT),
+        Integer("battery_status", 14, "Battery Status", "",  Kind.BAT),
         Temp("battery_temperature", 16, "Battery Temperature", Kind.BAT),
         Calculated("ibattery1", 18,
                    lambda data, _: abs(read_current(data, 18)) * (-1 if read_byte(data, 30) == 3 else 1),
@@ -45,9 +45,9 @@ class ES(Inverter):
                    "Battery Power", "W", Kind.BAT),
         Integer("battery_charge_limit", 20, "Battery Charge Limit", "A", Kind.BAT),
         Integer("battery_discharge_limit", 22, "Battery Discharge Limit", "A", Kind.BAT),
-        Integer("battery_status", 24, "Battery Status", "", Kind.BAT),
-        Byte("battery_soc", 26, "Battery State of Charge", "%", Kind.BAT),
-        # Byte("cbattery2", 27, "Battery State of Charge 2", "%", Kind.BAT),
+        Integer("battery_error", 24, "Battery Error Code", "", Kind.BAT),
+        Byte("battery_soc", 26, "Battery State of Charge", "%", Kind.BAT),  # modbus 0x50E
+        Integer("warning", 27, "Warning Code", ""),
         # Byte("cbattery3", 28, "Battery State of Charge 3", "%", Kind.BAT),
         Byte("battery_soh", 29, "Battery State of Health", "%", Kind.BAT),
         Byte("battery_mode", 30, "Battery Mode code", "", Kind.BAT),
@@ -62,7 +62,7 @@ class ES(Inverter):
         Frequency("fgrid", 40, "On-grid Frequency", Kind.AC),
         Byte("grid_mode", 42, "Work Mode code", "", Kind.AC),
         Enum("grid_mode_label", 42, WORK_MODES_ES, "Work Mode", "", Kind.AC),
-        Voltage("vload", 43, "Back-up Voltage", Kind.UPS),
+        Voltage("vload", 43, "Back-up Voltage", Kind.UPS),  # modbus 0x51b
         Current("iload", 45, "Back-up Current", Kind.UPS),
         Power("pload", 47, "On-grid Power", Kind.AC),
         Frequency("fload", 49, "Back-up Frequency", Kind.UPS),
@@ -77,7 +77,7 @@ class ES(Inverter):
         Energy("e_day", 67, "Today's PV Generation", Kind.PV),
         Energy("e_load_day", 69, "Today's Load", Kind.AC),
         Energy4("e_load_total", 71, "Total Load", Kind.AC),
-        Power("total_power", 75, "Total Power", Kind.AC),
+        Power("total_power", 75, "Total Power", Kind.AC),  # modbus 0x52c
         Byte("effective_work_mode", 77, "Effective Work Mode code"),
         Integer("effective_relay_control", 78, "Effective Relay Control", "", None),
         Byte("grid_in_out", 80, "On-grid Mode code", "", Kind.AC),
@@ -89,10 +89,22 @@ class ES(Inverter):
         Calculated("plant_power", 0,
                    lambda data, _: round(read_power2(data, 47) + read_power2(data, 81)),
                    "Plant Power", "W", Kind.AC),
-        Integer("xx83", 83, "Unknown sensor@83"),
+        Decimal("meter_power_factor", 83, 100, "Meter Power Factor"),  # modbus 0x531
         Integer("xx85", 85, "Unknown sensor@85"),
         Integer("xx87", 87, "Unknown sensor@87"),
         Long("diagnose_result", 89, "Diag Status"),
+        Energy4("e_total_exp", 93, "Total Energy (export)", Kind.AC),
+        Energy4("e_total_imp", 97, "Total Energy (import)", Kind.AC),
+        #Voltage("vpv3", 101, "PV3 Voltage", Kind.PV),  # modbus 0x500
+        #Current("ipv3", 103, "PV3 Current", Kind.PV),
+        #Byte("pv3_mode", 104, "PV1 Mode", "", Kind.PV),
+        Voltage("vgrid_uo", 105, "On-grid Uo Voltage", Kind.AC),
+        Current("igrid_uo", 107, "On-grid Uo Current", Kind.AC),
+        Voltage("vgrid_wo", 109, "On-grid Wo Voltage", Kind.AC),
+        Current("igrid_wo", 111, "On-grid Wo Current", Kind.AC),
+        Energy4("e_bat_charge_total", 113, "Total Battery Charge", Kind.BAT),
+        Energy4("e_bat_discharge_total", 117, "Total Battery Discharge", Kind.BAT),
+
         # ppv1 + ppv2 + pbattery - pgrid
         Calculated("house_consumption", 0,
                    lambda data, _: round(read_voltage(data, 0) * read_current(data, 2)) + round(

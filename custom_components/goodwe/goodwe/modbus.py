@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 MODBUS_READ_CMD: int = 0x3
 MODBUS_WRITE_CMD: int = 0x6
+MODBUS_WRITE_MULTI_CMD: int = 0x10
 
 
 def _create_crc16_table() -> tuple:
