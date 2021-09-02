@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -24,13 +25,13 @@ from homeassistant.const import (
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util.dt import utc_from_timestamp, utcnow
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -175,7 +176,7 @@ class InverterRefreshJob:
             sensor.update_value(inverter_response)
 
 
-class InverterEntity(Entity):
+class InverterEntity(SensorEntity):
     """Entity representing the inverter instance itself"""
 
     def __init__(self, inverter, name_prefix, include_unknown_sensors, hass):
@@ -187,9 +188,11 @@ class InverterEntity(Entity):
         self._include_unknown_sensors = include_unknown_sensors
         self._name_prefix = name_prefix
         self._uuid = f"{DOMAIN}-{inverter.serial_number}"
-        self._value = None
         self._sensor = "ppv"
         self._data = {}
+        self._attr_icon = "mdi:solar-power"
+        self._attr_native_value = None
+        self._attr_name = "PV Inverter"
 
     async def read_runtime_data(self):
         return await self.inverter.read_runtime_data(self._include_unknown_sensors)
@@ -210,15 +213,10 @@ class InverterEntity(Entity):
         """Update the entity value from the response received from inverter"""
         self._data = inverter_response
         if self._sensor in inverter_response:
-            self._value = inverter_response[self._sensor]
+            self._attr_native_value = inverter_response[self._sensor]
         else:
-            self._value = None
+            self._attr_native_value = None
         self.async_schedule_update_ha_state()
-
-    @property
-    def state(self):
-        """State of this inverter attribute."""
-        return self._value
 
     @property
     def unique_id(self):
@@ -226,19 +224,9 @@ class InverterEntity(Entity):
         return self._uuid
 
     @property
-    def name(self):
-        """Name of this inverter attribute."""
-        return "PV Inverter"
-
-    @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "W"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:solar-power"
+        return POWER_WATT
 
     @property
     def should_poll(self):
@@ -251,7 +239,7 @@ class InverterEntity(Entity):
         return self._data
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the inverter state attributes."""
         data = {
             "model": self.inverter.model_name,
@@ -287,7 +275,6 @@ class InverterSensor(SensorEntity):
         self._uid = uid
         self._sensor_id = sensor_id
         self._sensor_name = sensor_name
-        # self._last_reset = utc_from_timestamp(0)
         if unit == "A":
             self._unit = ELECTRIC_CURRENT_AMPERE
             self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -297,14 +284,13 @@ class InverterSensor(SensorEntity):
             self._attr_state_class = STATE_CLASS_MEASUREMENT
             self._attr_device_class = DEVICE_CLASS_VOLTAGE
         elif unit == "W":
-            self._unit = unit
+            self._unit = POWER_WATT
             self._attr_state_class = STATE_CLASS_MEASUREMENT
             self._attr_device_class = DEVICE_CLASS_POWER
         elif unit == "kWh":
-            self._unit = unit
-            self._attr_state_class = STATE_CLASS_MEASUREMENT  # will be replaced with STATE_CLASS_TOTAL_INCREASING
+            self._unit = ENERGY_KILO_WATT_HOUR
+            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
             self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_last_reset = utc_from_timestamp(0)
         elif unit == "%" and kind == SensorKind.BAT:
             self._unit = unit
             self._attr_state_class = STATE_CLASS_MEASUREMENT
@@ -319,31 +305,18 @@ class InverterSensor(SensorEntity):
             self._attr_device_class = None
 
         if kind is not None:
-            self._icon_name = _ICONS[kind]
+            self._attr_icon = _ICONS[kind]
         else:
-            self._icon_name = None
-        self._value = None
+            self._attr_icon = None
+        self._attr_native_value = None
 
     def update_value(self, inverter_response):
         """Update the sensor value from the response received from inverter"""
-        old_value = self._value
         if self._sensor_id in inverter_response:
-            self._value = inverter_response[self._sensor_id]
+            self._attr_native_value = inverter_response[self._sensor_id]
         else:
-            self._value = None
-        if (
-            self._unit == "kWh"
-            and old_value
-            and self._value
-            and (old_value > self._value)
-        ):
-            self._attr_last_reset = utcnow()
+            self._attr_native_value = None
         self.async_schedule_update_ha_state()
-
-    @property
-    def state(self):
-        """State of this inverter attribute."""
-        return self._value
 
     @property
     def unique_id(self):
@@ -356,14 +329,9 @@ class InverterSensor(SensorEntity):
         return self._sensor_name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon_name
 
     @property
     def should_poll(self):
