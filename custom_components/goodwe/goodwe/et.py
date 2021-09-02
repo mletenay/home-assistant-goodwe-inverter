@@ -144,7 +144,7 @@ class ET(Inverter):
     )
 
     # Inverter's meter data
-    # Modbus registers from offset 0x8ca0 (36000), count 0x13 (19)
+    # Modbus registers from offset 0x8ca0 (36000)
     __sensors_meter: Tuple[Sensor, ...] = (
         Integer("commode", 0, "Commode"),
         Integer("rssi", 2, "RSSI"),
@@ -160,10 +160,25 @@ class ET(Inverter):
         Decimal("meter_power_factor2", 22, 100, "Meter Power Factor L2"),
         Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3"),
         Decimal("meter_power_factor", 26, 100, "Meter Power Factor"),
-        Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),
-        Energy("meter_e_total_exp", 30, "Meter Total Energy (export)", Kind.AC),
-        Energy("meter_e_total_imp", 32, "Meter Total Energy (import)", Kind.AC),
+        Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),  # modbus 36014
+        Float("meter_e_total_exp", 30, "Meter Total Energy (export)", "kWh", Kind.AC),
+        Float("meter_e_total_imp", 34, "Meter Total Energy (import)", "kWh", Kind.AC),
+        Long("meter_active_power1", 38, "Meter Active Power L1", "W", Kind.AC),
+        Long("meter_active_power2", 42, "Meter Active Power L2", "W", Kind.AC),
+        Long("meter_active_power3", 46, "Meter Active Power L3", "W", Kind.AC),
+        Long("meter_active_power_total", 50, "Meter Active Power Total", "W", Kind.AC),
+        Long("meter_reactive_power1", 54, "Meter Reactive Power L1", "W", Kind.AC),
+        Long("meter_reactive_power2", 58, "Meter Reactive Power L2", "W", Kind.AC),
+        Long("meter_reactive_power3", 62, "Meter Reactive Power L2", "W", Kind.AC),
+        Long("meter_reactive_power_total", 66, "Meter Reactive Power Total", "W", Kind.AC),
+        Long("meter_apparent_power1", 70, "Meter Apparent Power L1", "", Kind.AC),
+        Long("meter_apparent_power2", 74, "Meter Apparent Power L2", "", Kind.AC),
+        Long("meter_apparent_power3", 78, "Meter Apparent Power L3", "", Kind.AC),
+        Long("meter_apparent_power_total", 82, "Meter Apparent Power Total", "", Kind.AC),
+        Integer("meter_type", 86, "Meter Type", "", Kind.AC),
+        Integer("meter_sw_version", 88, "Meter Software Version", "", Kind.AC),
     )
+
     # Modbus registers of inverter settings, offsets are modbus register addresses
     __settings: Tuple[Sensor, ...] = (
         Integer("cold_start", 45248, "Cold Start", "", Kind.AC),
@@ -198,7 +213,7 @@ class ET(Inverter):
             self.comm_addr = 0xf7
         self._READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x88b8, 0x0021)
         self._READ_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x891c, 0x007d)
-        self._READ_METER_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x8ca0, 0x0011)
+        self._READ_METER_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x8ca0, 0x2d)
         self._READ_BATTERY_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x9088, 0x0018)
         self._GET_WORK_MODE: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0xb798, 0x0001)
 
