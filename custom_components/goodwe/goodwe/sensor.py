@@ -259,7 +259,11 @@ def read_float4(buffer: io.BytesIO, offset: int = None) -> float:
     """Retrieve 4 byte (signed float) value from buffer"""
     if offset:
         buffer.seek(offset)
-    return (struct.unpack('>f', buffer.read(4))[0])
+    data = buffer.read(4);
+    if len(data) == 4:
+        return struct.unpack('>f', data)[0]
+    else:
+        return float(0)
 
 
 def read_voltage(buffer: io.BytesIO, offset: int = None) -> float:
