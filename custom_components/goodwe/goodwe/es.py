@@ -177,10 +177,8 @@ class ES(Inverter):
                 Aa55ProtocolCommand("023905056001" + "{:04x}".format(100 - dod), "02b9")
             )
 
-    @classmethod
-    def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors
+    def sensors(self) -> Tuple[Sensor, ...]:
+        return self.__sensors
 
-    @classmethod
-    def settings(cls) -> Tuple[Sensor, ...]:
-        return cls.__settings
+    def settings(self) -> Tuple[Sensor, ...]:
+        return self.__settings

@@ -161,10 +161,8 @@ class DT(Inverter):
         elif work_mode == 3:
             await self._read_from_socket(ModbusWriteCommand(self.comm_addr, 0x9d8a, 0))
 
-    @classmethod
-    def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors
+    def sensors(self) -> Tuple[Sensor, ...]:
+        return self.__sensors
 
-    @classmethod
-    def settings(cls) -> Tuple[Sensor, ...]:
-        return cls.__settings
+    def settings(self) -> Tuple[Sensor, ...]:
+        return self.__settings

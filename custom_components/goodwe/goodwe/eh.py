@@ -214,10 +214,8 @@ class EH(Inverter):
         if 0 <= dod <= 89:
             return await self.write_settings('battery_discharge_depth', 100 - dod)
 
-    @classmethod
-    def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors + cls.__sensors_battery
+    def sensors(self) -> Tuple[Sensor, ...]:
+        return self.__sensors + self.__sensors_battery
 
-    @classmethod
-    def settings(cls) -> Tuple[Sensor, ...]:
-        return cls.__settings
+    def settings(self) -> Tuple[Sensor, ...]:
+        return self.__settings

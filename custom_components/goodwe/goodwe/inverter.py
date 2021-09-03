@@ -161,15 +161,13 @@ class Inverter:
         """
         raise NotImplementedError()
 
-    @classmethod
-    def sensors(cls) -> Tuple[Sensor, ...]:
+    def sensors(self) -> Tuple[Sensor, ...]:
         """
         Return tuple of sensor definitions
         """
         raise NotImplementedError()
 
-    @classmethod
-    def settings(cls) -> Tuple[Sensor, ...]:
+    def settings(self) -> Tuple[Sensor, ...]:
         """
         Return tuple of settings definitions
         """

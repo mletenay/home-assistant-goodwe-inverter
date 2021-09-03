@@ -161,8 +161,8 @@ class ET(Inverter):
         Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3"),
         Decimal("meter_power_factor", 26, 100, "Meter Power Factor"),
         Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),  # modbus 36014
-        Float("meter_e_total_exp", 30, "Meter Total Energy (export)", "kWh", Kind.AC),
-        Float("meter_e_total_imp", 34, "Meter Total Energy (import)", "kWh", Kind.AC),
+        Float("meter_e_total_exp", 30, 1000, "Meter Total Energy (export)", "kWh", Kind.AC),
+        Float("meter_e_total_imp", 34, 1000, "Meter Total Energy (import)", "kWh", Kind.AC),
         Long("meter_active_power1", 38, "Meter Active Power L1", "W", Kind.AC),
         Long("meter_active_power2", 42, "Meter Active Power L2", "W", Kind.AC),
         Long("meter_active_power3", 46, "Meter Active Power L3", "W", Kind.AC),
@@ -280,10 +280,8 @@ class ET(Inverter):
         if 0 <= dod <= 89:
             return await self.write_settings('battery_discharge_depth', 100 - dod)
 
-    @classmethod
-    def sensors(cls) -> Tuple[Sensor, ...]:
-        return cls.__sensors + cls.__sensors_battery + cls.__sensors_meter
+    def sensors(self) -> Tuple[Sensor, ...]:
+        return self.__sensors + self.__sensors_battery + self.__sensors_meter
 
-    @classmethod
-    def settings(cls) -> Tuple[Sensor, ...]:
-        return cls.__settings
+    def settings(self) -> Tuple[Sensor, ...]:
+        return self.__settings

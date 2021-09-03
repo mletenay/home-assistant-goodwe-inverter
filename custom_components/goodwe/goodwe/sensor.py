@@ -169,11 +169,12 @@ class Decimal(Sensor):
 class Float(Sensor):
     """Sensor representing signed int value encoded in 4 bytes"""
 
-    def __init__(self, id_: str, offset: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
+    def __init__(self, id_: str, offset: int, scale: int, name: str, unit: str = "", kind: Optional[SensorKind] = None):
         super().__init__(id_, offset, name, unit, kind)
+        self.scale = scale
 
     def read_value(self, data: io.BytesIO):
-        return read_float4(data)
+        return read_float4(data) / self.scale
 
 
 class Timestamp(Sensor):
@@ -258,7 +259,7 @@ def read_float4(buffer: io.BytesIO, offset: int = None) -> float:
     """Retrieve 4 byte (signed float) value from buffer"""
     if offset:
         buffer.seek(offset)
-    return struct.unpack('>f', buffer.read(4))[0]
+    return (struct.unpack('>f', buffer.read(4))[0])
 
 
 def read_voltage(buffer: io.BytesIO, offset: int = None) -> float:
