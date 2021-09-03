@@ -42,12 +42,12 @@ class ET(Inverter):
         Power4("pgrid3", 68, "On-grid L3 Power", Kind.AC),
         Integer("xx72", 72, "Unknown sensor@72"),
         Power4("total_inverter_power", 74, "Total Power", Kind.AC),
-        Power4("active_power", 78, "Active Power", Kind.AC),
-        Calculated("grid_in_out", 78, lambda data, _: read_grid_mode(data, 78), "On-grid Mode code", "", Kind.AC),
+        Power4("active_power", 78, "Active Power", Kind.GRID),
+        Calculated("grid_in_out", 78, lambda data, _: read_grid_mode(data, 78), "On-grid Mode code", "", Kind.GRID),
         Calculated("grid_in_out_label", 0, lambda data, _: GRID_MODES.get(read_grid_mode(data, 78)), "On-grid Mode",
-                   "", Kind.AC),
-        Power4("reactive_power", 82, "Reactive Power", Kind.AC),
-        Power4("apparent_power", 86, "Apparent Power", Kind.AC),
+                   "", Kind.GRID),
+        Power4("reactive_power", 82, "Reactive Power", Kind.GRID),
+        Power4("apparent_power", 86, "Apparent Power", Kind.GRID),
         Voltage("backup_v1", 90, "Back-up L1 Voltage", Kind.UPS),  # modbus 35145
         Current("backup_i1", 92, "Back-up L1 Current", Kind.UPS),
         Frequency("backup_f1", 94, "Back-up L1 Frequency", Kind.UPS),
@@ -151,32 +151,32 @@ class ET(Inverter):
         Integer("manufacture_code", 4, "Manufacture Code"),
         Integer("meter_test_status", 6, "Meter Test Status"),  # 1: correct，2: reverse，3: incorrect，0: not checked
         Integer("meter_comm_status", 8, "Meter Communication Status"),  # 1 OK, 0 NotOK
-        Power("active_power1", 10, "Active Power L1", Kind.AC),  # modbus 36005
-        Power("active_power2", 12, "Active Power L2", Kind.AC),
-        Power("active_power3", 14, "Active Power L3", Kind.AC),
-        Integer("active_power_total", 16, "Active Power Total"),
-        Integer("reactive_power_total", 18, "Reactive Power Total"),
-        Decimal("meter_power_factor1", 20, 100, "Meter Power Factor L1"),
-        Decimal("meter_power_factor2", 22, 100, "Meter Power Factor L2"),
-        Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3"),
-        Decimal("meter_power_factor", 26, 100, "Meter Power Factor"),
-        Frequency("meter_freq", 28, "Meter Frequency", Kind.AC),  # modbus 36014
-        Float("meter_e_total_exp", 30, 1000, "Meter Total Energy (export)", "kWh", Kind.AC),
-        Float("meter_e_total_imp", 34, 1000, "Meter Total Energy (import)", "kWh", Kind.AC),
-        Long("meter_active_power1", 38, "Meter Active Power L1", "W", Kind.AC),
-        Long("meter_active_power2", 42, "Meter Active Power L2", "W", Kind.AC),
-        Long("meter_active_power3", 46, "Meter Active Power L3", "W", Kind.AC),
-        Long("meter_active_power_total", 50, "Meter Active Power Total", "W", Kind.AC),
-        Long("meter_reactive_power1", 54, "Meter Reactive Power L1", "W", Kind.AC),
-        Long("meter_reactive_power2", 58, "Meter Reactive Power L2", "W", Kind.AC),
-        Long("meter_reactive_power3", 62, "Meter Reactive Power L2", "W", Kind.AC),
-        Long("meter_reactive_power_total", 66, "Meter Reactive Power Total", "W", Kind.AC),
-        Long("meter_apparent_power1", 70, "Meter Apparent Power L1", "", Kind.AC),
-        Long("meter_apparent_power2", 74, "Meter Apparent Power L2", "", Kind.AC),
-        Long("meter_apparent_power3", 78, "Meter Apparent Power L3", "", Kind.AC),
-        Long("meter_apparent_power_total", 82, "Meter Apparent Power Total", "", Kind.AC),
-        Integer("meter_type", 86, "Meter Type", "", Kind.AC),
-        Integer("meter_sw_version", 88, "Meter Software Version", "", Kind.AC),
+        Power("active_power1", 10, "Active Power L1", Kind.GRID),  # modbus 36005
+        Power("active_power2", 12, "Active Power L2", Kind.GRID),
+        Power("active_power3", 14, "Active Power L3", Kind.GRID),
+        Integer("active_power_total", 16, "Active Power Total", "W", Kind.GRID),
+        Integer("reactive_power_total", 18, "Reactive Power Total", "W", Kind.GRID),
+        Decimal("meter_power_factor1", 20, 100, "Meter Power Factor L1", "", Kind.GRID),
+        Decimal("meter_power_factor2", 22, 100, "Meter Power Factor L2", "", Kind.GRID),
+        Decimal("meter_power_factor3", 24, 100, "Meter Power Factor L3", "", Kind.GRID),
+        Decimal("meter_power_factor", 26, 100, "Meter Power Factor", "", Kind.GRID),
+        Frequency("meter_freq", 28, "Meter Frequency", Kind.GRID),  # modbus 36014
+        Float("meter_e_total_exp", 30, 1000, "Meter Total Energy (export)", "kWh", Kind.GRID),
+        Float("meter_e_total_imp", 34, 1000, "Meter Total Energy (import)", "kWh", Kind.GRID),
+        Long("meter_active_power1", 38, "Meter Active Power L1", "W", Kind.GRID),
+        Long("meter_active_power2", 42, "Meter Active Power L2", "W", Kind.GRID),
+        Long("meter_active_power3", 46, "Meter Active Power L3", "W", Kind.GRID),
+        Long("meter_active_power_total", 50, "Meter Active Power Total", "W", Kind.GRID),
+        Long("meter_reactive_power1", 54, "Meter Reactive Power L1", "W", Kind.GRID),
+        Long("meter_reactive_power2", 58, "Meter Reactive Power L2", "W", Kind.GRID),
+        Long("meter_reactive_power3", 62, "Meter Reactive Power L2", "W", Kind.GRID),
+        Long("meter_reactive_power_total", 66, "Meter Reactive Power Total", "W", Kind.GRID),
+        Long("meter_apparent_power1", 70, "Meter Apparent Power L1", "", Kind.GRID),
+        Long("meter_apparent_power2", 74, "Meter Apparent Power L2", "", Kind.GRID),
+        Long("meter_apparent_power3", 78, "Meter Apparent Power L3", "", Kind.GRID),
+        Long("meter_apparent_power_total", 82, "Meter Apparent Power Total", "", Kind.GRID),
+        Integer("meter_type", 86, "Meter Type", "", Kind.GRID),
+        Integer("meter_sw_version", 88, "Meter Software Version", "", Kind.GRID),
     )
 
     # Modbus registers of inverter settings, offsets are modbus register addresses
@@ -202,8 +202,8 @@ class ET(Inverter):
 
         Integer("battery_soc_protection", 47500, "Battery SoC Protection", "", Kind.BAT),
 
-        Integer("grid_export", 47509, "Grid Export Enabled", "", Kind.AC),
-        Integer("grid_export_limit", 47510, "Grid Export Limit", "W", Kind.AC),
+        Integer("grid_export", 47509, "Grid Export Enabled", "", Kind.GRID),
+        Integer("grid_export_limit", 47510, "Grid Export Limit", "W", Kind.GRID),
     )
 
     def __init__(self, host: str, port: int, comm_addr: int = None, timeout: int = 2, retries: int = 3):

@@ -60,8 +60,8 @@ class ES(Inverter):
                    lambda data, _: abs(read_power2(data, 38)) * (-1 if read_byte(data, 80) == 2 else 1),
                    "On-grid Export Power", "W", Kind.AC),
         Frequency("fgrid", 40, "On-grid Frequency", Kind.AC),
-        Byte("grid_mode", 42, "Work Mode code", "", Kind.AC),
-        Enum("grid_mode_label", 42, WORK_MODES_ES, "Work Mode", "", Kind.AC),
+        Byte("grid_mode", 42, "Work Mode code", "", Kind.GRID),
+        Enum("grid_mode_label", 42, WORK_MODES_ES, "Work Mode", "", Kind.GRID),
         Voltage("vload", 43, "Back-up Voltage", Kind.UPS),  # modbus 0x51b
         Current("iload", 45, "Back-up Current", Kind.UPS),
         Power("pload", 47, "On-grid Power", Kind.AC),
@@ -80,21 +80,21 @@ class ES(Inverter):
         Power("total_power", 75, "Total Power", Kind.AC),  # modbus 0x52c
         Byte("effective_work_mode", 77, "Effective Work Mode code"),
         Integer("effective_relay_control", 78, "Effective Relay Control", "", None),
-        Byte("grid_in_out", 80, "On-grid Mode code", "", Kind.AC),
+        Byte("grid_in_out", 80, "On-grid Mode code", "", Kind.GRID),
         Calculated("grid_in_out_label", 0,
                    lambda data, _: GRID_MODES.get(read_byte(data, 80)),
-                   "On-grid Mode", "", Kind.AC),
+                   "On-grid Mode", "", Kind.GRID),
         Power("pback_up", 81, "Back-up Power", Kind.UPS),
         # pload + pback_up
         Calculated("plant_power", 0,
                    lambda data, _: round(read_power2(data, 47) + read_power2(data, 81)),
                    "Plant Power", "W", Kind.AC),
-        Decimal("meter_power_factor", 83, 100, "Meter Power Factor"),  # modbus 0x531
+        Decimal("meter_power_factor", 83, 100, "Meter Power Factor", "", Kind.GRID),  # modbus 0x531
         Integer("xx85", 85, "Unknown sensor@85"),
         Integer("xx87", 87, "Unknown sensor@87"),
         Long("diagnose_result", 89, "Diag Status"),
-        Energy4("e_total_exp", 93, "Total Energy (export)", Kind.AC),
-        Energy4("e_total_imp", 97, "Total Energy (import)", Kind.AC),
+        Energy4("e_total_exp", 93, "Total Energy (export)", Kind.GRID),
+        Energy4("e_total_imp", 97, "Total Energy (import)", Kind.GRID),
         #Voltage("vpv3", 101, "PV3 Voltage", Kind.PV),  # modbus 0x500
         #Current("ipv3", 103, "PV3 Current", Kind.PV),
         #Byte("pv3_mode", 104, "PV1 Mode", "", Kind.PV),

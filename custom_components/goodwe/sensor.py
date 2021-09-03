@@ -87,6 +87,7 @@ _ICONS = {
     SensorKind.AC: "mdi:power-plug-outline",
     SensorKind.UPS: "mdi:power-plug-off-outline",
     SensorKind.BAT: "mdi:battery-high",
+    SensorKind.GRID: "mdi:transmission-tower",
 }
 
 

@@ -11,16 +11,18 @@ class SensorKind(Enum):
     Enumeration of sensor kinds.
 
     Possible values are:
-    PV - photo-voltaic (e.g. dc voltage of pv panels)
-    AC - grid side (e.g. ac voltage of grid connected output)
-    UPS - ups/eps/backup side (e.g. ac voltage of backup/off-grid connected output)
+    PV - inverter photo-voltaic (e.g. dc voltage of pv panels)
+    AC - inverter grid output (e.g. ac voltage of grid connected output)
+    UPS - inverter ups/eps/backup output (e.g. ac voltage of backup/off-grid connected output)
     BAT - battery (e.g. dc voltage of connected battery pack)
+    GRID - power grid/smart meter (e.g. active power exported to grid)
     """
 
     PV = 1
     AC = 2
     UPS = 3
     BAT = 4
+    GRID = 5
 
 
 @dataclass
