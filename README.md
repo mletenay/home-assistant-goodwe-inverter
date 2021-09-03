@@ -63,11 +63,16 @@ The optional `sensor_name_prefix` config may be used to change the prefix of the
 
 There are many values reported by the inverers whose meaning is not yet fully known. Those sensors are named "xx\*" and will be provided if the `include_unknown_sensors` parameter is set to true.
 
+## Home Assistant Energy Dashboard
+
+The plugin provides several values suitable for the energy dashboard introduced to HA in v2021.8.
+The best supported are the inverters of ET/EH families, where the sensors `meter_e_total_exp`, `meter_e_total_imp`, `e_total`, `e_bat_charge_total` and `e_bat_discharge_total` are the most suitable for the dashboard measurements and statistics.
+For the other inverter families, if such sensors are not directly available from the inverter, they can be calculated, see paragraph below.
+
 ## Cumulative energy values
 
 The sensor values reported by the inverter are instant measurements.
-To report summary values like daily/monthly sell or buy (in kWh), these values have to be aggregated over time.
-(The only exception are the "total/daily" sensors like `e_total`, `e_day` where the inverter itselfs keeps intenal counters.)
+To report summary (energy) values like daily/monthly sell or buy (in kWh), these values have to be aggregated over time.
 
 [Riemann Sum](https://www.home-assistant.io/integrations/integration/) integration can be used to convert these instant (W) values into cumulative values (Wh).
 [Utility Meter](https://www.home-assistant.io/integrations/utility_meter) can report these values as human readable statistical values.
