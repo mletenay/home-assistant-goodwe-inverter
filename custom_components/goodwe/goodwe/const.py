@@ -22,6 +22,12 @@ ENERGY_MODES: Dict[int, str] = {
 }
 
 GRID_MODES: Dict[int, str] = {
+    0: "Not connected to grid",
+    1: "Connected to grid",
+    2: "Fault",
+}
+
+GRID_IN_OUT_MODES: Dict[int, str] = {
     0: "Idle",
     1: "Exporting",
     2: "Importing",
@@ -152,4 +158,39 @@ SAFETY_COUNTRIES_ET: Dict[int, str] = {
     105: "cUSA_240VacHECO_14HO0x69",
     106: "cUSA_208VacHECO_14HM",
     107: "cUSA_240VacHECO_14HM",
+}
+
+ERROR_CODES: Dict[int, str] = {
+    31: 'Internal Communication Failure',
+    30: 'EEPROM R/W Failure',
+    29: 'Fac Failure',
+    28: 'DSP communication failure',
+    27: 'PhaseAngleFailure',
+    26: '',
+    25: 'Relay Check Failure',
+    24: '',
+    23: 'Vac Consistency Failure',
+    22: 'Fac Consistency Failure',
+    21: '',
+    20: 'Back-Up Over Load',
+    19: 'DC Injection High',
+    18: 'Isolation Failure',
+    17: 'Vac Failure',
+    16: 'External Fan Failure',
+    15: 'PV Over Voltage',
+    14: 'Utility Phase Failure',
+    13: 'Over Temperature',
+    12: 'InternalFan Failure',
+    11: 'DC Bus High',
+    10: 'Ground I Failure',
+    9: 'Utility Loss',
+    8: 'AC HCT Failure',
+    7: 'Relay Device Failure',
+    6: 'GFCI Device Failure',
+    5: '',
+    4: 'GFCI Consistency Failure',
+    3: 'DCI Consistency Failure',
+    2: '',
+    1: 'AC HCT Check Failure',
+    0: 'GFCI Device Check Failure',
 }
