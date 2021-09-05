@@ -324,6 +324,9 @@ class InverterSensor(SensorEntity):
         """Update the sensor value from the response received from inverter"""
         prev_value = self._attr_native_value
         self._attr_native_value = inverter_response.get(self._sensor_id)
+        # Total increasing sensor should never be set to None
+        if self._attr_native_value is None and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING:
+            self._attr_native_value = prev_value
         # do not update sensor state if the value hasn't changed
         if self._attr_native_value != prev_value:
             self.async_schedule_update_ha_state()
