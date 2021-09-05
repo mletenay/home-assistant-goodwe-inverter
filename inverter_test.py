@@ -3,7 +3,7 @@ import asyncio
 import logging
 import sys
 
-import custom_components.goodwe.goodwe.goodwe as inverter
+import custom_components.goodwe.goodwe as inverter
 
 logging.basicConfig(
     format="%(asctime)-15s %(funcName)s(%(lineno)d) - %(levelname)s: %(message)s",

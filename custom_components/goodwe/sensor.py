@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 from datetime import timedelta
 
-from .goodwe.goodwe import connect, InverterError, SensorKind
+from .goodwe import connect, InverterError, SensorKind
 
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (

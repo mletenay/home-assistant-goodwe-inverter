@@ -4,7 +4,7 @@ import logging
 import sys
 import binascii
 
-import custom_components.goodwe.goodwe.goodwe as inverter
+import custom_components.goodwe.goodwe as inverter
 from custom_components.goodwe.goodwe.protocol import ProtocolCommand
 
 logging.basicConfig(

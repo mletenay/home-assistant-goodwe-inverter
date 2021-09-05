@@ -103,7 +103,7 @@ class DT(Inverter):
         Integer("work_mode", 40331, "Work Mode", "", Kind.AC),
     )
 
-    def __init__(self, host: str, port: int, comm_addr: int, timeout: int, retries: int):
+    def __init__(self, host: str, port: int = 8899, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
         super().__init__(host, port, comm_addr, timeout, retries)
         if not self.comm_addr:
             # Set the default inverter address

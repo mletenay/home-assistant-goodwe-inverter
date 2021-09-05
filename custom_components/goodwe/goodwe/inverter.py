@@ -54,7 +54,7 @@ class Inverter:
     Common superclass for various inverter models implementations.
     Represents the inverter state and its basic behavior
     """
-    def __init__(self, host: str, port: int, comm_addr: int, timeout: int, retries: int):
+    def __init__(self, host: str, port: int = 8899, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
         self.host = host
         self.port = port
         self.comm_addr = comm_addr
