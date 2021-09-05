@@ -14,8 +14,8 @@ class UdpInverterProtocol(asyncio.DatagramProtocol):
             request: bytes,
             validator: Callable[[bytes], bool],
             on_response_received: asyncio.futures.Future,
-            timeout: int = 2,
-            retries: int = 3
+            timeout: int,
+            retries: int
     ):
         super().__init__()
         self.request: bytes = request
@@ -82,7 +82,7 @@ class ProtocolCommand:
         self.request: bytes = request
         self.validator: Callable[[bytes], bool] = validator
 
-    async def execute(self, host: str, port: int, timeout: int = 2, retries: int = 3) -> bytes:
+    async def execute(self, host: str, port: int, timeout: int, retries: int) -> bytes:
         """
         Execute the udp protocol command on the specified address/port.
         Since the UDP communication is by definition unreliable, when no (valid) response is received by specified

@@ -211,7 +211,7 @@ class ET(Inverter):
         Integer("grid_export_limit", 47510, "Grid Export Limit", "W", Kind.GRID),
     )
 
-    def __init__(self, host: str, port: int, comm_addr: int = None, timeout: int = 2, retries: int = 3):
+    def __init__(self, host: str, port: int, comm_addr: int, timeout: int, retries: int):
         super().__init__(host, port, comm_addr, timeout, retries)
         if not self.comm_addr:
             # Set the default inverter address

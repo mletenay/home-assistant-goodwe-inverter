@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 _SUPPORTED_PROTOCOLS = [ET, DT, ES]
 
 
-async def connect(host: str, port: int = 8899, family: str = None, comm_addr: int = None, timeout: int = 2, retries: int = 3) -> Inverter:
+async def connect(host: str, port: int = 8899, family: str = None, comm_addr: int = None, timeout: int = 1, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified host/port and answer appropriate Inverter instance.
     To improve performance, it is recommended to provide the inverter family name,
     however it it is not explicitly provided, the code will try do detect the family automatically.
@@ -72,7 +72,7 @@ async def search_inverters() -> bytes:
         transport.close()
 
 
-async def discover(host: str, port: int = 8899, timeout: int = 2, retries: int = 3) -> Inverter:
+async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified value and answer appropriate Inverter instance
 
     Raise InverterError if unable to contact or recognise supported inverter
