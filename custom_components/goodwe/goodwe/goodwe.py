@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 # registry of supported inverter protocols
 _SUPPORTED_PROTOCOLS = [ET, DT, ES]
+# Inverter family mapping
+ET_FAMILY = ["ET", "EH", "BT", "BH"]
+ES_FAMILY = ["ES", "EM", "BP"]
+DT_FAMILY = ["DT", "NS", "XS"]
+# Serial number tags to indentify receiver type
+ET_MODEL_TAGS = ["ETU", "EHU", "BTU", "BHU"]
+ES_MODEL_TAGS = ["ESU", "EMU", "BPU", "BPS"]
 
 
 async def connect(host: str, port: int = 8899, family: str = None, comm_addr: int = None, timeout: int = 1, retries: int = 3) -> Inverter:
@@ -27,11 +34,11 @@ async def connect(host: str, port: int = 8899, family: str = None, comm_addr: in
 
     Raise InverterError if unable to contact or recognise supported inverter.
     """
-    if "ET" == family or "EH" == family or "BT" == family or "BH" == family:
+    if family in ET_FAMILY:
         inverter = ET(host, port, comm_addr, timeout, retries)
-    elif "ES" == family or "EM" == family or "BP" == family:
+    elif family in ES_FAMILY:
         inverter = ES(host, port, comm_addr, timeout, retries)
-    elif "DT" == family or "NS" == family or "XS" == family:
+    elif family in DT_FAMILY:
         inverter = DT(host, port, comm_addr, timeout, retries)
     else:
         return await discover(host, port, timeout, retries)
@@ -85,14 +92,19 @@ async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int =
         response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
-        if "ETU" in serial_number or "EHU" in serial_number or "BTU" in serial_number or "BHU" in serial_number:
-            logger.debug(f"Detected ET/EH/BT/BH inverter {model_name}, S/N:{serial_number}")
-            i = ET(host, port, None, timeout, retries)
-            await i.read_device_info()
-            return i
-        elif "ESU" in serial_number or "EMU" in serial_number or "BPU" in serial_number or "BPS" in serial_number:
-            logger.debug(f"Detected ES/EM/BP inverter {model_name}, S/N:{serial_number}")
-            i = ES(host, port, None, timeout, retries)
+        inverter_class = None
+
+        for model_tag in ET_MODEL_TAGS:
+            if model_tag in serial_number:
+                logger.debug(f"Detected ET/EH/BT/BH inverter {model_name}, S/N:{serial_number}")
+                inverter_class = ET
+        for model_tag in ES_MODEL_TAGS:
+            if model_tag in serial_number:
+                logger.debug(f"Detected ES/EM/BP inverter {model_name}, S/N:{serial_number}")
+                inverter_class = ES
+
+        if inverter_class:
+            i = inverter_class(host, port, None, timeout, retries)
             await i.read_device_info()
             return i
     except InverterError as ex:
