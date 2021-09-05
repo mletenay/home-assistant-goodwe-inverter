@@ -194,3 +194,37 @@ ERROR_CODES: Dict[int, str] = {
     1: 'AC HCT Check Failure',
     0: 'GFCI Device Check Failure',
 }
+
+BMS_ALARM_CODES: Dict[int, str] = {
+    15: 'Charging over-voltage 3',
+    14: 'Discharge under-voltage 3',
+    13: 'Cell high temperature 3',
+    12: 'Communication failure 2',
+    11: 'Charging circuit failure',
+    10: 'Discharge circuit fault',
+    9: 'Battery lock',
+    8: 'Battery break',
+    7: 'DC bus fault',
+    6: 'Precharge fault',
+    5: 'Discharging over-current 2',
+    4: 'Charging over-current 2',
+    3: 'Cell Low temperature 2',
+    2: 'Cell high temperature 2',
+    1: 'Discharging under-voltage 2',
+    0: 'Charging over-voltage 2',
+}
+
+BMS_WARNING_CODES: Dict[int, str] = {
+    11: 'System high temperature',
+    10: 'System low temperature 2',
+    9: 'System low temperature 1',
+    8: 'Cell imbalance',
+    7: 'System reboot',
+    6: 'communication failure 1',
+    5: 'Discharging over-current 1',
+    4: 'Charging over-current 1',
+    3: 'Cell low temperature 1',
+    2: 'Cell high temperature 1',
+    1: 'Discharge under-voltage 1',
+    0: 'Charging over-voltage 1',
+}

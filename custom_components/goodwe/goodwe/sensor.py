@@ -174,7 +174,7 @@ class Float(Sensor):
         self.scale = scale
 
     def read_value(self, data: io.BytesIO):
-        return read_float4(data) / self.scale
+        return round(read_float4(data) / self.scale, 3)
 
 
 class Timestamp(Sensor):
@@ -369,3 +369,13 @@ def read_grid_mode(buffer: io.BytesIO, offset: int = None) -> int:
 def read_unsigned_int(data: bytes, offset: int) -> int:
     """Retrieve 2 byte (unsigned int) value from bytes at specified offset"""
     return int.from_bytes(data[offset:offset + 2], byteorder="big", signed=False)
+
+
+def decode_bitmap(value: int, bitmap: Dict[int, str]) -> str:
+    bits = value
+    result = []
+    for i in range(32):
+        if bits & 0x1 == 1:
+            result.append(bitmap.get(i))
+        bits = bits >> 1
+    return ", ".join(result)

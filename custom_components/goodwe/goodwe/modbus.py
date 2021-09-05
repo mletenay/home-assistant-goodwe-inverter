@@ -60,7 +60,7 @@ def create_modbus_request(comm_addr: int, cmd: int, offset: int, value: int) -> 
     return bytes(data)
 
 
-def validate_modbus_response(data: bytes) -> bool:
+def validate_modbus_response(data: bytes, cmd: int, offset: int, value: int) -> bool:
     """
     Validate the modbus response.
     data[0:1] is header
@@ -71,10 +71,17 @@ def validate_modbus_response(data: bytes) -> bool:
     """
     if len(data) <= 4:
         logger.debug(f'Response is too short.')
+        return False
+    if data[3] != cmd:
+        logger.debug(f'Response returned command failure: {data[3]}, expected {cmd}.')
+        return False
     if data[3] == MODBUS_READ_CMD:
+        if data[4] != value * 2:
+            logger.debug(f'Response has unexpected length: {data[4]}, expected {value * 2}.')
+            return False
         expected_length = data[4] + 7
         if len(data) < expected_length:
-            logger.debug(f'Response has unexpected length: {len(data)}, expected {expected_length}.')
+            logger.debug(f'Response is too short: {len(data)}, expected {expected_length}.')
             return False
     elif data[3] == MODBUS_WRITE_CMD:
         if len(data) < 10:

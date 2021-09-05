@@ -198,7 +198,7 @@ class ModbusProtocolCommand(ProtocolCommand):
     def __init__(self, comm_addr: int, cmd: int, offset: int, value: int):
         super().__init__(
             create_modbus_request(comm_addr, cmd, offset, value),
-            lambda x: validate_modbus_response(x),
+            lambda x: validate_modbus_response(x, cmd, offset, value),
         )
 
 
