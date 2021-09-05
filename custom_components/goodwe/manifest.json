@@ -9,6 +9,7 @@
     "@fizcris"
   ],
   "requirements": ["goodwe==0.2.2"],
+  "config_flow": true,
   "iot_class": "local_polling",
   "version": "1.0.0"
 }

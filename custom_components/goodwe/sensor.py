@@ -33,10 +33,10 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
 
+from .const import DOMAIN, DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "goodwe"
 ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
 
 # Service related constants
@@ -62,28 +62,6 @@ SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
     }
 )
 
-# Configuration related constants
-CONF_INCLUDE_UNKNOWN_SENSORS = "include_unknown_sensors"
-CONF_INVERTER_TYPE = "inverter_type"
-CONF_COMM_ADDRESS = "comm_address"
-CONF_SENSOR_NAME_PREFIX = "sensor_name_prefix"
-CONF_NETWORK_TIMEOUT = "network_timeout"
-CONF_NETWORK_RETRIES = "network_retries"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT, default=8899): cv.port,
-        vol.Optional(CONF_INCLUDE_UNKNOWN_SENSORS, default=False): cv.boolean,
-        vol.Optional(CONF_INVERTER_TYPE): cv.string,
-        vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,
-        vol.Optional(CONF_NETWORK_TIMEOUT, default=2): cv.positive_int,
-        vol.Optional(CONF_NETWORK_RETRIES, default=3): cv.positive_int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=timedelta(seconds=30)): cv.time_period,
-        vol.Optional(CONF_SENSOR_NAME_PREFIX, default="GoodWe"): cv.string,
-    }
-)
-
 _ICONS = {
     SensorKind.PV: "mdi:solar-power",
     SensorKind.AC: "mdi:power-plug-outline",
@@ -93,52 +71,46 @@ _ICONS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform setup."""
-    try:
-        inverter = await connect(
-            config[CONF_IP_ADDRESS],
-            config.get(CONF_INVERTER_TYPE),
-            config.get(CONF_COMM_ADDRESS),
-            config[CONF_NETWORK_TIMEOUT],
-            config[CONF_NETWORK_RETRIES],
-        )
-    except InverterError as err:
-        raise PlatformNotReady from err
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the GoodWe inverter from a config entry."""
+    entities = []
+    sensor_entities = []
+    inverter = hass.data[DOMAIN][config_entry.entry_id]
+    scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
     # Entity representing inverter itself
-    entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, "inverter", hass=hass)
     uid = f"{DOMAIN}-{inverter.serial_number}"
-    inverter_entity = InverterEntity(inverter, entity_id, uid)
-    async_add_entities((inverter_entity,))
+    inverter_entity = InverterEntity(inverter, uid, config_entry)
+    entities.append(inverter_entity)
 
     # Individual inverter sensors entities
-    sensor_entities = []
     for sensor in inverter.sensors():
-        entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, sensor.id_, hass=hass)
+        if sensor.id_.startswith("xx"):
+            # do not include unknown sensors
+            continue
         uid = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
-        sensor_name = f"{config[CONF_SENSOR_NAME_PREFIX]} {sensor.name}".strip()
+        sensor_name = f"{DEFAULT_NAME} {sensor.name}".strip()
         sensor_entities.append(
             InverterSensor(
-                entity_id, uid, sensor.id_, sensor_name, sensor.unit, sensor.kind
+                config_entry, uid, sensor.id_, sensor_name, sensor.unit, sensor.kind
             )
         )
-    async_add_entities(sensor_entities)
+    entities.extend(sensor_entities)
+
+    async_add_entities(entities)
 
     # Add the refresh job
     refresh_job = InverterValuesRefreshJob(
         inverter_entity,
         sensor_entities,
-        config[CONF_NETWORK_RETRIES],
-        config[CONF_INCLUDE_UNKNOWN_SENSORS],
     )
     hass.async_add_job(refresh_job.async_refresh)
     async_track_time_interval(
-        hass, refresh_job.async_refresh, config[CONF_SCAN_INTERVAL]
+        hass, refresh_job.async_refresh, scan_interval
     )
 
     # Add services
-    platform = entity_platform.current_platform.get()
+    platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_WORK_MODE,
         {vol.Required(ATTR_WORK_MODE): vol.Coerce(int)},
@@ -162,14 +134,11 @@ class InverterValuesRefreshJob:
     """Job for refreshing inverter sensors values"""
 
     def __init__(
-        self, inverter_entity, sensor_entities, network_retries, include_unknown_sensors
+        self, inverter_entity, sensor_entities
     ):
         """Initialize the sensors."""
         self._inverter_entity = inverter_entity
         self._sensor_entities = sensor_entities
-        self._network_retries = network_retries
-        self._include_unknown_sensors = include_unknown_sensors
-        self._network_failure_count = 0
 
     async def async_refresh(self, now=None):
         """Fetch new state data for the sensors.
@@ -177,17 +146,10 @@ class InverterValuesRefreshJob:
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            inverter_response = await self._inverter_entity.read_runtime_data(
-                self._include_unknown_sensors
-            )
-            self._network_failure_count = 0
+            inverter_response = await self._inverter_entity.read_runtime_data()
         except InverterError as ex:
-            self._network_failure_count += 1
-            if self._network_failure_count > self._network_retries:
-                _LOGGER.debug("Inverter is not responding to requests: %s", ex)
-                inverter_response = {}
-            else:
-                return
+            _LOGGER.debug("Inverter is not responding to requests: %s", ex)
+            return
 
         self._inverter_entity.update_value(inverter_response)
         for sensor in self._sensor_entities:
@@ -197,21 +159,21 @@ class InverterValuesRefreshJob:
 class InverterEntity(SensorEntity):
     """Entity representing the inverter instance itself"""
 
-    def __init__(self, inverter, entity_id, uid):
+    def __init__(self, inverter, uid, config_entry):
         super().__init__()
-        self.entity_id = entity_id
         self._attr_icon = "mdi:solar-power"
         self._attr_native_value = None
         self._attr_name = "PV Inverter"
 
         self._inverter = inverter
-        self._uid = uid
+        self._config_entry = config_entry
+        self._attr_unique_id = uid
         self._sensor = "ppv"
         self._data = {}
 
-    async def read_runtime_data(self, include_unknown_sensors):
+    async def read_runtime_data(self):
         """Read runtime data from the inverter"""
-        return await self._inverter.read_runtime_data(include_unknown_sensors)
+        return await self._inverter.read_runtime_data()
 
     async def set_work_mode(self, work_mode: int):
         """Set the inverter work mode"""
@@ -230,11 +192,6 @@ class InverterEntity(SensorEntity):
         self._data = inverter_response
         self._attr_native_value = inverter_response.get(self._sensor)
         self.async_schedule_update_ha_state()
-
-    @property
-    def unique_id(self):
-        """Return unique id."""
-        return self._uid
 
     @property
     def native_unit_of_measurement(self):
@@ -266,10 +223,7 @@ class InverterEntity(SensorEntity):
         """Return device info."""
         return {
             "name": self.name,
-            "identifiers": {
-                (DOMAIN, self._inverter.serial_number),
-                (DOMAIN, self._inverter.host),
-            },
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
             "sw_version": self._inverter.software_version,
@@ -279,16 +233,16 @@ class InverterEntity(SensorEntity):
 class InverterSensor(SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, entity_id, uid, sensor_id, sensor_name, unit, kind):
+    def __init__(self, config_entry, uid, sensor_id, sensor_name, unit, kind):
         """Initialize an inverter sensor."""
         super().__init__()
-        self.entity_id = entity_id
         if kind is not None:
             self._attr_icon = _ICONS.get(kind)
         self._attr_name = sensor_name
         self._attr_native_value = None
+        self.  = config_entry
 
-        self._uid = uid
+        self._attr_unique_id = uid
         self._sensor_id = sensor_id
         if unit == "A":
             self._unit = ELECTRIC_CURRENT_AMPERE
@@ -334,11 +288,6 @@ class InverterSensor(SensorEntity):
             self.async_schedule_update_ha_state()
 
     @property
-    def unique_id(self):
-        """Return unique id."""
-        return self._uid
-
-    @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
@@ -347,3 +296,14 @@ class InverterSensor(SensorEntity):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "model": self._inverter.model_name,
+            "manufacturer": "GoodWe",
+            "sw_version": self._inverter.software_version,
+        }
