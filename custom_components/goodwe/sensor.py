@@ -229,10 +229,7 @@ class InverterEntity(SensorEntity):
     def update_value(self, inverter_response):
         """Update the entity value from the response received from inverter"""
         self._data = inverter_response
-        if self._sensor in inverter_response:
-            self._attr_native_value = inverter_response[self._sensor]
-        else:
-            self._attr_native_value = None
+        self._attr_native_value = inverter_response.get(self._sensor)
         self.async_schedule_update_ha_state()
 
     @property
@@ -325,11 +322,11 @@ class InverterSensor(SensorEntity):
 
     def update_value(self, inverter_response):
         """Update the sensor value from the response received from inverter"""
-        if self._sensor_id in inverter_response:
-            self._attr_native_value = inverter_response[self._sensor_id]
-        else:
-            self._attr_native_value = None
-        self.async_schedule_update_ha_state()
+        prev_value = self._attr_native_value
+        self._attr_native_value = inverter_response.get(self._sensor_id)
+        # do not update sensor state if the value hasn't changed
+        if self._attr_native_value != prev_value:
+            self.async_schedule_update_ha_state()
 
     @property
     def unique_id(self):
