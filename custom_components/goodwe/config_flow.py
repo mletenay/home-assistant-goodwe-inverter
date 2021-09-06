@@ -81,7 +81,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: host
                         CONF_COMM_ADDRESS: inverter.comm_addr
-                        CONF_MODEL_FAMILY: inverter.inverter_class
+                        CONF_MODEL_FAMILY: type(inverter).__name__
                     },
                 )
 
