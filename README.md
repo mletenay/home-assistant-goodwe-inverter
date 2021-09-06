@@ -2,15 +2,13 @@
 
 # GoodWe solar inverter sensors for Home Assistant
 
-The GoodWe Inverter Solar Sensor component will retrieve data from a GoodWe inverter connected to local network.
-It has been tested on GoodWe ET, EH, ES, EM, DT, D-NS, XS and BP families of inverters.
+The GoodWe [Home Assistant](https://home-assistant.io/) custom component will retrieve data from a GoodWe inverter connected to a local network.
+It has been reported to work on GoodWe ET, EH, ES, EM, DT, D-NS, XS and BP families of inverters.
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
-
-The values will be presented as sensors in [Home Assistant](https://home-assistant.io/).
 
 ## Requirements
 
-Your inverter needs to be connected to your local network, as this custom component will utilise the UDP protocol to read data from inverter. All you need to know is the IP address of the inverter and you are good to go.
+Your inverter needs to be connected to your local network, as this custom component will utilise the UDP protocol to read data from it. All you need to know is the IP address of the inverter and you are good to go.
 
 ## HACS installation
 
@@ -26,10 +24,10 @@ This is how your custom_components directory should look like:
 ```bash
 custom_components
 ├── goodwe
-│   ├── goodwe/*
 │   ├── __init__.py
 │   ├── manifest.json
-│   └── sensor.py
+│   ├── sensor.py
+│   └── services.yaml
 ```
 
 ## Configuration example
@@ -40,8 +38,7 @@ To enable this sensor, add the following lines to your `configuration.yaml` file
 sensor:
   - platform: goodwe
     ip_address: 192.168.100.100
-    #port: 8899
-    #network_timeout: 2
+    #network_timeout: 1
     #network_retries: 3
     #scan_interval: 30
     #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
@@ -50,7 +47,7 @@ sensor:
     #include_unknown_sensors: false
 ```
 
-The type (and communication protocol) of inverter can be detected automatically, but it is generally recommended to explicitly specify the `inverter_type` to improve startup reliability and performance. One of ET, EH, ES, EM, DT, NS, XS, BP can be specified.
+The type (and communication protocol) of the inverter can be detected automatically, but it can be explicitly specified via the `inverter_type` parameter to improve startup reliability and performance. Supported values are ET, EH, ES, EM, DT, NS, XS, BP.
 
 Usually there is no need to explicitly specify inverter's communication address and default values will be applied (0xF7 for ET/EH inverters, 0x7F for DT/D-NS/XS inverters).
 In case the inverter was configured to non-stadard value, the `comm_address` should be set accordingly.
@@ -61,7 +58,7 @@ The default values (2 secs / 3 times) are fine for most cases, but they can be i
 
 The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
 
-There are many values reported by the inverers whose meaning is not yet fully known. Those sensors are named "xx\*" and will be provided if the `include_unknown_sensors` parameter is set to true.
+There are some values pruduced by the inverters whose meaning is not yet fully known. Those sensors are named "xx\*" and will be provided if the `include_unknown_sensors` parameter is set to true.
 
 ## Home Assistant Energy Dashboard
 
@@ -148,7 +145,12 @@ logger:
   default: warning
   logs:
     custom_components.goodwe: debug
+    goodwe: debug
 ```
+
+## Source code
+
+The source code implementing the actual communication with GoodWe inverters (which was originally part of this plugin) was extracted and moved to standalone [PyPI library](https://pypi.org/project/goodwe/). This repository now contains only the HomeAssistant specific code.
 
 ## Inverter discovery and communication testing
 
