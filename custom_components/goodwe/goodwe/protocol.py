@@ -82,7 +82,7 @@ class ProtocolCommand:
         self.request: bytes = request
         self.validator: Callable[[bytes], bool] = validator
 
-    async def execute(self, host: str, port: int, timeout: int, retries: int) -> bytes:
+    async def execute(self, host: str, timeout: int, retries: int) -> bytes:
         """
         Execute the udp protocol command on the specified address/port.
         Since the UDP communication is by definition unreliable, when no (valid) response is received by specified
@@ -96,7 +96,7 @@ class ProtocolCommand:
             lambda: UdpInverterProtocol(
                 self.request, self.validator, on_response_received, timeout, retries
             ),
-            remote_addr=(host, port),
+            remote_addr=(host, 8899),
         )
         try:
             await on_response_received

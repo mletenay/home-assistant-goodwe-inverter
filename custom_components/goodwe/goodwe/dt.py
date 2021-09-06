@@ -9,7 +9,7 @@ from .sensor import *
 class DT(Inverter):
     """Class representing inverter of DT, D-NS and XS families"""
 
-    __sensors: Tuple[Sensor, ...] = (
+    __all_sensors: Tuple[Sensor, ...] = (
         Timestamp("timestamp", 0, "Timestamp"),
         Voltage("vpv1", 6, "PV1 Voltage", Kind.PV),
         Current("ipv1", 8, "PV1 Current", Kind.PV),
@@ -99,17 +99,24 @@ class DT(Inverter):
     )
 
     # Modbus registers of inverter settings, offsets are modbus register addresses
-    __settings: Tuple[Sensor, ...] = (
+    __all_settings: Tuple[Sensor, ...] = (
         Integer("work_mode", 40331, "Work Mode", "", Kind.AC),
     )
 
-    def __init__(self, host: str, port: int = 8899, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
-        super().__init__(host, port, comm_addr, timeout, retries)
+    def __init__(self, host: str, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
+        super().__init__(host, comm_addr, timeout, retries)
         if not self.comm_addr:
             # Set the default inverter address
             self.comm_addr = 0x7f
         self._READ_DEVICE_VERSION_INFO: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x7531, 0x0028)
         self._READ_DEVICE_RUNNING_DATA: ProtocolCommand = ModbusReadCommand(self.comm_addr, 0x7594, 0x0049)
+        self._is_single_phase: bool = False
+        self._sensors = self.__all_sensors
+        self._settings = self.__all_settings
+
+    @staticmethod
+    def _is_not_3phase_sensor(s: Sensor) -> bool:
+        return not ((s.id_.endswith('2') or s.id_.endswith('3')) and 'pv' not in s.id_ and not s.id_.startswith('xx'))
 
     async def read_device_info(self):
         response = await self._read_from_socket(self._READ_DEVICE_VERSION_INFO)
@@ -122,9 +129,14 @@ class DT(Inverter):
             int.from_bytes(response[70:72], byteorder='big'),
         )
 
+        if "DSN" in self.serial_number:
+            self._is_single_phase = True
+            # this is single phase inverter, filter out all L2 and L3 sensors
+            self._sensors = tuple(filter(self._is_not_3phase_sensor, self.__all_sensors))
+
     async def read_runtime_data(self, include_unknown_sensors: bool = False) -> Dict[str, Any]:
         raw_data = await self._read_from_socket(self._READ_DEVICE_RUNNING_DATA)
-        data = self._map_response(raw_data[5:-2], self.__sensors, include_unknown_sensors)
+        data = self._map_response(raw_data[5:-2], self._sensors, include_unknown_sensors)
         return data
 
     async def read_settings(self, setting_id: str) -> Any:
@@ -162,7 +174,7 @@ class DT(Inverter):
             await self._read_from_socket(ModbusWriteCommand(self.comm_addr, 0x9d8a, 0))
 
     def sensors(self) -> Tuple[Sensor, ...]:
-        return self.__sensors
+        return self._sensors
 
     def settings(self) -> Tuple[Sensor, ...]:
-        return self.__settings
+        return self._settings

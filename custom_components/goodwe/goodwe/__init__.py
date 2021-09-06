@@ -19,13 +19,13 @@ DT_FAMILY = ["DT", "NS", "XS"]
 # Serial number tags to identify inverter type
 ET_MODEL_TAGS = ["ETU", "EHU", "BTU", "BHU"]
 ES_MODEL_TAGS = ["ESU", "EMU", "BPU", "BPS"]
+DT_MODEL_TAGS = ["DTU", "DTN", "DSN"]
 
 # supported inverter protocols
 _SUPPORTED_PROTOCOLS = [ET, DT, ES]
 
 
-async def connect(host: str, port: int = 8899, family: str = None, comm_addr: int = None, timeout: int = 1,
-                  retries: int = 3) -> Inverter:
+async def connect(host: str, family: str = None, comm_addr: int = 0, timeout: int = 1, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified host/port and answer appropriate Inverter instance.
 
     The specific inverter family/type will be detected automatically, but it can be passed explicitly.
@@ -40,15 +40,15 @@ async def connect(host: str, port: int = 8899, family: str = None, comm_addr: in
     Raise InverterError if unable to contact or recognise supported inverter.
     """
     if family in ET_FAMILY:
-        inverter = ET(host, port, comm_addr, timeout, retries)
+        inverter = ET(host, comm_addr, timeout, retries)
     elif family in ES_FAMILY:
-        inverter = ES(host, port, comm_addr, timeout, retries)
+        inverter = ES(host, comm_addr, timeout, retries)
     elif family in DT_FAMILY:
-        inverter = DT(host, port, comm_addr, timeout, retries)
+        inverter = DT(host, comm_addr, timeout, retries)
     else:
-        return await discover(host, port, timeout, retries)
+        return await discover(host, timeout, retries)
 
-    logger.debug(f"Connecting to {family} family inverter at {host}:{port}")
+    logger.debug(f"Connecting to {family} family inverter at {host}")
     await inverter.read_device_info()
     logger.debug(f"Connected to inverter {inverter.model_name}, S/N:{inverter.serial_number}")
     return inverter
@@ -86,7 +86,7 @@ async def search_inverters() -> bytes:
         transport.close()
 
 
-async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int = 3) -> Inverter:
+async def discover(host: str, timeout: int = 1, retries: int = 3) -> Inverter:
     """Contact the inverter at the specified value and answer appropriate Inverter instance
 
     Raise InverterError if unable to contact or recognise supported inverter
@@ -95,8 +95,8 @@ async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int =
 
     # Try the common AA55C07F0102000241 command first and detect inverter type from serial_number
     try:
-        logger.debug(f"Probing inverter at {host}:{port}")
-        response = await Aa55ProtocolCommand("010200", "0182").execute(host, port, timeout, retries)
+        logger.debug(f"Probing inverter at {host}")
+        response = await Aa55ProtocolCommand("010200", "0182").execute(host, timeout, retries)
         model_name = response[12:22].decode("ascii").rstrip()
         serial_number = response[38:54].decode("ascii")
 
@@ -109,8 +109,12 @@ async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int =
             if model_tag in serial_number:
                 logger.debug(f"Detected ES/EM/BP inverter {model_name}, S/N:{serial_number}")
                 inverter_class = ES
+        for model_tag in DT_MODEL_TAGS:
+            if model_tag in serial_number:
+                logger.debug(f"Detected DT/D-NS/XS inverter {model_name}, S/N:{serial_number}")
+                inverter_class = DT
         if inverter_class:
-            i = inverter_class(host, port, 0, timeout, retries)
+            i = inverter_class(host, 0, timeout, retries)
             await i.read_device_info()
             return i
 
@@ -119,9 +123,9 @@ async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int =
 
     # Probe inverter specific protocols
     for inverter in _SUPPORTED_PROTOCOLS:
-        i = inverter(host, port, 0, timeout, retries)
+        i = inverter(host, 0, timeout, retries)
         try:
-            logger.debug(f"Probing {inverter.__name__} inverter at {host}:{port}")
+            logger.debug(f"Probing {inverter.__name__} inverter at {host}")
             await i.read_device_info()
             logger.debug(f"Detected {inverter.__name__} protocol inverter {i.model_name}, S/N:{i.serial_number}")
             return i
@@ -129,6 +133,6 @@ async def discover(host: str, port: int = 8899, timeout: int = 1, retries: int =
             failures.append(ex)
     raise InverterError(
         "Unable to connect to the inverter at "
-        f"host={host} port={port}, or your inverter is not supported yet.\n"
+        f"host={host}, or your inverter is not supported yet.\n"
         f"Failures={str(failures)}"
     )

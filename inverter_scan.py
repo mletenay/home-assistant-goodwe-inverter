@@ -16,7 +16,7 @@ logging.basicConfig(
 def try_command(command, ip):
     print(f"Trying command: {command}")
     try:
-        response = asyncio.run(ProtocolCommand(bytes.fromhex(command), lambda x: True).execute(result[0], 8899))
+        response = asyncio.run(ProtocolCommand(bytes.fromhex(command), lambda x: True).execute(result[0]))
         print(f"Response to {command} command: {response.hex()}")
     except Exception as err:
         print(f"No response to {command} command")

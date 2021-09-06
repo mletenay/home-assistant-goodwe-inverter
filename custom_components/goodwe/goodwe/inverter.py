@@ -54,9 +54,8 @@ class Inverter:
     Common superclass for various inverter models implementations.
     Represents the inverter state and its basic behavior
     """
-    def __init__(self, host: str, port: int = 8899, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
+    def __init__(self, host: str, comm_addr: int = 0, timeout: int = 1, retries: int = 3):
         self.host = host
-        self.port = port
         self.comm_addr = comm_addr
         self.timeout = timeout
         self.retries = retries
@@ -74,7 +73,7 @@ class Inverter:
         self.arm_version: str = None
 
     async def _read_from_socket(self, command: ProtocolCommand) -> bytes:
-        return await command.execute(self.host, self.port, self.timeout, self.retries)
+        return await command.execute(self.host, self.timeout, self.retries)
 
     async def read_device_info(self):
         """

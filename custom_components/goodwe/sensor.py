@@ -98,7 +98,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         inverter = await connect(
             config[CONF_IP_ADDRESS],
-            config[CONF_PORT],
             config.get(CONF_INVERTER_TYPE),
             config.get(CONF_COMM_ADDRESS),
             config[CONF_NETWORK_TIMEOUT],
@@ -269,7 +268,7 @@ class InverterEntity(SensorEntity):
             "name": self.name,
             "identifiers": {
                 (DOMAIN, self._inverter.serial_number),
-                (DOMAIN, self._inverter.host, self._inverter.port),
+                (DOMAIN, self._inverter.host),
             },
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
@@ -325,7 +324,10 @@ class InverterSensor(SensorEntity):
         prev_value = self._attr_native_value
         self._attr_native_value = inverter_response.get(self._sensor_id)
         # Total increasing sensor should never be set to None
-        if self._attr_native_value is None and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING:
+        if (
+            self._attr_native_value is None
+            and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING
+        ):
             self._attr_native_value = prev_value
         # do not update sensor state if the value hasn't changed
         if self._attr_native_value != prev_value:

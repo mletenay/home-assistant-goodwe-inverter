@@ -14,13 +14,12 @@ logging.basicConfig(
 # Set the appropriate IP address
 IP_ADDRESS = "192.168.1.14"
 
-PORT = 8899
 FAMILY = "ET"  # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter family automatically
 COMM_ADDR = None  # Usually 0xf7 for ET/EH or 0x7f for DT/D-NS/XS, or None for default value
 TIMEOUT = 2
 RETRIES = 3
 
-inverter = asyncio.run(inverter.connect(IP_ADDRESS, PORT, COMM_ADDR, FAMILY, TIMEOUT, RETRIES))
+inverter = asyncio.run(inverter.connect(IP_ADDRESS, COMM_ADDR, FAMILY, TIMEOUT, RETRIES))
 print(
     f"Identified inverter\n"
     f"- Model: {inverter.model_name}\n"
