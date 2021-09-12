@@ -35,21 +35,8 @@ for sensor in inverter.sensors():
 
 # response = asyncio.run(inverter.read_settings_data())
 
-# for (sensor, _, _, unit, name, _) in inverter.settings():
-#    print(f"{sensor}: \t\t {name} = {response[sensor]} {unit}")
+# for setting in inverter.settings():
+#    print(f"{setting.id_}: \t\t {setting.name} = {response[setting.id_]} {setting.unit}")
 
-# print(asyncio.run(inverter.send_command("F703B798000136C7")))
-# Read settings
-# print(asyncio.run(inverter.send_command("AA55C07F0109000248")))
-
-# General mode
-# print(asyncio.run(inverter.send_command("AA55C07F03590100029B")))
-# Off grid mode
-# print(asyncio.run(inverter.send_command("AA55C07F03590101029C")))
-# Backup mode
-# print(asyncio.run(inverter.send_command("AA55C07F03590102029D")))
-
-# Get S/N SolarGo
-# print(asyncio.run(inverter.send_command("7F03753100280409")))
-# Get Data SolarGo
-# print(asyncio.run(inverter.send_command("7F0375940049D5C2")))
+# response = asyncio.run(goodwe.protocol.ModbusReadCommand(0xf7, 0x88b8, 1).execute(IP_ADDRESS, TIMEOUT, RETRIES))
+# print(response.hex())

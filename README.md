@@ -2,9 +2,11 @@
 
 # GoodWe solar inverter sensors for Home Assistant
 
-The GoodWe [Home Assistant](https://home-assistant.io/) custom component will retrieve data from a GoodWe inverter connected to a local network.
+This [Home Assistant](https://home-assistant.io/) custom component will retrieve data from a GoodWe inverter connected to a local network.
 It has been reported to work on GoodWe ET, EH, ES, EM, DT, D-NS, XS and BP families of inverters.
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
+
+(If you can't communicate with the inverter despite your model is listed above, it is possible you have old ARM firmware version. Usually the ARM firmware (not the nverter firmware) has to be >=13. You should ask manufacturer support to upgrade your ARM firmware to be able to communicate with inveter via UDP.)
 
 ## Requirements
 
