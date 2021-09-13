@@ -35,7 +35,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, KEY_INVERTER, KEY_COORDINATOR
+from .const import (
+    DOMAIN,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    KEY_INVERTER,
+    KEY_COORDINATOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,23 +49,17 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SET_WORK_MODE = "set_work_mode"
 ATTR_WORK_MODE = "work_mode"
 SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_WORK_MODE): cv.positive_int,
-    }
+    {vol.Required(ATTR_WORK_MODE): cv.positive_int,}
 )
 SERVICE_SET_ONGRID_BATTERY_DOD = "set_ongrid_battery_dod"
 ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
 SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,
-    }
+    {vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,}
 )
 SERVICE_SET_GRID_EXPORT_LIMIT = "set_grid_export_limit"
 ATTR_GRID_EXPORT_LIMIT = "grid_export_limit"
 SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,
-    }
+    {vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,}
 )
 
 _ICONS = {
@@ -91,7 +91,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_name = f"{DEFAULT_NAME} {sensor.name}".strip()
         entities.append(
             InverterSensor(
-                coordinator, config_entry, uid, sensor.id_, sensor_name, sensor.unit, sensor.kind
+                coordinator,
+                config_entry,
+                uid,
+                sensor.id_,
+                sensor_name,
+                sensor.unit,
+                sensor.kind,
             )
         )
 
@@ -193,14 +199,16 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
 class InverterSensor(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, coordinator, config_entry, uid, sensor_id, sensor_name, unit, kind):
+    def __init__(
+        self, coordinator, config_entry, uid, sensor_id, sensor_name, unit, kind
+    ):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         if kind is not None:
             self._attr_icon = _ICONS.get(kind)
         self._attr_name = sensor_name
         self._attr_native_value = None
-        self.  = config_entry
+        self._config_entry = config_entry
 
         self._attr_unique_id = uid
         self._sensor_id = sensor_id

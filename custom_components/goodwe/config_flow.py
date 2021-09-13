@@ -8,13 +8,16 @@ from homeassistant.core import callback
 
 from .goodwe.goodwe import connect, InverterError
 
-from .const import CONF_COMM_ADDRESS, CONF_MODEL_FAMILY, DEFAULT_NAME, DOMAIN, DEFAULT_SCAN_INTERVAL
+from .const import (
+    CONF_COMM_ADDRESS,
+    CONF_MODEL_FAMILY,
+    DEFAULT_NAME,
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,
-    }
+    {vol.Required(CONF_HOST): str, vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,}
 )
 
 
@@ -65,10 +68,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             comm_address = user_input.get(CONF_COMM_ADDRESS)
 
             try:
-                inverter = await connect(
-                    host = host,
-                    comm_addr = comm_address,
-                )
+                inverter = await connect(host=host, comm_addr=comm_address,)
             except InverterError as err:
                 errors["base"] = "connection_error"
 
@@ -79,13 +79,12 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data={
-                        CONF_HOST: host
-                        CONF_COMM_ADDRESS: inverter.comm_addr
-                        CONF_MODEL_FAMILY: type(inverter).__name__
+                        CONF_HOST: host,
+                        CONF_COMM_ADDRESS: inverter.comm_addr,
+                        CONF_MODEL_FAMILY: type(inverter).__name__,
                     },
                 )
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
-

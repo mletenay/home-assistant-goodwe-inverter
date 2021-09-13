@@ -39,9 +39,7 @@ async def async_setup_entry(
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
-            host = host,
-            family = model_family,
-            comm_addr = comm_address,
+            host=host, family=model_family, comm_addr=comm_address,
         )
     except InverterError as err:
         raise ConfigEntryNotReady from err
