@@ -1,25 +1,22 @@
 """The Goodwe inverter component."""
-import logging
 from datetime import timedelta
-from socket import timeout
+import logging
+
+from goodwe import InverterError, connect
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .goodwe.goodwe import connect, InverterError
-
 from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORMS,
     CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
-    CONF_SCAN_INTERVAL,
-    KEY_INVERTER,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     KEY_COORDINATOR,
+    KEY_INVERTER,
+    PLATFORMS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +36,9 @@ async def async_setup_entry(
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
-            host=host, family=model_family, comm_addr=comm_address,
+            host=host,
+            family=model_family,
+            comm_addr=comm_address,
         )
     except InverterError as err:
         raise ConfigEntryNotReady from err
@@ -47,7 +46,7 @@ async def async_setup_entry(
     async def async_update_data():
         """Fetch data from the inverter."""
         try:
-            data = await self._inverter_entity.read_runtime_data()
+            data = await inverter.read_runtime_data()
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
 
@@ -92,6 +91,8 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)

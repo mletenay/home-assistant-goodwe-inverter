@@ -1,24 +1,30 @@
 """Config flow to configure Goodwe inverters using their local API."""
+import logging
+
+from goodwe import InverterError, connect
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
-from homeassistant.helpers import config_validation as cv
 from homeassistant.core import callback
-
-from .goodwe.goodwe import connect, InverterError
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
     DEFAULT_NAME,
-    DOMAIN,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,}
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,
+    }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -68,8 +74,12 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             comm_address = user_input.get(CONF_COMM_ADDRESS)
 
             try:
-                inverter = await connect(host=host, comm_addr=comm_address,)
+                inverter = await connect(
+                    host=host,
+                    comm_addr=comm_address,
+                )
             except InverterError as err:
+                _LOGGER.error("Connection error during GoodWe config flow: %s", err)
                 errors["base"] = "connection_error"
 
             if not errors:

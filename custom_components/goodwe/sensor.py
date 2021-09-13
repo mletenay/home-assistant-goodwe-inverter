@@ -1,28 +1,20 @@
 """Support for GoodWe inverter via UDP."""
-import asyncio
 import logging
+
+from goodwe import SensorKind
 import voluptuous as vol
-from datetime import timedelta
 
-from goodwe import connect, InverterError, SensorKind
-
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
-from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_POWER,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -30,18 +22,11 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
-    KEY_INVERTER,
-    KEY_COORDINATOR,
-)
+from .const import DEFAULT_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,17 +34,23 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SET_WORK_MODE = "set_work_mode"
 ATTR_WORK_MODE = "work_mode"
 SET_WORK_MODE_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_WORK_MODE): cv.positive_int,}
+    {
+        vol.Required(ATTR_WORK_MODE): cv.positive_int,
+    }
 )
 SERVICE_SET_ONGRID_BATTERY_DOD = "set_ongrid_battery_dod"
 ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
 SET_ONGRID_BATTERY_DOD_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,}
+    {
+        vol.Required(ATTR_ONGRID_BATTERY_DOD): cv.positive_int,
+    }
 )
 SERVICE_SET_GRID_EXPORT_LIMIT = "set_grid_export_limit"
 ATTR_GRID_EXPORT_LIMIT = "grid_export_limit"
 SET_GRID_EXPORT_LIMIT_SERVICE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,}
+    {
+        vol.Required(ATTR_GRID_EXPORT_LIMIT): cv.positive_int,
+    }
 )
 
 _ICONS = {
@@ -92,8 +83,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(
             InverterSensor(
                 coordinator,
-                config_entry,
+                inverter,
                 uid,
+                config_entry,
                 sensor.id_,
                 sensor_name,
                 sensor.unit,
@@ -125,9 +117,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class InverterEntity(CoordinatorEntity, SensorEntity):
-    """Entity representing the inverter instance itself"""
+    """Entity representing the inverter instance itself."""
 
     def __init__(self, coordinator, inverter, uid, config_entry):
+        """Initialize the main inverter entity."""
         super().__init__(coordinator)
         self._attr_icon = "mdi:solar-power"
         self._attr_native_value = None
@@ -139,20 +132,16 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._sensor = "ppv"
         self._data = {}
 
-    async def read_runtime_data(self):
-        """Read runtime data from the inverter"""
-        return await self._inverter.read_runtime_data()
-
     async def set_work_mode(self, work_mode: int):
-        """Set the inverter work mode"""
+        """Set the inverter work mode."""
         await self._inverter.set_work_mode(work_mode)
 
     async def set_ongrid_battery_dod(self, ongrid_battery_dod: int):
-        """Set the on-grid battery dod"""
+        """Set the on-grid battery dod."""
         await self._inverter.set_ongrid_battery_dod(ongrid_battery_dod)
 
     async def set_grid_export_limit(self, grid_export_limit: int):
-        """Set the grid export limit"""
+        """Set the grid export limit."""
         await self._inverter.set_grid_export_limit(grid_export_limit)
 
     @callback
@@ -200,7 +189,15 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
     def __init__(
-        self, coordinator, config_entry, uid, sensor_id, sensor_name, unit, kind
+        self,
+        coordinator,
+        inverter,
+        uid,
+        config_entry,
+        sensor_id,
+        sensor_name,
+        unit,
+        kind,
     ):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
@@ -209,6 +206,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = sensor_name
         self._attr_native_value = None
         self._config_entry = config_entry
+        self._inverter = inverter
 
         self._attr_unique_id = uid
         self._sensor_id = sensor_id
