@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
@@ -32,12 +33,11 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, DEFAULT_NAME, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, DEFAULT_NAME, DEFAULT_SCAN_INTERVAL, KEY_INVERTER, KEY_COORDINATOR
 
 _LOGGER = logging.getLogger(__name__)
-
-ENTITY_ID_FORMAT = "." + DOMAIN + "_{}"
 
 # Service related constants
 SERVICE_SET_WORK_MODE = "set_work_mode"
@@ -74,13 +74,12 @@ _ICONS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the GoodWe inverter from a config entry."""
     entities = []
-    sensor_entities = []
-    inverter = hass.data[DOMAIN][config_entry.entry_id]
-    scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
     # Entity representing inverter itself
     uid = f"{DOMAIN}-{inverter.serial_number}"
-    inverter_entity = InverterEntity(inverter, uid, config_entry)
+    inverter_entity = InverterEntity(coordinator, inverter, uid, config_entry)
     entities.append(inverter_entity)
 
     # Individual inverter sensors entities
@@ -90,24 +89,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
         uid = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
         sensor_name = f"{DEFAULT_NAME} {sensor.name}".strip()
-        sensor_entities.append(
+        entities.append(
             InverterSensor(
-                config_entry, uid, sensor.id_, sensor_name, sensor.unit, sensor.kind
+                coordinator, config_entry, uid, sensor.id_, sensor_name, sensor.unit, sensor.kind
             )
         )
-    entities.extend(sensor_entities)
 
     async_add_entities(entities)
-
-    # Add the refresh job
-    refresh_job = InverterValuesRefreshJob(
-        inverter_entity,
-        sensor_entities,
-    )
-    hass.async_add_job(refresh_job.async_refresh)
-    async_track_time_interval(
-        hass, refresh_job.async_refresh, scan_interval
-    )
 
     # Add services
     platform = entity_platform.async_get_current_platform()
@@ -130,37 +118,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class InverterValuesRefreshJob:
-    """Job for refreshing inverter sensors values"""
-
-    def __init__(
-        self, inverter_entity, sensor_entities
-    ):
-        """Initialize the sensors."""
-        self._inverter_entity = inverter_entity
-        self._sensor_entities = sensor_entities
-
-    async def async_refresh(self, now=None):
-        """Fetch new state data for the sensors.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        try:
-            inverter_response = await self._inverter_entity.read_runtime_data()
-        except InverterError as ex:
-            _LOGGER.debug("Inverter is not responding to requests: %s", ex)
-            return
-
-        self._inverter_entity.update_value(inverter_response)
-        for sensor in self._sensor_entities:
-            sensor.update_value(inverter_response)
-
-
-class InverterEntity(SensorEntity):
+class InverterEntity(CoordinatorEntity, SensorEntity):
     """Entity representing the inverter instance itself"""
 
-    def __init__(self, inverter, uid, config_entry):
-        super().__init__()
+    def __init__(self, coordinator, inverter, uid, config_entry):
+        super().__init__(coordinator)
         self._attr_icon = "mdi:solar-power"
         self._attr_native_value = None
         self._attr_name = "PV Inverter"
@@ -187,21 +149,19 @@ class InverterEntity(SensorEntity):
         """Set the grid export limit"""
         await self._inverter.set_grid_export_limit(grid_export_limit)
 
-    def update_value(self, inverter_response):
-        """Update the entity value from the response received from inverter"""
-        self._data = inverter_response
-        self._attr_native_value = inverter_response.get(self._sensor)
-        self.async_schedule_update_ha_state()
+    @callback
+    def _handle_coordinator_update(self):
+        """Update the entity value from the response received from inverter."""
+        self._data = self.coordinator.data
+        self._attr_native_value = self._data.get(self._sensor)
+
+        # async_write_ha_state is called in super()._handle_coordinator_update()
+        super()._handle_coordinator_update()
 
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return POWER_WATT
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def state_attributes(self):
@@ -230,12 +190,12 @@ class InverterEntity(SensorEntity):
         }
 
 
-class InverterSensor(SensorEntity):
+class InverterSensor(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, config_entry, uid, sensor_id, sensor_name, unit, kind):
+    def __init__(self, coordinator, config_entry, uid, sensor_id, sensor_name, unit, kind):
         """Initialize an inverter sensor."""
-        super().__init__()
+        super().__init__(coordinator)
         if kind is not None:
             self._attr_icon = _ICONS.get(kind)
         self._attr_name = sensor_name
@@ -273,29 +233,26 @@ class InverterSensor(SensorEntity):
             self._attr_state_class = None
             self._attr_device_class = None
 
-    def update_value(self, inverter_response):
-        """Update the sensor value from the response received from inverter"""
+    @callback
+    def _handle_coordinator_update(self):
+        """Update the sensor value from the response received from inverter."""
         prev_value = self._attr_native_value
-        self._attr_native_value = inverter_response.get(self._sensor_id)
+        self._attr_native_value = self.coordinator.data.get(self._sensor_id)
+
         # Total increasing sensor should never be set to None
         if (
             self._attr_native_value is None
             and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING
         ):
             self._attr_native_value = prev_value
-        # do not update sensor state if the value hasn't changed
-        if self._attr_native_value != prev_value:
-            self.async_schedule_update_ha_state()
+
+        # async_write_ha_state is called in super()._handle_coordinator_update()
+        super()._handle_coordinator_update()
 
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def device_info(self):
