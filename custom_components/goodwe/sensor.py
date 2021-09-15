@@ -169,7 +169,8 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         data = {
             "model": self._inverter.model_name,
             "serial_number": self._inverter.serial_number,
-            "software_version": self._inverter.software_version,
+            "firmware_version": self._inverter.software_version,
+            "arm_version": self._inverter.arm_version,
         }
         return data
 
@@ -181,7 +182,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
-            "sw_version": self._inverter.software_version,
+            "sw_version": f"{self._inverter.software_version} ({self._inverter.arm_version})",
         }
 
 
