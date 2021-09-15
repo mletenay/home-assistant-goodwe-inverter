@@ -26,7 +26,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
+from .const import DEFAULT_NAME, DEVICE_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device info."""
         return {
-            "name": self.name,
+            "name": DEVICE_NAME,
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
@@ -261,3 +261,14 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "name": DEVICE_NAME,
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "model": self._inverter.model_name,
+            "manufacturer": "GoodWe",
+            "sw_version": f"{self._inverter.software_version} ({self._inverter.arm_version})",
+        }
