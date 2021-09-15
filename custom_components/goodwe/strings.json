@@ -2,11 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "GoodWe inverters",
-        "description": "Connect to your CoodWe inverter",
+        "title": "GoodWe inverter",
+        "description": "Connect to your GoodWe inverter",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "comm_address": "Communication address (default blanck)"
+          "comm_address": "Communication address (default empty)"
         }
       }
     },
@@ -21,7 +21,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "GoodWe inverters",
+        "title": "GoodWe inverter",
         "description": "Specify optional settings",
         "data": {
           "scan_interval": "Scan interval (s)"

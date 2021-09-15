@@ -6,6 +6,7 @@
   "dependencies": [],
   "codeowners": [
     "@mletenay",
+    "@starkillerOG",
     "@fizcris"
   ],
   "requirements": ["goodwe==0.2.4"],

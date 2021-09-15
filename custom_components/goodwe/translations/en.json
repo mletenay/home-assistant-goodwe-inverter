@@ -11,10 +11,10 @@
         "step": {
             "user": {
                 "data": {
-                    "comm_address": "Communication address (default blanck)",
+                    "comm_address": "Communication address (default empty)",
                     "host": "IP Address"
                 },
-                "description": "Connect to your CoodWe inverter",
+                "description": "Connect to your GoodWe inverter",
                 "title": "GoodWe inverters"
             }
         }

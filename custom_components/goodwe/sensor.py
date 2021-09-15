@@ -251,22 +251,12 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING
         ):
             self._attr_native_value = prev_value
-
-        # async_write_ha_state is called in super()._handle_coordinator_update()
-        super()._handle_coordinator_update()
+        # do not update sensor state if the value hasn't changed
+        if self._attr_native_value != prev_value:
+            # async_write_ha_state is called in super()._handle_coordinator_update()
+            super()._handle_coordinator_update()
 
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "name": self.name,
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "model": self._inverter.model_name,
-            "manufacturer": "GoodWe",
-            "sw_version": self._inverter.software_version,
-        }
