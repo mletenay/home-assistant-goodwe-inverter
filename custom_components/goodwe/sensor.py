@@ -125,6 +125,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._inverter = inverter
         self._config_entry = config_entry
         self._attr_unique_id = uid
+        self.entity_id = f".{DOMAIN}_ppv"
         self._sensor = "ppv"
         self._data = {}
 
@@ -213,6 +214,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._inverter = inverter
 
         self._attr_unique_id = uid
+        self.entity_id = f".{DOMAIN}_{sensor_id}"
         self._sensor_id = sensor_id
         if unit == "A":
             self._unit = ELECTRIC_CURRENT_AMPERE
