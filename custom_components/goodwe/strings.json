@@ -21,10 +21,12 @@
   "options": {
     "step": {
       "init": {
-        "title": "GoodWe inverter",
-        "description": "Specify optional settings",
+        "title": "GoodWe optional settings",
+        "description": "Specify optional (network) settings",
         "data": {
-          "scan_interval": "Scan interval (s)"
+          "scan_interval": "Scan interval (s)",
+          "network_retries": "Network retry attempts",
+          "network_timeout": "Network request timeout (s)"
         }
       }
     }

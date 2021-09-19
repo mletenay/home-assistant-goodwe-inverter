@@ -12,7 +12,11 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
+    CONF_NETWORK_RETRIES,
+    CONF_NETWORK_TIMEOUT,
     DEFAULT_NAME,
+    DEFAULT_NETWORK_RETRIES,
+    DEFAULT_NETWORK_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -47,6 +51,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
                 ): int,
+                vol.Optional(
+                    CONF_NETWORK_RETRIES,
+                    default=self.config_entry.options.get(
+                        CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES
+                    ),
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_NETWORK_TIMEOUT,
+                    default=self.config_entry.options.get(
+                        CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
+                    ),
+                ): cv.positive_int,
             }
         )
 

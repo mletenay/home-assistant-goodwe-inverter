@@ -12,6 +12,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
+    CONF_NETWORK_RETRIES,
+    CONF_NETWORK_TIMEOUT,
+    DEFAULT_NETWORK_RETRIES,
+    DEFAULT_NETWORK_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KEY_COORDINATOR,
@@ -32,6 +36,8 @@ async def async_setup_entry(
     comm_address = entry.data[CONF_COMM_ADDRESS]
     model_family = entry.data[CONF_MODEL_FAMILY]
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
+    network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
 
     # Connect to Goodwe inverter
     try:
@@ -39,6 +45,8 @@ async def async_setup_entry(
             host=host,
             family=model_family,
             comm_addr=comm_address,
+            timeout=network_timeout,
+            retries=network_retries,
         )
     except InverterError as err:
         raise ConfigEntryNotReady from err
