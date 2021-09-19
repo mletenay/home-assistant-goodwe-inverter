@@ -5,7 +5,6 @@ PLATFORMS = ["sensor"]
 
 DEFAULT_NAME = "GoodWe"
 DEFAULT_SCAN_INTERVAL = 5
-DEVICE_NAME = "GoodWe Inverter"
 
 CONF_COMM_ADDRESS = "comm_address"
 CONF_MODEL_FAMILY = "model_family"

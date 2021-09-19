@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from goodwe import InverterError, connect
+from goodwe import InverterError, RequestFailedException, connect
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
@@ -47,6 +47,23 @@ async def async_setup_entry(
         """Fetch data from the inverter."""
         try:
             data = await inverter.read_runtime_data()
+        except RequestFailedException as ex:
+            # UDP communication with inverter is by definition unreliable.
+            # It is rather normal in many environments to fail to receive
+            # proper response in usual time, so we intentionally report
+            # failures only after consecutive streak of 3 of them.
+            if ex.consecutive_failures_count < 3:
+                # return empty dictionary
+                # sensors will keep their previous values
+                _LOGGER.debug(f"Request failed (#{ex.consecutive_failures_count}).")
+                return {}
+            else:
+                # return None
+                # sensors will report themselves as not available
+                _LOGGER.debug(
+                    f"Inverter not responding (#{ex.consecutive_failures_count})."
+                )
+                return None
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
 

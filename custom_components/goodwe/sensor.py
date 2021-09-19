@@ -1,6 +1,4 @@
 """Support for GoodWe inverter via UDP."""
-import logging
-
 from goodwe import SensorKind
 import voluptuous as vol
 
@@ -26,9 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DEVICE_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
 
 # Service related constants
 SERVICE_SET_WORK_MODE = "set_work_mode"
@@ -144,14 +140,21 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         """Set the grid export limit."""
         await self._inverter.set_grid_export_limit(grid_export_limit)
 
-    @callback
-    def _handle_coordinator_update(self):
-        """Update the entity value from the response received from inverter."""
-        self._data = self.coordinator.data
-        self._attr_native_value = self._data.get(self._sensor)
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.coordinator.data is not None
 
-        # async_write_ha_state is called in super()._handle_coordinator_update()
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self):
+        """Return the value reported by the sensor."""
+        if self.coordinator.data is not None:
+            new_value = self.coordinator.data.get(self._sensor)
+            # If no new value was provided, keep the previous
+            if new_value is not None:
+                self._attr_native_value = new_value
+
+        return self._attr_native_value
 
     @property
     def native_unit_of_measurement(self):
@@ -178,7 +181,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device info."""
         return {
-            "name": DEVICE_NAME,
+            "name": self._config_entry.title,
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
@@ -240,22 +243,26 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._attr_state_class = None
             self._attr_device_class = None
 
-    @callback
-    def _handle_coordinator_update(self):
-        """Update the sensor value from the response received from inverter."""
-        prev_value = self._attr_native_value
-        self._attr_native_value = self.coordinator.data.get(self._sensor_id)
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.coordinator.data is not None
 
-        # Total increasing sensor should never be set to None
-        if (
-            self._attr_native_value is None
-            and self._attr_state_class == STATE_CLASS_TOTAL_INCREASING
-        ):
-            self._attr_native_value = prev_value
-        # do not update sensor state if the value hasn't changed
-        if self._attr_native_value != prev_value:
-            # async_write_ha_state is called in super()._handle_coordinator_update()
-            super()._handle_coordinator_update()
+    @property
+    def native_value(self):
+        """Return the value reported by the sensor."""
+        if self.coordinator.data is not None:
+            new_value = self.coordinator.data.get(self._sensor_id)
+            # If no new value was provided, keep the previous
+            if new_value is not None:
+                # Total increasing sensor should never be set to 0
+                if self._attr_state_class == STATE_CLASS_TOTAL_INCREASING:
+                    if new_value:
+                        self._attr_native_value = new_value
+                else:
+                    self._attr_native_value = new_value
+
+        return self._attr_native_value
 
     @property
     def native_unit_of_measurement(self):
@@ -266,7 +273,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device info."""
         return {
-            "name": DEVICE_NAME,
+            "name": self._config_entry.title,
             "identifiers": {(DOMAIN, self._config_entry.unique_id)},
             "model": self._inverter.model_name,
             "manufacturer": "GoodWe",
