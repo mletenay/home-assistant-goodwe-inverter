@@ -125,7 +125,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._inverter = inverter
         self._config_entry = config_entry
         self._attr_unique_id = uid
-        self.entity_id = f".{DOMAIN}_ppv"
+        self.entity_id = f".{DOMAIN}_inverter"
         self._sensor = "ppv"
         self._data = {}
 
