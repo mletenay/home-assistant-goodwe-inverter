@@ -127,7 +127,6 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = uid
         self.entity_id = f".{DOMAIN}_inverter"
         self._sensor = "ppv"
-        self._data = {}
 
     async def set_work_mode(self, work_mode: int):
         """Set the inverter work mode."""
@@ -165,7 +164,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
     @property
     def state_attributes(self):
         """Return the inverter state attributes."""
-        return self._data
+        return self.coordinator.data
 
     @property
     def extra_state_attributes(self):
