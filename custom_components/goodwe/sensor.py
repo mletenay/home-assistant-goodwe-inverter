@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN, KEY_COORDINATOR, KEY_INVERTER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_INVERTER
 
 # Service related constants
 SERVICE_SET_WORK_MODE = "set_work_mode"
@@ -75,7 +75,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # do not include unknown sensors
             continue
         uid = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
-        sensor_name = f"{DEFAULT_NAME} {sensor.name}".strip()
         entities.append(
             InverterSensor(
                 coordinator,
@@ -83,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 uid,
                 config_entry,
                 sensor.id_,
-                sensor_name,
+                sensor.name,
                 sensor.unit,
                 sensor.kind,
             )
@@ -207,7 +206,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         if kind is not None:
             self._attr_icon = _ICONS.get(kind)
-        self._attr_name = sensor_name
+        self._attr_name = sensor_name.strip()
         self._attr_native_value = None
         self._config_entry = config_entry
         self._inverter = inverter
