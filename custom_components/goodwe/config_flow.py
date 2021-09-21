@@ -10,7 +10,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
@@ -24,7 +23,6 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_COMM_ADDRESS): cv.positive_int,
     }
 )
 
@@ -87,13 +85,9 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            comm_address = user_input.get(CONF_COMM_ADDRESS)
 
             try:
-                inverter = await connect(
-                    host=host,
-                    comm_addr=comm_address,
-                )
+                inverter = await connect(host=host)
             except InverterError as err:
                 _LOGGER.error("Connection error during GoodWe config flow: %s", err)
                 errors["base"] = "connection_error"
@@ -106,7 +100,6 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=DEFAULT_NAME,
                     data={
                         CONF_HOST: host,
-                        CONF_COMM_ADDRESS: inverter.comm_addr,
                         CONF_MODEL_FAMILY: type(inverter).__name__,
                     },
                 )

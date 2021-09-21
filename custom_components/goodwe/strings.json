@@ -3,10 +3,9 @@
     "step": {
       "user": {
         "title": "GoodWe inverter",
-        "description": "Connect to your GoodWe inverter",
+        "description": "Connect to inverter",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "comm_address": "Communication address (default empty)"
         }
       }
     },

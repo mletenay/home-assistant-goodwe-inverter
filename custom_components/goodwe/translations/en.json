@@ -11,11 +11,10 @@
         "step": {
             "user": {
                 "data": {
-                    "comm_address": "Communication address (default empty)",
                     "host": "IP Address"
                 },
-                "description": "Connect to your GoodWe inverter",
-                "title": "GoodWe inverters"
+                "description": "Connect to inverter",
+                "title": "GoodWe inverter"
             }
         }
     },

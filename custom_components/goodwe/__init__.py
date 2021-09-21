@@ -10,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_COMM_ADDRESS,
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
@@ -33,7 +32,6 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})
     name = entry.title
     host = entry.data[CONF_HOST]
-    comm_address = entry.data[CONF_COMM_ADDRESS]
     model_family = entry.data[CONF_MODEL_FAMILY]
     scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
@@ -44,7 +42,7 @@ async def async_setup_entry(
         inverter = await connect(
             host=host,
             family=model_family,
-            comm_addr=comm_address,
+            comm_addr=0,
             timeout=network_timeout,
             retries=network_retries,
         )
