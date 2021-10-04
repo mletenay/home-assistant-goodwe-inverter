@@ -17,6 +17,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    FREQUENCY_HERTZ,
     POWER_WATT,
     TEMP_CELSIUS,
 )
@@ -238,8 +239,12 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self._unit = TEMP_CELSIUS
             self._attr_state_class = STATE_CLASS_MEASUREMENT
             self._attr_device_class = DEVICE_CLASS_TEMPERATURE
+        elif unit == "Hz":
+            self._unit = FREQUENCY_HERTZ
+            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = DEVICE_CLASS_VOLTAGE
         else:
-            self._unit = unit
+            self._unit = unit if unit else None
             self._attr_state_class = None
             self._attr_device_class = None
 
