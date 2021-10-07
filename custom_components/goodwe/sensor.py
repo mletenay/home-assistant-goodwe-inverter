@@ -261,7 +261,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             # If no new value was provided, keep the previous
             if new_value is not None:
                 # Total increasing sensor should never be set to 0
-                if self._attr_state_class == STATE_CLASS_TOTAL_INCREASING:
+                if (
+                    self._attr_state_class == STATE_CLASS_TOTAL_INCREASING
+                    and "total" in self._sensor_id
+                ):
                     if new_value:
                         self._attr_native_value = new_value
                 else:
