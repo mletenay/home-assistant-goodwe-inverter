@@ -72,9 +72,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # Individual inverter sensors entities
     for sensor in inverter.sensors():
-        if sensor.id_.startswith("xx"):
-            # do not include unknown sensors
-            continue
+        # if sensor.id_.startswith("xx"):
+        #    # do not include unknown sensors
+        #    continue
         uid = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
         entities.append(
             InverterSensor(
