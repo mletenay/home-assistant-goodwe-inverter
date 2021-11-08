@@ -23,6 +23,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_INVERTER
@@ -110,8 +111,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
 
+    device_info: DeviceInfo = {
+        "identifiers": {(DOMAIN, config_entry.unique_id)},
+        "name": config_entry.title,
+        "manufacturer": "GoodWe",
+        "model": inverter.model_name,
+        "sw_version": f"{inverter.software_version} ({inverter.arm_version})",
+    }
+
     # Entity representing inverter itself
-    inverter_entity = InverterEntity(coordinator, inverter)
+    inverter_entity = InverterEntity(coordinator, device_info, inverter)
     entities.append(inverter_entity)
 
     # Individual inverter sensors entities
@@ -122,9 +131,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(
             InverterSensor(
                 coordinator,
+                device_info,
                 _get_sensor_description(sensor),
                 inverter,
-                sensor,
             )
         )
 
@@ -154,16 +163,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class InverterEntity(CoordinatorEntity, SensorEntity):
     """Entity representing the inverter instance itself."""
 
-    def __init__(self, coordinator, inverter):
+    _MAIN_ENTITY_SENSOR = "ppv"
+
+    def __init__(self, coordinator, device_info, inverter):
         """Initialize the main inverter entity."""
         super().__init__(coordinator)
         self.entity_id = f".{DOMAIN}_inverter"
         self._attr_unique_id = f"{DOMAIN}-{inverter.serial_number}"
+        self._attr_device_info = device_info
         self._attr_icon = "mdi:solar-power"
         self._attr_name = "PV Inverter"
         self._attr_native_unit_of_measurement = POWER_WATT
         self._inverter = inverter
-        self._sensor = "ppv"
 
     async def set_work_mode(self, work_mode: int):
         """Set the inverter work mode."""
@@ -186,7 +197,7 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the value reported by the sensor."""
         if self.coordinator.data is not None:
-            new_value = self.coordinator.data.get(self._sensor)
+            new_value = self.coordinator.data.get(self._MAIN_ENTITY_SENSOR)
             # If no new value was provided, keep the previous
             if new_value is not None:
                 self._attr_native_value = new_value
@@ -209,35 +220,17 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         }
         return data
 
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "name": self.coordinator.config_entry.title,
-            "identifiers": {(DOMAIN, self.coordinator.config_entry.unique_id)},
-            "model": self._inverter.model_name,
-            "manufacturer": "GoodWe",
-            "sw_version": f"{self._inverter.software_version} ({self._inverter.arm_version})",
-        }
-
 
 class InverterSensor(CoordinatorEntity, SensorEntity):
-    """Class for an inverter sensor."""
+    """Entity representing individual inverter sensor."""
 
-    def __init__(
-        self,
-        coordinator,
-        description,
-        inverter,
-        sensor,
-    ):
+    def __init__(self, coordinator, device_info, description, inverter):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self.entity_id = f".{DOMAIN}_{sensor.id_}"
-        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
-        self._inverter = inverter
-        self._sensor_id = sensor.id_
+        self.entity_id = f".{DOMAIN}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        self._attr_device_info = device_info
 
     @property
     def available(self):
@@ -248,13 +241,13 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the value reported by the sensor."""
         if self.coordinator.data is not None:
-            new_value = self.coordinator.data.get(self._sensor_id)
+            new_value = self.coordinator.data.get(self.entity_description.key)
             # If no new value was provided, keep the previous
             if new_value is not None:
                 # Total increasing sensor should never be set to 0
                 if (
                     self.state_class == STATE_CLASS_TOTAL_INCREASING
-                    and "total" in self._sensor_id
+                    and "total" in self.entity_description.key
                 ):
                     if new_value:
                         self._attr_native_value = new_value
@@ -262,14 +255,3 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
                     self._attr_native_value = new_value
 
         return self._attr_native_value
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "name": self.coordinator.config_entry.title,
-            "identifiers": {(DOMAIN, self.coordinator.config_entry.unique_id)},
-            "model": self._inverter.model_name,
-            "manufacturer": "GoodWe",
-            "sw_version": f"{self._inverter.software_version} ({self._inverter.arm_version})",
-        }
