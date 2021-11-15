@@ -2,5 +2,5 @@
   "name": "GoodWe Inverter Solar Sensor (UDP - no cloud)",
   "country": "SK",
   "domains": ["sensor"],
-  "homeassistant": "2021.9.0"
+  "homeassistant": "2021.11.0"
 }
