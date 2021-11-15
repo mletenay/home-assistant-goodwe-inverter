@@ -4,8 +4,9 @@ import logging
 
 from goodwe import InverterError, RequestFailedException, connect
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,9 +26,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     name = entry.title
@@ -52,29 +51,26 @@ async def async_setup_entry(
     async def async_update_data():
         """Fetch data from the inverter."""
         try:
-            data = await inverter.read_runtime_data()
+            return await inverter.read_runtime_data()
         except RequestFailedException as ex:
             # UDP communication with inverter is by definition unreliable.
             # It is rather normal in many environments to fail to receive
-            # proper response in usual time, so we intentionally report
-            # failures only after consecutive streak of 3 of them.
+            # proper response in usual time, so we intentionally ignore isolated
+            # failures and report problem with availability only after
+            # consecutive streak of 3 of failed requests.
             if ex.consecutive_failures_count < 3:
-                # return empty dictionary
-                # sensors will keep their previous values
-                _LOGGER.debug(f"Request failed (#{ex.consecutive_failures_count}).")
-                return {}
-            else:
-                # Inverter does not respond anymore (e.g. it went to sleep mode)
-                # return None
-                # sensors will report themselves as not available
                 _LOGGER.debug(
-                    f"Inverter not responding (#{ex.consecutive_failures_count})."
+                    "No response received (streak of %d)", ex.consecutive_failures_count
                 )
-                return None
+                # return empty dictionary, sensors will keep their previous values
+                return {}
+            # Inverter does not respond anymore (e.g. it went to sleep mode)
+            _LOGGER.debug(
+                "Inverter not responding (streak of %d)", ex.consecutive_failures_count
+            )
+            raise UpdateFailed(ex) from ex
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
-
-        return data
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(
@@ -101,9 +97,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -115,8 +109,6 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def update_listener(
-    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> None:
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
