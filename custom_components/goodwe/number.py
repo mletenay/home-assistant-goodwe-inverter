@@ -33,9 +33,6 @@ NUMBERS = (
         unit_of_measurement=POWER_WATT,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        step=100,
-        min_value=0,
-        max_value=10000,
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
@@ -45,9 +42,6 @@ NUMBERS = (
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
-        step=1,
-        min_value=0,
-        max_value=99,
     ),
 )
 
@@ -62,9 +56,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for description in NUMBERS:
         try:
             current_value = await description.getter(inverter)
-            entities.append(
-                InverterNumberEntity(device_info, description, inverter, current_value),
-            )
+            entity = InverterNumberEntity(device_info, description, inverter, current_value)
+            if description.key == "grid_export_limit":
+                entity._attr_max_value = 10000
+                entity._attr_min_value = 0
+                entity._attr_step = 100
+            if description.key == "battery_discharge_depth":
+                entity._attr_max_value = 99
+                entity._attr_min_value = 0
+                entity._attr_step = 1
+
+            entities.append(entity)
         except InverterError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
