@@ -41,6 +41,7 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
 BATTERY_SOC = "battery_soc"
 
 _MAIN_SENSORS = (
+    "ppv",
     "house_consumption",
     "active_power",
     "battery_soc",
@@ -149,9 +150,8 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
-        self.entity_id = f".{DOMAIN}_{sensor.id_}"
-        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
         self._attr_name = sensor.name.strip()
+        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._attr_entity_category = (
             ENTITY_CATEGORY_DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None

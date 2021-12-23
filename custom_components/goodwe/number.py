@@ -17,11 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class GoodweNumberEntityDescription(NumberEntityDescription):
-    """Class describing Goodwe sensor entities."""
+class GoodweNumberEntityDescriptionBase:
+    """Required values when describing Goodwe number entities."""
 
-    getter: Callable[[Inverter], Awaitable[int]] | None = None
-    setter: Callable[[Inverter, int], Awaitable[None]] | None = None
+    getter: Callable[[Inverter], Awaitable[int]]
+    setter: Callable[[Inverter, int], Awaitable[None]]
+
+
+@dataclass
+class GoodweNumberEntityDescription(
+    NumberEntityDescription, GoodweNumberEntityDescriptionBase
+):
+    """Class describing Goodwe number entities."""
 
 
 NUMBERS = (
@@ -56,24 +63,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for description in NUMBERS:
         try:
             current_value = await description.getter(inverter)
-            entity = InverterNumberEntity(device_info, description, inverter, current_value)
-            if description.key == "grid_export_limit":
-                entity._attr_max_value = 10000
-                entity._attr_min_value = 0
-                entity._attr_step = 100
-            if description.key == "battery_discharge_depth":
-                entity._attr_max_value = 99
-                entity._attr_min_value = 0
-                entity._attr_step = 1
-
-            entities.append(entity)
         except InverterError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
+            continue
+
+        entity = InverterNumberEntity(device_info, description, inverter, current_value)
+        if description.key == "grid_export_limit":
+            entity._attr_max_value = 10000
+            entity._attr_min_value = 0
+            entity._attr_step = 100
+        if description.key == "battery_discharge_depth":
+            entity._attr_max_value = 99
+            entity._attr_min_value = 0
+            entity._attr_step = 1
+
+        entities.append(entity)
 
     async_add_entities(entities)
-
-    return True
 
 
 class InverterNumberEntity(NumberEntity):
@@ -100,5 +107,5 @@ class InverterNumberEntity(NumberEntity):
         """Set new value."""
         if self.entity_description.setter:
             await self.entity_description.setter(self._inverter, int(value))
-        self._attr_value = float(value)
+        self._attr_value = value
         self.async_write_ha_state()
