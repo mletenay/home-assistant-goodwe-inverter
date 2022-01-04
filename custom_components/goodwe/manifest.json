@@ -3,13 +3,12 @@
   "name": "GoodWe Inverter",
   "documentation": "https://github.com/mletenay/home-assistant-goodwe-inverter",
   "issue_tracker": "https://github.com/mletenay/home-assistant-goodwe-inverter/issues",
-  "dependencies": [],
   "codeowners": [
     "@mletenay",
     "@starkillerOG",
     "@fizcris"
   ],
-  "requirements": ["goodwe==0.2.9"],
+  "requirements": ["goodwe==0.2.10"],
   "config_flow": true,
   "iot_class": "local_polling",
   "version": "1.0.0"

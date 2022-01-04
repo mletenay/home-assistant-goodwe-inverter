@@ -3,7 +3,7 @@
 # GoodWe solar inverter sensors for Home Assistant
 
 This [Home Assistant](https://home-assistant.io/) custom component will retrieve data from a GoodWe inverter connected to a local network.
-It has been reported to work on GoodWe ET, EH, BT, BH, ES, EM, DT, D-NS, MS, XS and BP families of inverters.
+It has been reported to work on GoodWe ET, EH, BT, BH, ES, EM, BP, DT, MS, D-NS and XS families of inverters.
 It may work for other inverters as well, as long as they listen on UDP port 8899 and respond to one of supported communication protocols.
 
 (If you can't communicate with the inverter despite your model is listed above, it is possible you have old ARM firmware version. You should ask manufacturer support to upgrade your ARM firmware (not just inverter firmware) to be able to communicate with the inveter via UDP.)
@@ -21,45 +21,6 @@ Then just configure it the standard way in Configuration > Integrations > Add In
 
 Create a directory called `goodwe` in the `<config directory>/custom_components/` directory on your Home Assistant instance.
 Install this component by copying all files in `/custom_components/goodwe/` folder from this repo into the new `<config directory>/custom_components/goodwe/` directory you just created.
-
-This is how your custom_components directory should look like:
-
-```bash
-custom_components
-├── goodwe
-│   ├── __init__.py
-│   ├── manifest.json
-│   ├── sensor.py
-│   └── services.yaml
-```
-
-## Configuration example
-
-Since v0.9.2 the plugin is installed and configured via standard HA's mechanism - Configuration > Integrations > Add Integration UI.
-
-For releases < v0.9.2, add the following lines to your `configuration.yaml` file:
-
-```YAML
-sensor:
-  - platform: goodwe
-    ip_address: 192.168.100.100
-    #network_timeout: 1
-    #network_retries: 3
-    #scan_interval: 30
-    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
-    #sensor_name_prefix: GoodWe
-    #include_unknown_sensors: false
-```
-
-The type (and communication protocol) of the inverter can be detected automatically, but it can be explicitly specified via the `inverter_type` parameter to improve startup reliability and performance. Supported values are ET, EH, ES, EM, DT, NS, XS, BP.
-
-The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
-the command will be re-tried up to `network_retries` times.
-The default values (2 secs / 3 times) are fine for most cases, but they can be increased to achieve better stability on less reliable networks.
-
-The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
-
-There are some values pruduced by the inverters whose meaning is not yet fully known. Those sensors are named "xx\*" and will be provided if the `include_unknown_sensors` parameter is set to true.
 
 ## Home Assistant Energy Dashboard
 
@@ -136,6 +97,34 @@ utility_meter:
     source: sensor.house_consumption_sum
     cycle: monthly
 ```
+
+## Configuration
+
+Since v0.9.2 the plugin is installed and configured via standard HA's mechanism - Configuration > Integrations > Add Integration UI.
+
+For releases < v0.9.2, add the following lines to your `configuration.yaml` file:
+
+```YAML
+sensor:
+  - platform: goodwe
+    ip_address: 192.168.100.100
+    #network_timeout: 1
+    #network_retries: 3
+    #scan_interval: 30
+    #inverter_type: ET           # One of ET, EH, ES, EM, DT, NS, XS, BP or None to detect inverter type automatically
+    #sensor_name_prefix: GoodWe
+    #include_unknown_sensors: false
+```
+
+The type (and communication protocol) of the inverter can be detected automatically, but it can be explicitly specified via the `inverter_type` parameter to improve startup reliability and performance. Supported values are ET, EH, ES, EM, DT, NS, XS, BP.
+
+The UDP communication is by definition unreliable, so when no response is received by specified time (`network_timeout` config parameter),
+the command will be re-tried up to `network_retries` times.
+The default values (2 secs / 3 times) are fine for most cases, but they can be increased to achieve better stability on less reliable networks.
+
+The optional `sensor_name_prefix` config may be used to change the prefix of the individual sensor's default entity names.
+
+There are some values pruduced by the inverters whose meaning is not yet fully known. Those sensors are named "xx\*" and will be provided if the `include_unknown_sensors` parameter is set to true.
 
 ## Troubleshooting
 

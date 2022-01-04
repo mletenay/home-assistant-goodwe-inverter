@@ -3,7 +3,7 @@
 ## GoodWe solar inverter sensors for Home Assistant
 
 The component retrieves data from GoodWe solar inverter connected to local network and presents them as sensors in Home Assistant.
-GoodWe ET, EH, BT, BH, ES, EM, DT, D-NS, MS, XS and BP families of inverters are supported, other types may work too.
+GoodWe ET, EH, BT, BH, ES, EM, BP, DT, MS, D-NS and XS families of inverters are supported, other types may work too.
 
 ## Configuration
 
