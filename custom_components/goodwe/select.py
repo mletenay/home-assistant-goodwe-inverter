@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # read current operating mode from the inverter
     try:
         active_mode = await inverter.get_operation_mode()
-    except InverterError:
+    except Exception:
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
