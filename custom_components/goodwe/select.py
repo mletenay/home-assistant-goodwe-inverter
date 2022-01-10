@@ -17,6 +17,8 @@ INVERTER_OPERATION_MODES = [
     "Off grid mode",
     "Backup mode",
     "Eco mode",
+    "Eco charge mode",
+    "Eco discharge mode",
 ]
 
 OPERATION_MODE = SelectEntityDescription(
@@ -35,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # read current operating mode from the inverter
     try:
         active_mode = await inverter.get_operation_mode()
-    except Exception:
+    except (InverterError, ValueError):
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
@@ -74,6 +76,10 @@ class InverterOperationModeEntity(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._inverter.set_operation_mode(INVERTER_OPERATION_MODES.index(option))
+        operation_mode = INVERTER_OPERATION_MODES.index(option)
+        eco_mode_power = 100
+        if operation_mode in (4, 5):
+            eco_mode_power = self.hass.states.get("number.eco_mode_power").state
+        await self._inverter.set_operation_mode(operation_mode, eco_mode_power)
         self._attr_current_option = option
         self.async_write_ha_state()

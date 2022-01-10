@@ -50,6 +50,15 @@ NUMBERS = (
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
     ),
+    GoodweNumberEntityDescription(
+        key="eco_mode_power",
+        name="Eco mode power",
+        icon="mdi:battery-charging-low",
+        entity_category=ENTITY_CATEGORY_CONFIG,
+        unit_of_measurement=PERCENTAGE,
+        getter=lambda inv: inv.get_operation_mode(),
+        setter=None,
+    ),
 )
 
 
@@ -63,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for description in NUMBERS:
         try:
             current_value = await description.getter(inverter)
-        except Exception:
+        except (InverterError, ValueError):
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
@@ -75,6 +84,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entity._attr_step = 100
         if description.key == "battery_discharge_depth":
             entity._attr_max_value = 99
+            entity._attr_min_value = 0
+            entity._attr_step = 1
+        if description.key == "eco_mode_power":
+            entity._attr_max_value = 100
             entity._attr_min_value = 0
             entity._attr_step = 1
 
