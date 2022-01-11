@@ -79,7 +79,7 @@ class InverterOperationModeEntity(SelectEntity):
         operation_mode = INVERTER_OPERATION_MODES.index(option)
         eco_mode_power = 100
         if operation_mode in (4, 5):
-            eco_mode_power = self.hass.states.get("number.eco_mode_power").state
+            eco_mode_power = int(self.hass.states.get("number.eco_mode_power").state)
         await self._inverter.set_operation_mode(operation_mode, eco_mode_power)
         self._attr_current_option = option
         self.async_write_ha_state()
