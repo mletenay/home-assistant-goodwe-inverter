@@ -11,7 +11,13 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import ENTITY_CATEGORY_CONFIG, PERCENTAGE, POWER_WATT
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
+from .const import (
+    DOMAIN,
+    KEY_DEVICE_INFO,
+    KEY_ECO_MODE_POWER,
+    KEY_INVERTER,
+    KEY_OPERATION_MODE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +27,7 @@ class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
     getter: Callable[[Inverter], Awaitable[int]]
-    setter: Callable[[Inverter, int], Awaitable[None]]
+    setter: Callable[[InverterNumberEntity, int], Awaitable[None]]
 
 
 @dataclass
@@ -29,6 +35,12 @@ class GoodweNumberEntityDescription(
     NumberEntityDescription, GoodweNumberEntityDescriptionBase
 ):
     """Class describing Goodwe number entities."""
+
+
+async def _set_eco_mode_power(entity: InverterNumberEntity, value: int) -> None:
+    operation_mode_entity = entity.config[KEY_OPERATION_MODE]
+    if operation_mode_entity:
+        await operation_mode_entity.update_eco_mode_power(value)
 
 
 NUMBERS = (
@@ -39,7 +51,7 @@ NUMBERS = (
         entity_category=ENTITY_CATEGORY_CONFIG,
         unit_of_measurement=POWER_WATT,
         getter=lambda inv: inv.get_grid_export_limit(),
-        setter=lambda inv, val: inv.set_grid_export_limit(val),
+        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
@@ -48,7 +60,7 @@ NUMBERS = (
         entity_category=ENTITY_CATEGORY_CONFIG,
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
-        setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
+        setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
     ),
     GoodweNumberEntityDescription(
         key="eco_mode_power",
@@ -57,15 +69,16 @@ NUMBERS = (
         entity_category=ENTITY_CATEGORY_CONFIG,
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_operation_mode(),
-        setter=None,
+        setter=_set_eco_mode_power,
     ),
 )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the inverter select entities from a config entry."""
-    inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
-    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
+    domain_data = hass.data[DOMAIN][config_entry.entry_id]
+    inverter = domain_data[KEY_INVERTER]
+    device_info = domain_data[KEY_DEVICE_INFO]
 
     entities = []
 
@@ -77,7 +90,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
 
-        entity = InverterNumberEntity(device_info, description, inverter, current_value)
+        entity = InverterNumberEntity(
+            device_info, description, inverter, current_value, domain_data
+        )
         if description.key == "grid_export_limit":
             entity._attr_max_value = 10000
             entity._attr_min_value = 0
@@ -90,6 +105,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entity._attr_max_value = 100
             entity._attr_min_value = 0
             entity._attr_step = 1
+            domain_data[KEY_ECO_MODE_POWER] = entity
 
         entities.append(entity)
 
@@ -108,17 +124,19 @@ class InverterNumberEntity(NumberEntity):
         description: GoodweNumberEntityDescription,
         inverter: Inverter,
         current_value: int,
+        config: dict,
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._attr_value = float(current_value)
-        self._inverter: Inverter = inverter
+        self.inverter: Inverter = inverter
+        self.config: dict = config
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.setter:
-            await self.entity_description.setter(self._inverter, int(value))
+            await self.entity_description.setter(self, int(value))
         self._attr_value = value
         self.async_write_ha_state()
