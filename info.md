@@ -1,14 +1,17 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-## GoodWe solar inverter sensors for Home Assistant
+## GoodWe solar inverter for Home Assistant (experimental)
 
-The component retrieves data from GoodWe solar inverter connected to local network and presents them as sensors in Home Assistant.
-GoodWe ET, EH, BT, BH, ES, EM, BP, DT, MS, D-NS and XS families of inverters are supported, other types may work too.
+Support for Goodwe solar inverters is present as native integration of [Home Assistant](<(https://www.home-assistant.io/integrations/goodwe/)>) since release 2022.02 and is recommended for most users.
 
-## Configuration
+This custom component is experimental version with features not (yet) present in standard HA's integration and is intended for users with specific needs and early adopters of new features.
+Use at own risk.
 
-Add this component using HACS by searching for `GoodWe Inverter Solar Sensor (UDP - no cloud)` on the `Integrations` page.
-Then just configure it the standard way in Configuration > Integrations > Add Integration.
+### Migration from HACS to HA
+
+If you have been using this custom component and want to migrate to standard HA integration, the migration is straighforward. Just remove the integration from HACS (press Ignore and force uninstall despite the warning the integration is still used). Atrer restart of Home Assistant, the standard Goodwe integration will start and all your existing settings, entity names, history and statistics should be preserved.
+
+(If you uninstall the integration, then uninstall HACS component and install it back again, it will also work, but you will loose some history and settings since HA integration uses slightly different default entity names).
 
 ### Documentation
 
