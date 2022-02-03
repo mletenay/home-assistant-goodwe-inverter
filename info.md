@@ -2,7 +2,7 @@
 
 ## GoodWe solar inverter for Home Assistant (experimental)
 
-Support for Goodwe solar inverters is present as native integration of [Home Assistant](<(https://www.home-assistant.io/integrations/goodwe/)>) since release 2022.02 and is recommended for most users.
+Support for Goodwe solar inverters is present as native integration of [Home Assistant](<(https://www.home-assistant.io/integrations/goodwe/)>) since release 2022.2 and is recommended for most users.
 
 This custom component is experimental version with features not (yet) present in standard HA's integration and is intended for users with specific needs and early adopters of new features.
 Use at own risk.
