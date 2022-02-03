@@ -8,8 +8,11 @@ import logging
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG, PERCENTAGE, POWER_WATT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -52,6 +55,9 @@ NUMBERS = (
         unit_of_measurement=POWER_WATT,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
+        step=100,
+        min_value=0,
+        max_value=10000,
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
@@ -61,6 +67,9 @@ NUMBERS = (
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
+        step=1,
+        min_value=0,
+        max_value=99,
     ),
     GoodweNumberEntityDescription(
         key="eco_mode_power",
@@ -70,11 +79,18 @@ NUMBERS = (
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_operation_mode(),
         setter=_set_eco_mode_power,
+        step=1,
+        min_value=0,
+        max_value=100,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the inverter select entities from a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     inverter = domain_data[KEY_INVERTER]
@@ -93,18 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entity = InverterNumberEntity(
             device_info, description, inverter, current_value, domain_data
         )
-        if description.key == "grid_export_limit":
-            entity._attr_max_value = 10000
-            entity._attr_min_value = 0
-            entity._attr_step = 100
-        if description.key == "battery_discharge_depth":
-            entity._attr_max_value = 99
-            entity._attr_min_value = 0
-            entity._attr_step = 1
         if description.key == "eco_mode_power":
-            entity._attr_max_value = 100
-            entity._attr_min_value = 0
-            entity._attr_step = 1
             domain_data[KEY_ECO_MODE_POWER] = entity
 
         entities.append(entity)

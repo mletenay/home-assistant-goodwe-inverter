@@ -90,10 +90,9 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
 
             try:
-                inverter = await connect(host=host, retries=5)
-            except InverterError as err:
-                _LOGGER.error("Connection error during GoodWe config flow: %s", err)
-                errors["base"] = "connection_error"
+                inverter = await connect(host=host, retries=10)
+            except InverterError:
+                errors[CONF_HOST] = "connection_error"
             else:
                 await self.async_set_unique_id(inverter.serial_number)
                 self._abort_if_unique_id_configured()
