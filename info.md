@@ -7,6 +7,12 @@ Support for Goodwe solar inverters is present as native integration of [Home Ass
 This custom component is experimental version with features not (yet) present in standard HA's integration and is intended for users with specific needs and early adopters of new features.
 Use at own risk.
 
+### Differences between HACS 0.9.9.0 and HA 2022.2
+
+- Integration configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
+- Synchronize inverter clock button
+- Special work modes `Eco charge mode` and `Eco discharge mode`.
+
 ### Migration from HACS to HA
 
 If you have been using this custom component and want to migrate to standard HA integration, the migration is straightforward. Just remove the integration from HACS (press Ignore and force uninstall despite the warning the integration is still configured). Atrer restart of Home Assistant, the standard Goodwe integration will start and all your existing settings, entity names, history and statistics should be preserved.
