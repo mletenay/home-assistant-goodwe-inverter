@@ -112,6 +112,12 @@ async def async_setup_entry(
         if description.key == "eco_mode_power":
             domain_data[KEY_ECO_MODE_POWER] = entity
 
+        # DT family of inverter uses % instead of W in grid export limit
+        if inverter.family == "DT" and description.key == "grid_export_limit":
+            description.unit_of_measurement = PERCENTAGE
+            description.step = 1
+            description.max_value = 100
+
         entities.append(entity)
 
     async_add_entities(entities)
