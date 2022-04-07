@@ -9,9 +9,9 @@ from goodwe import Inverter, InverterError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, PERCENTAGE, POWER_WATT
+from homeassistant.const import PERCENTAGE, POWER_WATT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -51,7 +51,7 @@ NUMBERS = (
         key="grid_export_limit",
         name="Grid export limit",
         icon="mdi:transmission-tower",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         unit_of_measurement=POWER_WATT,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
@@ -63,7 +63,7 @@ NUMBERS = (
         key="battery_discharge_depth",
         name="Depth of discharge (on-grid)",
         icon="mdi:battery-arrow-down",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
@@ -75,7 +75,7 @@ NUMBERS = (
         key="eco_mode_power",
         name="Eco mode power",
         icon="mdi:battery-charging-low",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         unit_of_measurement=PERCENTAGE,
         getter=lambda inv: inv.get_operation_mode(),
         setter=_set_eco_mode_power,

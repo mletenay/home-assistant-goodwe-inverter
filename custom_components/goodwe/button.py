@@ -5,8 +5,7 @@ from datetime import datetime
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
@@ -17,7 +16,7 @@ SYNCHRONIZE_CLOCK = ButtonEntityDescription(
     key="synchronize_clock",
     name="Synchronize inverter clock",
     icon="mdi:clock-check-outline",
-    entity_category=ENTITY_CATEGORY_CONFIG,
+    entity_category=EntityCategory.CONFIG,
 )
 
 

@@ -1,6 +1,6 @@
 {
   "name": "GoodWe Inverter (experimental)",
   "country": "SK",
-  "domains": ["sensor"],
-  "homeassistant": "2022.2.0"
+  "domains": ["button", "number", "select", "sensor"],
+  "homeassistant": "2022.4.0"
 }

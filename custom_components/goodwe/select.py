@@ -4,8 +4,10 @@ import logging
 from goodwe import Inverter, InverterError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -31,11 +33,15 @@ OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
     name="Inverter operation mode",
     icon="mdi:solar-power",
-    entity_category=ENTITY_CATEGORY_CONFIG,
+    entity_category=EntityCategory.CONFIG,
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the inverter select entities from a config entry."""
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     inverter = domain_data[KEY_INVERTER]
