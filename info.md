@@ -12,6 +12,7 @@ Use at own risk.
 - Integration configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
 - Synchronize inverter clock button
 - Special work modes `Eco charge mode` and `Eco discharge mode`.
+- Battery charge and discharge limits writable
 
 ### Migration from HACS to HA
 
