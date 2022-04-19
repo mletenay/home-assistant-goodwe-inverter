@@ -9,7 +9,7 @@ from goodwe import Inverter, InverterError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, POWER_WATT
+from homeassistant.const import PERCENTAGE, POWER_WATT, ELECTRIC_CURRENT_AMPERE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -47,6 +47,30 @@ async def _set_eco_mode_power(entity: InverterNumberEntity, value: int) -> None:
 
 
 NUMBERS = (
+    GoodweNumberEntityDescription(
+        key="battery_charge_limit",
+        name="Battery charge limit",
+        icon="mdi:battery-charging",
+        entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        getter=lambda inv: inv.read_setting('battery_charge_current'),
+        setter=lambda inv, val: inv.inverter.write_setting('battery_charge_current', val),
+        step=1,
+        min_value=1,
+        max_value=50,
+    ),
+    GoodweNumberEntityDescription(
+        key="battery_discharge_limit",
+        name="Battery discharge limit",
+        icon="mdi:battery-charging",
+        entity_category=EntityCategory.CONFIG,
+        unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        getter=lambda inv: inv.read_setting('battery_discharge_current'),
+        setter=lambda inv, val: inv.inverter.write_setting('battery_discharge_current', val),
+        step=1,
+        min_value=1,
+        max_value=50,
+    ),
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         name="Grid export limit",
