@@ -56,7 +56,7 @@ NUMBERS = (
         getter=lambda inv: inv.read_setting('battery_charge_current'),
         setter=lambda inv, val: inv.inverter.write_setting('battery_charge_current', val),
         step=1,
-        min_value=1,
+        min_value=0,
         max_value=50,
     ),
     GoodweNumberEntityDescription(
@@ -68,7 +68,7 @@ NUMBERS = (
         getter=lambda inv: inv.read_setting('battery_discharge_current'),
         setter=lambda inv, val: inv.inverter.write_setting('battery_discharge_current', val),
         step=1,
-        min_value=1,
+        min_value=0,
         max_value=50,
     ),
     GoodweNumberEntityDescription(
