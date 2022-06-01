@@ -1,5 +1,5 @@
 {
-  "name": "GoodWe Inverter (experimental)",
+  "name": "GoodWe Inverter (experimental, added battery limits)",
   "country": "SK",
   "domains": ["button", "number", "select", "sensor"],
   "homeassistant": "2022.4.0"
