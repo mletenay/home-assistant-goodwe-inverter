@@ -1,5 +1,32 @@
+get_parameter:
+  name: Get inverter configuration parameter
+  description: Read inverter configuration parameter and store it in helper entity
+  fields:
+    device_id:
+      name: Inverter device
+      description: ID of the inverter device
+      required: true
+      selector:
+        device:
+          integration: goodwe
+    parameter:
+      name: Parameter
+      description: Name of the inverter parameter
+      required: true
+      selector:
+        text:
+      example: 'battery_charge_current'
+    entity_id:
+      name: Helper entity
+      description: Entity where to store the parameter value
+      required: true
+      selector:
+        entity:
+          domain:
+            - input_number
+            - input_text
 set_parameter:
-  name: Set inverter parameter - EXPERIMENTAL
+  name: Set inverter configuration parameter - EXPERIMENTAL
   description: BEWARE !!! Improper use may cause damage !
   fields:
     device_id:

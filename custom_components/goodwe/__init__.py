@@ -6,16 +6,17 @@ import voluptuous as vol
 from goodwe import InverterError, RequestFailedException, connect
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
     ATTR_PARAMETER,
     ATTR_VALUE,
     CONF_MODEL_FAMILY,
@@ -29,10 +30,19 @@ from .const import (
     KEY_DEVICE_INFO,
     KEY_INVERTER,
     PLATFORMS,
+    SERVICE_GET_PARAMETER,
     SERVICE_SET_PARAMETER,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_GET_PARAMETER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PARAMETER): str,
+        vol.Required(ATTR_ENTITY_ID): str,
+    }
+)
 
 SERVICE_SET_PARAMETER_SCHEMA = vol.Schema(
     {
@@ -45,7 +55,7 @@ SERVICE_SET_PARAMETER_SCHEMA = vol.Schema(
 
 async def _get_inverter_by_device_id(hass: HomeAssistant, device_id: str):
     """Return a inverter instance given a device_id."""
-    device = dr.async_get(hass).async_get(device_id)
+    device = device_registry.async_get(hass).async_get(device_id)
     for entry_values in hass.data[DOMAIN].values():
         if device.identifiers == entry_values[KEY_DEVICE_INFO].get("identifiers"):
             return entry_values[KEY_INVERTER]
@@ -54,6 +64,24 @@ async def _get_inverter_by_device_id(hass: HomeAssistant, device_id: str):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Goodwe component."""
+
+    async def async_get_parameter(call):
+        """Service for setting inverter parameter."""
+        device_id = call.data[ATTR_DEVICE_ID]
+        parameter = call.data[ATTR_PARAMETER]
+        entity_id = call.data[ATTR_ENTITY_ID]
+
+        _LOGGER.debug("Reading inverter parameter '%s'", parameter)
+        inverter = await _get_inverter_by_device_id(hass, device_id)
+        value = await inverter.read_setting(parameter)
+
+        entity = entity_registry.async_get(hass).async_get(entity_id)
+        await hass.services.async_call(
+            entity.domain,
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+            blocking=True,
+        )
 
     async def async_set_parameter(call):
         """Service for setting inverter parameter."""
@@ -65,6 +93,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         inverter = await _get_inverter_by_device_id(hass, device_id)
         await inverter.write_setting(parameter, value)
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_PARAMETER,
+        async_get_parameter,
+        schema=SERVICE_GET_PARAMETER_SCHEMA,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_SET_PARAMETER,
