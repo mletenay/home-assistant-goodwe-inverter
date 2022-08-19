@@ -22,3 +22,8 @@ KEY_COORDINATOR = "coordinator"
 KEY_DEVICE_INFO = "device_info"
 KEY_ECO_MODE_POWER = "eco_mode_power"
 KEY_OPERATION_MODE = "operation_mode"
+
+SERVICE_SET_PARAMETER = "set_parameter"
+ATTR_DEVICE_ID = "device_id"
+ATTR_PARAMETER = "parameter"
+ATTR_VALUE = "value"

@@ -1,0 +1,25 @@
+set_parameter:
+  name: Set inverter parameter - EXPERIMENTAL
+  description: BEWARE !!! Improper use may cause damage !
+  fields:
+    device_id:
+      name: Inverter device
+      description: ID of the inverter device
+      required: true
+      selector:
+        device:
+          integration: goodwe
+    parameter:
+      name: Parameter
+      description: Name of the inverter parameter
+      required: true
+      selector:
+        text:
+      example: 'battery_charge_current'
+    value:
+      name: Value
+      description: Value of the parameter to set
+      example: '20'
+      required: true
+      selector:
+        object:
