@@ -31,6 +31,7 @@ class GoodweNumberEntityDescriptionBase:
 
     getter: Callable[[Inverter], Awaitable[int]]
     setter: Callable[[InverterNumberEntity, int], Awaitable[None]]
+    filter: Callable[[Inverter], bool]
 
 
 @dataclass
@@ -47,17 +48,33 @@ async def _set_eco_mode_power(entity: InverterNumberEntity, value: int) -> None:
 
 
 NUMBERS = (
+    # non DT inverters (limit in W)
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         name="Grid export limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=POWER_WATT,
-        getter=lambda inv: inv.get_grid_export_limit(),
-        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
         native_step=100,
         native_min_value=0,
         native_max_value=10000,
+        getter=lambda inv: inv.get_grid_export_limit(),
+        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
+        filter=lambda inv: type(inv).__name__ != "DT",
+    ),
+    # DT inverters (limit is in %)
+    GoodweNumberEntityDescription(
+        key="grid_export_limit",
+        name="Grid export limit",
+        icon="mdi:transmission-tower",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.get_grid_export_limit(),
+        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
+        filter=lambda inv: type(inv).__name__ == "DT",
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
@@ -65,11 +82,12 @@ NUMBERS = (
         icon="mdi:battery-arrow-down",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        getter=lambda inv: inv.get_ongrid_battery_dod(),
-        setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
         native_step=1,
         native_min_value=0,
         native_max_value=99,
+        getter=lambda inv: inv.get_ongrid_battery_dod(),
+        setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
+        filter=lambda inv: True,
     ),
     GoodweNumberEntityDescription(
         key="eco_mode_power",
@@ -77,13 +95,13 @@ NUMBERS = (
         icon="mdi:battery-charging-low",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        getter=lambda inv: inv.get_operation_mode(),
-        setter=_set_eco_mode_power,
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-    ),
-)
+        getter=lambda inv: inv.get_operation_mode(),
+        setter=_set_eco_mode_power,
+        filter=lambda inv: True,
+    ),)
 
 
 async def async_setup_entry(
@@ -98,7 +116,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for description in NUMBERS:
+    for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
             current_value = await description.getter(inverter)
         except (InverterError, ValueError):
@@ -111,12 +129,6 @@ async def async_setup_entry(
         )
         if description.key == "eco_mode_power":
             domain_data[KEY_ECO_MODE_POWER] = entity
-
-        # DT family of inverter uses % instead of W in grid export limit
-        if type(inverter).__name__ == "DT" and description.key == "grid_export_limit":
-            description.unit_of_measurement = PERCENTAGE
-            description.step = 1
-            description.max_value = 100
 
         entities.append(entity)
 
