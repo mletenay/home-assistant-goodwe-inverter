@@ -20,8 +20,6 @@ CONF_NETWORK_TIMEOUT = "network_timeout"
 KEY_INVERTER = "inverter"
 KEY_COORDINATOR = "coordinator"
 KEY_DEVICE_INFO = "device_info"
-KEY_ECO_MODE_POWER = "eco_mode_power"
-KEY_OPERATION_MODE = "operation_mode"
 
 SERVICE_GET_PARAMETER = "get_parameter"
 SERVICE_SET_PARAMETER = "set_parameter"
