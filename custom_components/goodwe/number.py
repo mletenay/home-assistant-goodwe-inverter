@@ -14,11 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    KEY_DEVICE_INFO,
-    KEY_INVERTER,
-)
+from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +24,7 @@ class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
     getter: Callable[[Inverter], Awaitable[int]]
-    setter: Callable[[InverterNumberEntity, int], Awaitable[None]]
+    setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
 
 
@@ -51,7 +47,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=10000,
         getter=lambda inv: inv.get_grid_export_limit(),
-        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
+        setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: type(inv).__name__ != "DT",
     ),
     # DT inverters (limit is in %)
@@ -65,7 +61,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=100,
         getter=lambda inv: inv.get_grid_export_limit(),
-        setter=lambda inv, val: inv.inverter.set_grid_export_limit(val),
+        setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: type(inv).__name__ == "DT",
     ),
     GoodweNumberEntityDescription(
@@ -78,7 +74,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=99,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
-        setter=lambda inv, val: inv.inverter.set_ongrid_battery_dod(val),
+        setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
         filter=lambda inv: True,
     ),
     GoodweNumberEntityDescription(
@@ -116,8 +112,9 @@ async def async_setup_entry(
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
 
-        entity = InverterNumberEntity(device_info, description, inverter, current_value)
-        entities.append(entity)
+        entities.append(
+            InverterNumberEntity(device_info, description, inverter, current_value)
+        )
 
     async_add_entities(entities)
 
@@ -140,11 +137,11 @@ class InverterNumberEntity(NumberEntity):
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
-        self.inverter: Inverter = inverter
+        self._inverter: Inverter = inverter
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.setter:
-            await self.entity_description.setter(self, int(value))
+            await self.entity_description.setter(self._inverter, int(value))
         self._attr_native_value = value
         self.async_write_ha_state()

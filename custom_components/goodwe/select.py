@@ -12,11 +12,7 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import (
-    DOMAIN,
-    KEY_DEVICE_INFO,
-    KEY_INVERTER,
-)
+from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,11 +52,11 @@ async def async_setup_entry(
     else:
         if 0 <= active_mode < len(INVERTER_OPERATION_MODES):
             entity = InverterOperationModeEntity(
-                device_info,
-                OPERATION_MODE,
-                inverter,
-                INVERTER_OPERATION_MODES[active_mode],
-            )
+                        device_info,
+                        OPERATION_MODE,
+                        inverter,
+                        INVERTER_OPERATION_MODES[active_mode],
+                    )
             async_add_entities([entity])
 
             eco_mode_entity_id = entity_registry.async_get(hass).async_get_entity_id(
@@ -73,7 +69,7 @@ async def async_setup_entry(
                     hass,
                     eco_mode_entity_id,
                     entity.update_eco_mode_power,
-                )
+            )
 
 
 class InverterOperationModeEntity(SelectEntity):
