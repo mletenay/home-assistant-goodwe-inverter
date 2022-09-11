@@ -91,7 +91,7 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_options = INVERTER_OPERATION_MODES
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
-        self._eco_mode_power = None
+        self._eco_mode_power = 0
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
@@ -102,7 +102,7 @@ class InverterOperationModeEntity(SelectEntity):
 
     async def update_eco_mode_power(self, event: Event) -> None:
         """Update eco mode power value in inverter (when in eco mode)"""
-        self._eco_mode_power = event.data.get("new_state").state
+        self._eco_mode_power = int(event.data.get("new_state").state)
         if event.data.get("old_state"):
             operation_mode = INVERTER_OPERATION_MODES.index(self.current_option)
             if operation_mode in (4, 5):
