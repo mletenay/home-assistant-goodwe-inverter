@@ -26,6 +26,9 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
+        vol.Required(CONF_MODEL_FAMILY,
+                        default="none"
+        ): str,
     }
 )
 
@@ -88,9 +91,10 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
+            model_family = user_input[CONF_MODEL_FAMILY]
 
             try:
-                inverter = await connect(host=host, retries=10)
+                inverter = await connect(host=host, family=model_family, retries=10)
             except InverterError:
                 errors[CONF_HOST] = "connection_error"
             else:

@@ -11,7 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP Address"
+                    "host": "IP Address",
+                    "model_family": "Inverter Family (optional)"
                 },
                 "description": "Connect to inverter",
                 "title": "GoodWe inverter"
