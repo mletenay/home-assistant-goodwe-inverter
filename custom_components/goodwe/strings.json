@@ -5,7 +5,8 @@
         "title": "GoodWe inverter",
         "description": "Connect to inverter",
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "model_family": "Inverter Family (optional)"
         }
       }
     },
