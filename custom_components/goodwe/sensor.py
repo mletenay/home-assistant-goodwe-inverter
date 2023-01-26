@@ -18,12 +18,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -108,6 +111,18 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         value=lambda prev, val: prev if not val else val,
         available=lambda entity: entity.coordinator.data is not None,
     ),
+    "VA": GoodweSensorEntityDescription(
+        key="VA",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+    ),
+    "var": GoodweSensorEntityDescription(
+        key="var",
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+    ),
     "C": GoodweSensorEntityDescription(
         key="C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -120,6 +135,11 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
+    "h": GoodweSensorEntityDescription(
+        key="h",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+    ),
     "%": GoodweSensorEntityDescription(
         key="%",
         state_class=SensorStateClass.MEASUREMENT,
@@ -129,6 +149,10 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
 DIAG_SENSOR = GoodweSensorEntityDescription(
     key="_",
     state_class=SensorStateClass.MEASUREMENT,
+)
+ENUM_SENSOR = GoodweSensorEntityDescription(
+    key="enum",
+    device_class=SensorDeviceClass.ENUM,
 )
 
 
@@ -174,6 +198,14 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = _DESCRIPTIONS.get(sensor.unit, DIAG_SENSOR)
         if not self.entity_description.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = sensor.unit
+        if self.entity_description == DIAG_SENSOR and (
+            "label" in sensor.id_
+            or "battery_error" == sensor.id_
+            or "battery_warning" == sensor.id_
+            or "timestamp" == sensor.id_
+            or "errors" == sensor.id_
+        ):
+            self.entity_description = ENUM_SENSOR
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:
