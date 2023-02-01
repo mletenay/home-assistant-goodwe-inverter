@@ -137,6 +137,7 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
     ),
     "h": GoodweSensorEntityDescription(
         key="h",
+        device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
     ),
@@ -199,13 +200,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         if not self.entity_description.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = sensor.unit
         if self.entity_description == DIAG_SENSOR and (
-            "label" in sensor.id_
-            or "battery_error" == sensor.id_
-            or "battery_warning" == sensor.id_
-            or "timestamp" == sensor.id_
-            or "errors" == sensor.id_
+            "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp"
         ):
             self.entity_description = ENUM_SENSOR
+            self._attr_native_unit_of_measurement = None
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:

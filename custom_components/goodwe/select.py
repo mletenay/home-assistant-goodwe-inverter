@@ -1,7 +1,7 @@
 """GoodWe PV inverter selection settings entities."""
 import logging
 
-from goodwe import Inverter, InverterError
+from goodwe import Inverter, InverterError, OperationMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -17,19 +17,26 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
+_OPERATION_MODES: dict[OperationMode, str] = {
+    OperationMode.GENERAL: "General mode",
+    OperationMode.OFF_GRID: "Off grid mode",
+    OperationMode.BACKUP: "Backup mode",
+    OperationMode.ECO: "Eco mode",
+    OperationMode.PEAK_SHAVING: "Peak shaving",
+    OperationMode.ECO_CHARGE: "Eco charge mode",
+    OperationMode.ECO_DISCHARGE: "Eco discharge mode",
+}
+
+
+def _get_operation_mode(mode: str) -> OperationMode:
+    return [k for k, v in _OPERATION_MODES.items() if v == mode][0]
+
+
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
     name="Inverter operation mode",
     icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
-    options=[
-        "General mode",
-        "Off grid mode",
-        "Backup mode",
-        "Eco mode",
-        "Eco charge mode",
-        "Eco discharge mode",
-    ],
 )
 
 
@@ -42,6 +49,10 @@ async def async_setup_entry(
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
 
+    supported_modes = await inverter.get_operation_modes(True)
+    OPERATION_MODE.options = [
+        v for k, v in _OPERATION_MODES.items() if k in supported_modes
+    ]
     # read current operating mode from the inverter
     try:
         active_mode = await inverter.get_operation_mode()
@@ -49,26 +60,25 @@ async def async_setup_entry(
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
-        if (options := OPERATION_MODE.options) and 0 <= active_mode < len(options):
-            entity = InverterOperationModeEntity(
-                device_info,
-                OPERATION_MODE,
-                inverter,
-                options[active_mode],
-            )
-            async_add_entities([entity])
+        entity = InverterOperationModeEntity(
+            device_info,
+            OPERATION_MODE,
+            inverter,
+            _OPERATION_MODES[active_mode],
+        )
+        async_add_entities([entity])
 
-            eco_mode_entity_id = entity_registry.async_get(hass).async_get_entity_id(
-                Platform.NUMBER,
-                DOMAIN,
-                f"{DOMAIN}-eco_mode_power-{inverter.serial_number}",
+        eco_mode_entity_id = entity_registry.async_get(hass).async_get_entity_id(
+            Platform.NUMBER,
+            DOMAIN,
+            f"{DOMAIN}-eco_mode_power-{inverter.serial_number}",
+        )
+        if eco_mode_entity_id:
+            async_track_state_change_event(
+                hass,
+                eco_mode_entity_id,
+                entity.update_eco_mode_power,
             )
-            if eco_mode_entity_id:
-                async_track_state_change_event(
-                    hass,
-                    eco_mode_entity_id,
-                    entity.update_eco_mode_power,
-                )
 
 
 class InverterOperationModeEntity(SelectEntity):
@@ -94,7 +104,7 @@ class InverterOperationModeEntity(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._inverter.set_operation_mode(
-            self.options.index(option), self._eco_mode_power
+            _get_operation_mode(option), self._eco_mode_power
         )
         self._attr_current_option = option
         self.async_write_ha_state()
@@ -103,8 +113,11 @@ class InverterOperationModeEntity(SelectEntity):
         """Update eco mode power value in inverter (when in eco mode)"""
         self._eco_mode_power = int(float(event.data.get("new_state").state))
         if event.data.get("old_state"):
-            operation_mode = self.options.index(self.current_option)
-            if operation_mode in (4, 5):
+            operation_mode = _get_operation_mode(self.current_option)
+            if operation_mode in (
+                OperationMode.ECO_CHARGE,
+                OperationMode.ECO_DISCHARGE,
+            ):
                 await self._inverter.set_operation_mode(
                     operation_mode, self._eco_mode_power
                 )
