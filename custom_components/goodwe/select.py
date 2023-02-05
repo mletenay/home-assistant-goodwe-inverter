@@ -60,11 +60,20 @@ async def async_setup_entry(
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
+        active_power = None
+        try:
+            if active_mode:
+                active_power = (await inverter.read_setting("eco_mode_1")).power
+        except (InverterError, ValueError):
+            _LOGGER.debug("Could not read inverter eco mode")
+            active_power = 0
+
         entity = InverterOperationModeEntity(
             device_info,
             OPERATION_MODE,
             inverter,
             _OPERATION_MODES[active_mode],
+            active_power,
         )
         async_add_entities([entity])
 
@@ -92,6 +101,7 @@ class InverterOperationModeEntity(SelectEntity):
         description: SelectEntityDescription,
         inverter: Inverter,
         current_mode: str,
+        current_power: int,
     ) -> None:
         """Initialize the inverter operation mode setting entity."""
         self.entity_description = description
@@ -99,7 +109,7 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_device_info = device_info
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
-        self._eco_mode_power = 0
+        self._eco_mode_power = current_power
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

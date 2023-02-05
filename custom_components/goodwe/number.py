@@ -27,7 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
-    getter: Callable[[Inverter], Awaitable[int]]
+    getter: Callable[[Inverter], Awaitable[any]]
+    mapper: Callable[[any], int]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
 
@@ -52,6 +53,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=10000,
         getter=lambda inv: inv.get_grid_export_limit(),
+        mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: type(inv).__name__ != "DT",
     ),
@@ -66,6 +68,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=100,
         getter=lambda inv: inv.get_grid_export_limit(),
+        mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
         filter=lambda inv: type(inv).__name__ == "DT",
     ),
@@ -79,6 +82,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=99,
         getter=lambda inv: inv.get_ongrid_battery_dod(),
+        mapper=lambda v: v,
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
         filter=lambda inv: True,
     ),
@@ -91,7 +95,8 @@ NUMBERS = (
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        getter=lambda inv: inv.get_operation_mode(),
+        getter=lambda inv: inv.read_setting("eco_mode_1"),
+        mapper=lambda v: v.power,
         setter=None,
         filter=lambda inv: True,
     ),
@@ -111,7 +116,7 @@ async def async_setup_entry(
 
     for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
-            current_value = await description.getter(inverter)
+            current_value = description.mapper(await description.getter(inverter))
         except (InverterError, ValueError):
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
