@@ -151,9 +151,8 @@ DIAG_SENSOR = GoodweSensorEntityDescription(
     key="_",
     state_class=SensorStateClass.MEASUREMENT,
 )
-ENUM_SENSOR = GoodweSensorEntityDescription(
-    key="enum",
-    device_class=SensorDeviceClass.ENUM,
+TEXT_SENSOR = GoodweSensorEntityDescription(
+    key="text",
 )
 
 
@@ -196,14 +195,14 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
         )
-        self.entity_description = _DESCRIPTIONS.get(sensor.unit, DIAG_SENSOR)
-        if not self.entity_description.native_unit_of_measurement:
-            self._attr_native_unit_of_measurement = sensor.unit
-        if self.entity_description == DIAG_SENSOR and (
-            "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp"
-        ):
-            self.entity_description = ENUM_SENSOR
-            self._attr_native_unit_of_measurement = None
+        try:
+            self.entity_description = _DESCRIPTIONS[sensor.unit]
+        except KeyError:
+            if "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp":
+                self.entity_description = TEXT_SENSOR
+            else:
+                self.entity_description = DIAG_SENSOR
+                self._attr_native_unit_of_measurement = sensor.unit
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
         if sensor.id_ == BATTERY_SOC:
