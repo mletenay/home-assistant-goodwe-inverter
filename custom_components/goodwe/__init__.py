@@ -1,15 +1,12 @@
 """The Goodwe inverter component."""
-from datetime import timedelta
-import logging
 
-from goodwe import InverterError, RequestFailedException, connect
+from goodwe import InverterError, connect
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_MODEL_FAMILY,
@@ -17,25 +14,21 @@ from .const import (
     CONF_NETWORK_TIMEOUT,
     DEFAULT_NETWORK_RETRIES,
     DEFAULT_NETWORK_TIMEOUT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE_INFO,
     KEY_INVERTER,
     PLATFORMS,
 )
+from .coordinator import GoodweUpdateCoordinator
 from .services import async_setup_services, async_unload_services
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    name = entry.title
     host = entry.data[CONF_HOST]
     model_family = entry.data[CONF_MODEL_FAMILY]
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
 
@@ -60,39 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         sw_version=f"{inverter.firmware} / {inverter.arm_firmware}",
     )
 
-    async def async_update_data():
-        """Fetch data from the inverter."""
-        try:
-            return await inverter.read_runtime_data()
-        except RequestFailedException as ex:
-            # UDP communication with inverter is by definition unreliable.
-            # It is rather normal in many environments to fail to receive
-            # proper response in usual time, so we intentionally ignore isolated
-            # failures and report problem with availability only after
-            # consecutive streak of 3 of failed requests.
-            if ex.consecutive_failures_count < 3:
-                _LOGGER.debug(
-                    "No response received (streak of %d)", ex.consecutive_failures_count
-                )
-                # return empty dictionary, sensors will keep their previous values
-                return {}
-            # Inverter does not respond anymore (e.g. it went to sleep mode)
-            _LOGGER.debug(
-                "Inverter not responding (streak of %d)", ex.consecutive_failures_count
-            )
-            raise UpdateFailed(ex) from ex
-        except InverterError as ex:
-            raise UpdateFailed(ex) from ex
-
     # Create update coordinator
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=name,
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=scan_interval),
-    )
+    coordinator = GoodweUpdateCoordinator(hass, entry, inverter)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

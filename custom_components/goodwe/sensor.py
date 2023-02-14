@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 import logging
 from typing import Any, cast
 
@@ -32,13 +33,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
+from .coordinator import GoodweUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,10 +78,12 @@ _ICONS: dict[SensorKind, str] = {
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[[Any, Any], Any] = lambda prev, val: val
+    value: Callable[
+        [GoodweUpdateCoordinator, str], Any
+    ] = lambda coordinator, sensor: coordinator.sensor_value(sensor)
     available: Callable[
-        [CoordinatorEntity], bool
-    ] = lambda entity: entity.coordinator.last_update_success
+        [GoodweUpdateCoordinator], bool
+    ] = lambda coordinator: coordinator.last_update_success
 
 
 _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
@@ -108,8 +110,8 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda prev, val: prev if not val else val,
-        available=lambda entity: entity.coordinator.data is not None,
+        value=lambda coordinator, sensor: coordinator.total_sensor_value(sensor),
+        available=lambda coordinator: coordinator.data is not None,
     ),
     "VA": GoodweSensorEntityDescription(
         key="VA",
@@ -177,12 +179,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class InverterSensor(CoordinatorEntity, SensorEntity):
+class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     """Entity representing individual inverter sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: GoodweUpdateCoordinator,
         device_info: DeviceInfo,
         inverter: Inverter,
         sensor: Sensor,
@@ -208,18 +210,14 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         if sensor.id_ == BATTERY_SOC:
             self._attr_device_class = SensorDeviceClass.BATTERY
         self._sensor = sensor
-        self._previous_value = None
-        self._stop_reset = None
+        self._stop_reset: Callable[[], None] | None = None
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        value = cast(GoodweSensorEntityDescription, self.entity_description).value(
-            self._previous_value,
-            self.coordinator.data.get(self._sensor.id_, self._previous_value),
+        return cast(GoodweSensorEntityDescription, self.entity_description).value(
+            self.coordinator, self._sensor.id_
         )
-        self._previous_value = value
-        return value
 
     @property
     def available(self) -> bool:
@@ -231,15 +229,19 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         and most of the sensors are actually unavailable.
         """
         return cast(GoodweSensorEntityDescription, self.entity_description).available(
-            self
+            self.coordinator
         )
 
     @callback
     def async_reset(self, now):
-        """Reset the value back to 0 at midnight."""
+        """Reset the value back to 0 at midnight.
+
+        Some sensors values like daily produced energy are kept available,
+        even when the inverter is in sleep mode and no longer responds to request.
+        In contrast to "total" sensors, these "daily" sensors need to be reset to 0 on midnight.
+        """
         if not self.coordinator.last_update_success:
-            self._previous_value = 0
-            self.coordinator.data[self._sensor.id_] = 0
+            self.coordinator.reset_sensor(self._sensor.id)
             self.async_write_ha_state()
             _LOGGER.debug("Goodwe reset %s to 0", self.name)
         next_midnight = dt_util.start_of_local_day(
@@ -249,7 +251,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             self.hass, self.async_reset, next_midnight
         )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Schedule reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET:
             next_midnight = dt_util.start_of_local_day(
@@ -260,7 +262,7 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
             )
         await super().async_added_to_hass()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Remove reset task at midnight."""
         if self._sensor.id_ in DAILY_RESET and self._stop_reset is not None:
             self._stop_reset()
