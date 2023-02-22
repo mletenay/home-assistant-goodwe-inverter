@@ -75,11 +75,13 @@ class LoadControlSwitch(SwitchEntity):
         """Turn the switch on."""
         await self._inverter.write_setting("load_control_switch", 1)
         self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._inverter.write_setting("load_control_switch", 0)
         self._attr_is_on = False
+        self.async_write_ha_state()
 
     async def async_update(self) -> None:
         """Process update from entity."""

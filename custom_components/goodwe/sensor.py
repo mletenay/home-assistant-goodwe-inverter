@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import logging
-from typing import Any, cast
+from typing import Any
 
 from goodwe import Inverter, Sensor, SensorKind
 
@@ -182,6 +182,8 @@ async def async_setup_entry(
 class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     """Entity representing individual inverter sensor."""
 
+    entity_description: GoodweSensorEntityDescription
+
     def __init__(
         self,
         coordinator: GoodweUpdateCoordinator,
@@ -215,9 +217,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
-        return cast(GoodweSensorEntityDescription, self.entity_description).value(
-            self.coordinator, self._sensor.id_
-        )
+        return self.entity_description.value(self.coordinator, self._sensor.id_)
 
     @property
     def available(self) -> bool:
@@ -228,9 +228,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         as available even when the (non-battery) pv inverter is off-line during night
         and most of the sensors are actually unavailable.
         """
-        return cast(GoodweSensorEntityDescription, self.entity_description).available(
-            self.coordinator
-        )
+        return self.entity_description.available(self.coordinator)
 
     @callback
     def async_reset(self, now):
