@@ -110,7 +110,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=100,
         getter=lambda inv: inv.read_setting("eco_mode_1"),
-        mapper=lambda v: v.max_charge if v else 0,
+        mapper=lambda v: v.soc if v else 0,
         setter=None,
         filter=lambda inv: True,
     ),

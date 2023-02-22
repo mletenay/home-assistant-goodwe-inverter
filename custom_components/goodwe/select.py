@@ -55,7 +55,7 @@ async def async_setup_entry(
         active_mode = await inverter.get_operation_mode()
         eco_mode = await inverter.read_setting("eco_mode_1")
         current_eco_power = abs(eco_mode.power) if eco_mode else 0
-        current_eco_soc = eco_mode.max_charge if eco_mode else 0
+        current_eco_soc = eco_mode.soc if eco_mode else 0
     except (InverterError, ValueError):
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
