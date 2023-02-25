@@ -41,6 +41,7 @@ sensor:
     sensors:
       # Template sensor for values of energy bought (active_power < 0)
       energy_buy:
+        device_class: power
         friendly_name: "Energy Buy"
         unit_of_measurement: 'W'
         value_template: >-
@@ -51,6 +52,7 @@ sensor:
           {% endif %}
       # Template sensor for values of energy sold (active_power > 0)
       energy_sell:
+        device_class: power
         friendly_name: "Energy Sell"
         unit_of_measurement: 'W'
         value_template: >-
