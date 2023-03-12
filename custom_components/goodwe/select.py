@@ -5,10 +5,10 @@ from goodwe import Inverter, InverterError, OperationMode
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, EntityCategory
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
