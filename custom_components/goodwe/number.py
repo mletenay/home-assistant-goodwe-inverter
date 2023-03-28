@@ -40,8 +40,13 @@ class GoodweNumberEntityDescription(
     """Class describing Goodwe number entities."""
 
 
+def _get_setting_unit(inverter: Inverter, setting: str) -> str:
+    """Answer unit of an inverter setting of specified name."""
+    return next((s.unit for s in inverter.settings() if s.id_ == setting), "")
+
+
 NUMBERS = (
-    # non DT inverters (limit in W)
+    # Export limit in W
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         name="Grid export limit",
@@ -55,9 +60,9 @@ NUMBERS = (
         getter=lambda inv: inv.get_grid_export_limit(),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        filter=lambda inv: type(inv).__name__ != "DT",
+        filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") != "%",
     ),
-    # DT inverters (limit is in %)
+    # Export limit in %
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         name="Grid export limit",
@@ -70,7 +75,7 @@ NUMBERS = (
         getter=lambda inv: inv.get_grid_export_limit(),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        filter=lambda inv: type(inv).__name__ == "DT",
+        filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") == "%",
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
