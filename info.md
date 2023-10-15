@@ -7,7 +7,7 @@ Support for Goodwe solar inverters is present as native integration of [Home Ass
 This custom component is experimental version with features not (yet) present in standard HA's integration and is intended for users with specific needs and early adopters of new features.
 Use at own risk.
 
-### Differences between HACS 0.9.9.9 and HA 2023.3
+### Differences between HACS 0.9.9.9 and HA 2023.10
 
 - Integration configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).

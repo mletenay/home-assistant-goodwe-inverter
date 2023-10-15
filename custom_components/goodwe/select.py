@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, EntityCategory
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -33,7 +33,6 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
-    name="Inverter operation mode",
     icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
@@ -99,6 +98,7 @@ class InverterOperationModeEntity(SelectEntity):
     """Entity representing the inverter operation mode."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self,

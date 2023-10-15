@@ -7,7 +7,7 @@
         "error": {
             "connection_error": "Failed to connect"
         },
-        "flow_title": "GoodWe",
+"flow_title": "GoodWe",
         "step": {
             "user": {
                 "data": {
@@ -20,8 +20,22 @@
         }
     },
     "entity": {
+        "button": {
+            "synchronize_clock": {
+                "name": "Synchronize inverter clock"
+            }
+        },
+        "number": {
+            "battery_discharge_depth": {
+                "name": "Depth of discharge (on-grid)"
+            },
+            "grid_export_limit": {
+                "name": "Grid export limit"
+            }
+        },
         "select": {
             "operation_mode": {
+                "name": "Inverter operation mode",
                 "state": {
                     "backup": "Backup mode",
                     "eco": "Eco mode",
@@ -42,7 +56,7 @@
                 }
             }
         }
-    },
+},
     "options": {
         "step": {
             "init": {

@@ -15,7 +15,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
@@ -41,15 +41,17 @@ class GoodweNumberEntityDescription(
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
-    """Answer unit of an inverter setting of specified name."""
+    """Return the unit of an inverter setting."""
     return next((s.unit for s in inverter.settings() if s.id_ == setting), "")
 
 
 NUMBERS = (
+    # Only one of the export limits are added.
+    # Availability is checked in the filter method.
     # Export limit in W
     GoodweNumberEntityDescription(
         key="grid_export_limit",
-        name="Grid export limit",
+        translation_key="grid_export_limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
@@ -65,7 +67,7 @@ NUMBERS = (
     # Export limit in %
     GoodweNumberEntityDescription(
         key="grid_export_limit",
-        name="Grid export limit",
+        translation_key="grid_export_limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -79,7 +81,7 @@ NUMBERS = (
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
-        name="Depth of discharge (on-grid)",
+        translation_key="battery_discharge_depth",
         icon="mdi:battery-arrow-down",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -152,6 +154,7 @@ class InverterNumberEntity(NumberEntity):
     """Inverter numeric setting entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     entity_description: GoodweNumberEntityDescription
 
     def __init__(
