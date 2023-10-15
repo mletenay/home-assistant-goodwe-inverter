@@ -69,8 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if len(hass.data[DOMAIN]) == 1:
-        await async_setup_services(hass)
+    await async_setup_services(hass)
 
     return True
 
@@ -84,8 +83,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if not hass.data[DOMAIN]:
-        await async_unload_services(hass)
+        if not hass.data[DOMAIN]:
+            await async_unload_services(hass)
 
     return unload_ok
 
