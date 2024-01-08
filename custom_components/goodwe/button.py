@@ -55,7 +55,7 @@ async def async_setup_entry(
         await inverter.read_setting("time")
     except (InverterError, ValueError):
         # Inverter model does not support clock synchronization
-        _LOGGER.debug("Could not read inverter current clock time")
+        _LOGGER.debug("Could not read inverter current clock time", exc_info=True)
     else:
         async_add_entities(
             [GoodweButtonEntity(device_info, SYNCHRONIZE_CLOCK, inverter)]

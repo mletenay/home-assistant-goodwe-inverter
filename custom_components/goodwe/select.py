@@ -62,7 +62,7 @@ async def async_setup_entry(
         current_eco_soc = eco_mode.soc if eco_mode else 0
     except (InverterError, ValueError):
         # Inverter model does not support this setting
-        _LOGGER.debug("Could not read inverter operation mode")
+        _LOGGER.debug("Could not read inverter operation mode", exc_info=True)
     else:
         entity = InverterOperationModeEntity(
             device_info,

@@ -41,7 +41,7 @@ async def async_setup_entry(
         current_state = await inverter.read_setting("load_control_switch")
     except (InverterError, ValueError):
         # Inverter model does not support this feature
-        _LOGGER.debug("Could not read load control switch value")
+        _LOGGER.debug("Could not read load control switch value", exc_info=True)
     else:
         entity = LoadControlSwitch(
             device_info,
