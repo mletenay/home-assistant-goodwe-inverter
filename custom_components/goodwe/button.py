@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,14 +19,14 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweButtonEntityDescriptionRequired:
     """Required attributes of GoodweButtonEntityDescription."""
 
     action: Callable[[Inverter], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweButtonEntityDescription(
     ButtonEntityDescription, GoodweButtonEntityDescriptionRequired
 ):

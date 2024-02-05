@@ -1,4 +1,5 @@
 """GoodWe PV inverter numeric settings entities."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -23,7 +24,7 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
@@ -33,7 +34,7 @@ class GoodweNumberEntityDescriptionBase:
     filter: Callable[[Inverter], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescription(
     NumberEntityDescription, GoodweNumberEntityDescriptionBase
 ):
