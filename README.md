@@ -63,14 +63,14 @@ sensor:
             {{ 0 }}
           {% endif %}
 
-  # Sensor for Riemann sum of energy bought (W -> Wh)
+  # Sensor for Riemann sum of energy bought (W -> kWh)
   - platform: integration
     source: sensor.energy_buy
     name: energy_buy_sum
     unit_prefix: k
     round: 1
     method: left
-  # Sensor for Riemann sum of energy sold (W -> Wh)
+  # Sensor for Riemann sum of energy sold (W -> kWh)
   - platform: integration
     source: sensor.energy_sell
     name: energy_sell_sum
