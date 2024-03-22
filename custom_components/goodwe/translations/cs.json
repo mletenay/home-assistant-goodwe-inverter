@@ -1,0 +1,73 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zařízení je již nastaveno",
+            "already_in_progress": "Nastavení již probíhá"
+        },
+        "error": {
+            "connection_error": "Nepodařilo se připojit"
+        },
+        "flow_title": "GoodWe",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP adresa",
+                    "model_family": "Typ střídače (volitelné)"
+                },
+                "description": "Připojí se ke střídači",
+                "title": "Střídač GoodWe"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "synchronize_clock": {
+                "name": "Synchronizovat hodiny střídače"
+            }
+        },
+        "number": {
+            "battery_discharge_depth": {
+                "name": "Maximum vybití (v síti)"
+            },
+            "grid_export_limit": {
+                "name": "Limit dodávky do sítě"
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "name": "Provozní režim střídače",
+                "state": {
+                    "backup": "Režim zálohy",
+                    "eco": "Ekonomický režim",
+                    "eco_charge": "Režim ekonomického nabíjení",
+                    "eco_discharge": "Režim ekonomického vybíjení",
+                    "general": "Obecný režim",
+                    "off_grid": "Režim vypnuté sítě",
+                    "peak_shaving": "Režim pokrývání špiček"
+                }
+            }
+        },
+        "sensor": {
+            "grid_in_out_label": {
+                "state": {
+                    "Idle": "Nečinnost",
+                    "Exporting": "Export",
+                    "Importing": "Import"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval skenování (s)",
+                    "network_retries": "Počet opakování síťového požadavku",
+                    "network_timeout": "Časový limit síťového požadavku (s)"
+                },
+                "description": "Nastaví volitelné (síťové) volby",
+                "title": "Volitelné volby GoodWe"
+            }
+        }
+    }
+}
