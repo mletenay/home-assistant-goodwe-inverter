@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 LOAD_CONTROL = SwitchEntityDescription(
     key="load_control",
-    name="Load Control",
+    translation_key="load_control",
+    has_entity_name=True,
     icon="mdi:electric-switch",
     entity_category=EntityCategory.CONFIG,
     device_class=SwitchDeviceClass.OUTLET,

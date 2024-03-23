@@ -25,6 +25,12 @@
       }
     },
     "number": {
+      "eco_mode_power": {
+        "name": "Eco mode power"
+      },
+      "eco_mode_soc": {
+        "name": "Eco mode SoC"
+      },
       "grid_export_limit": {
         "name": "Grid export limit"
       },
@@ -44,6 +50,11 @@
           "eco_charge": "Eco charge mode",
           "eco_discharge": "Eco discharge mode"
         }
+      }
+    },
+    "switch": {
+      "load_control": {
+        "name": "Load control"
       }
     }
   },
