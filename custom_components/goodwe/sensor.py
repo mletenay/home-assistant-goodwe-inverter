@@ -10,6 +10,8 @@ import logging
 from typing import Any
 
 from goodwe import Inverter, Sensor, SensorKind
+from goodwe.sensor import Enum, Enum2, EnumBitmap22, EnumBitmap4, EnumCalculated, EnumH, EnumL
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -157,6 +159,10 @@ DIAG_SENSOR = GoodweSensorEntityDescription(
 TEXT_SENSOR = GoodweSensorEntityDescription(
     key="text",
 )
+ENUM_SENSOR = GoodweSensorEntityDescription(
+    key="enum",
+    device_class=SensorDeviceClass.ENUM,
+)
 
 
 async def async_setup_entry(
@@ -203,7 +209,20 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         try:
             self.entity_description = _DESCRIPTIONS[sensor.unit]
         except KeyError:
-            if "Enum" in type(sensor).__name__ or sensor.id_ == "timestamp":
+            if (
+                isinstance(sensor, Enum)
+                or isinstance(sensor, EnumH)
+                or isinstance(sensor, EnumL)
+                or isinstance(sensor, Enum2)
+                or isinstance(sensor, EnumCalculated)
+            ):
+                self.entity_description = ENUM_SENSOR
+                self._attr_options = list(sensor._labels.values())
+            elif (
+                isinstance(sensor, EnumBitmap4)
+                or isinstance(sensor, EnumBitmap22)
+                or sensor.id_ == "timestamp"
+            ):
                 self.entity_description = TEXT_SENSOR
             else:
                 self.entity_description = DIAG_SENSOR
