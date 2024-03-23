@@ -29,6 +29,12 @@
             "battery_discharge_depth": {
                 "name": "Maximum vybití (v síti)"
             },
+            "eco_mode_power": {
+                "name": "Výkon v ekonomickém režimu"
+            },
+            "eco_mode_soc": {
+                "name": "Stav nabítí baterie ekonomickém režimu"
+            },
             "grid_export_limit": {
                 "name": "Limit dodávky do sítě"
             }
@@ -54,6 +60,11 @@
                     "Exporting": "Export",
                     "Importing": "Import"
                 }
+            }
+        },
+        "switch": {
+            "load_control": {
+                "name": "Řízení zátěže"
             }
         }
     },

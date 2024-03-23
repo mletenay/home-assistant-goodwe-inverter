@@ -96,7 +96,7 @@ NUMBERS = (
     ),
     GoodweNumberEntityDescription(
         key="eco_mode_power",
-        name="Eco mode power",
+        translation_key="eco_mode_power",
         icon="mdi:battery-charging-low",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -110,7 +110,7 @@ NUMBERS = (
     ),
     GoodweNumberEntityDescription(
         key="eco_mode_soc",
-        name="Eco mode SoC",
+        translation_key="eco_mode_soc",
         icon="mdi:battery-charging-low",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
