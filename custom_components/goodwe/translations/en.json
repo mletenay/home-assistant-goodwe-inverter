@@ -50,9 +50,9 @@
         "sensor": {
             "grid_in_out_label": {
                 "state": {
-                    "0": "Idle",
-                    "1": "Exporting",
-                    "2": "Importing"
+                    "Idle": "Idle",
+                    "Exporting": "Exporting",
+                    "Importing": "Importing"
                 }
             }
         }
