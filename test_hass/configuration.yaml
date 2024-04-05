@@ -1,0 +1,11 @@
+
+logger:
+  default: info
+  logs:
+    custom_components.goodwe: debug
+
+# Loads default set of integrations. Do not remove.
+default_config:
+
+http:
+  server_port: 9123
