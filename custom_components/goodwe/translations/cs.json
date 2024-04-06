@@ -55,6 +55,14 @@
                     "Importing": "Import"
                 }
             }
+        },
+        "switch": {
+            "load_control": {
+                "name": "Řízení zátěže"
+            },
+            "grid_export": {
+                "name": "Řízení dodávky do sítě"
+            }
         }
     },
     "options": {

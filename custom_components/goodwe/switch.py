@@ -30,7 +30,8 @@ class GoodweSettingsSwitchEntityDescription(SwitchEntityDescription):
 
 LOAD_CONTROL = GoodweSettingsSwitchEntityDescription(
     key="load_control",
-    name="Load Control",
+    translation_key="load_control",
+    has_entity_name=True,
     icon_off="mdi:electric-switch",
     icon_on="mdi:electric-switch-closed",
     entity_category=EntityCategory.CONFIG,
@@ -40,7 +41,8 @@ LOAD_CONTROL = GoodweSettingsSwitchEntityDescription(
 
 EXPORT_LIMIT_CONTROL = GoodweSettingsSwitchEntityDescription(
     key="grid_export",
-    name="Grid Export",
+    translation_key="grid_export",
+    has_entity_name=True,
     icon_on="mdi:transmission-tower-off",
     icon_off="mdi:transmission-tower-import",
     entity_category=EntityCategory.CONFIG,
