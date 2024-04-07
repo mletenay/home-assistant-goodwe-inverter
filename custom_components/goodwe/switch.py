@@ -55,8 +55,6 @@ async def async_setup_entry(
 class LoadControlSwitch(SwitchEntity):
     """Switch representation of inverter's 'Load Control' relay."""
 
-    _attr_should_poll = False
-
     def __init__(
         self,
         device_info: DeviceInfo,
