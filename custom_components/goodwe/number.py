@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import logging
 
 from goodwe import Inverter, InverterError
-
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
@@ -24,21 +23,14 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class GoodweNumberEntityDescriptionBase:
-    """Required values when describing Goodwe number entities."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweNumberEntityDescription(NumberEntityDescription):
+    """Class describing Goodwe number entities."""
 
     getter: Callable[[Inverter], Awaitable[any]]
     mapper: Callable[[any], int]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
-
-
-@dataclass(frozen=True)
-class GoodweNumberEntityDescription(
-    NumberEntityDescription, GoodweNumberEntityDescriptionBase
-):
-    """Class describing Goodwe number entities."""
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
@@ -53,7 +45,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -69,7 +60,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
@@ -83,7 +73,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
         translation_key="battery_discharge_depth",
-        icon="mdi:battery-arrow-down",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
@@ -97,7 +86,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="eco_mode_power",
         translation_key="eco_mode_power",
-        icon="mdi:battery-charging-low",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
@@ -111,7 +99,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="eco_mode_soc",
         translation_key="eco_mode_soc",
-        icon="mdi:battery-charging-low",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,

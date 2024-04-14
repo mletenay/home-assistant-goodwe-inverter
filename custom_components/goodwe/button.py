@@ -6,7 +6,6 @@ from datetime import datetime
 import logging
 
 from goodwe import Inverter, InverterError
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -19,24 +18,16 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class GoodweButtonEntityDescriptionRequired:
-    """Required attributes of GoodweButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class GoodweButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Goodwe button entities."""
 
     action: Callable[[Inverter], Awaitable[None]]
-
-
-@dataclass(frozen=True)
-class GoodweButtonEntityDescription(
-    ButtonEntityDescription, GoodweButtonEntityDescriptionRequired
-):
-    """Class describing Goodwe button entities."""
 
 
 SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
-    icon="mdi:clock-check-outline",
     entity_category=EntityCategory.CONFIG,
     action=lambda inv: inv.write_setting("time", datetime.now()),
 )

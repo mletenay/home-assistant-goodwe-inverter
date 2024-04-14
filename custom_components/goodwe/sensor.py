@@ -10,7 +10,6 @@ import logging
 from typing import Any
 
 from goodwe import Inverter, Sensor, SensorKind
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,

@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "button": {
+      "synchronize_clock": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
+    "number": {
+      "grid_export_limit": {
+        "default": "mdi:transmission-tower"
+      },
+      "battery_discharge_depth": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "eco_mode_power": {
+        "default": "mdi:battery-charging-low"
+      },
+      "eco_mode_soc": {
+        "default": "mdi:battery-charging-low"
+      }
+    },
+    "select": {
+      "operation_mode": {
+        "default": "mdi:solar-power"
+      }
+    }
+  }
+}

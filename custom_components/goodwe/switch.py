@@ -1,13 +1,13 @@
 """GoodWe PV inverter switch entities."""
+
 import logging
 from typing import Any
 
 from goodwe import Inverter, InverterError
-
 from homeassistant.components.switch import (
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
-    SwitchDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

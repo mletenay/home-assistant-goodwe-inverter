@@ -1,7 +1,6 @@
 """The Goodwe inverter component."""
 
 from goodwe import InverterError, connect
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
