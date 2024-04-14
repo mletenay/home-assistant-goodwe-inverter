@@ -50,7 +50,6 @@ NUMBERS = (
         native_unit_of_measurement=UnitOfPower.WATT,
         native_step=100,
         native_min_value=0,
-        native_max_value=10000,
         getter=lambda inv: inv.get_grid_export_limit(),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
@@ -64,7 +63,7 @@ NUMBERS = (
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=200,
         getter=lambda inv: inv.get_grid_export_limit(),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.set_grid_export_limit(val),
@@ -131,9 +130,15 @@ async def async_setup_entry(
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
 
-        entities.append(
-            InverterNumberEntity(device_info, description, inverter, current_value)
-        )
+        entity = InverterNumberEntity(device_info, description, inverter, current_value)
+        # Adjust the max value according to actual inverter power (if provided)
+        if (
+            inverter.rated_power
+            and description.key == "grid_export_limit"
+            and description.native_unit_of_measurement == UnitOfPower.WATT
+        ):
+            entity.native_max_value = inverter.rated_power
+        entities.append(entity)
 
     async_add_entities(entities)
 
