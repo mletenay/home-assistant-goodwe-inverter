@@ -63,6 +63,9 @@
             }
         },
         "switch": {
+            "grid_export_limit_switch": {
+                "name": "Řízení dodávky do sítě"
+            },
             "load_control": {
                 "name": "Řízení zátěže"
             }

@@ -25,6 +25,13 @@
       }
     },
     "switch": {
+      "grid_export_limit_switch": {
+        "default": "mdi:transmission-tower-import",
+        "state": {
+          "on": "mdi:transmission-tower",
+          "off": "mdi:transmission-tower-import"
+        }
+      },
       "load_control": {
         "default": "mdi:electric-switch",
         "state": {

@@ -35,6 +35,13 @@ SWITCHES = (
         device_class=SwitchDeviceClass.OUTLET,
         setting="load_control_switch",
     ),
+    GoodweSwitchEntityDescription(
+        key="grid_export_limit_switch",
+        translation_key="grid_export_limit_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="grid_export",
+    ),
 )
 
 
