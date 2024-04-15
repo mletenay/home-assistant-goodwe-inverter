@@ -23,6 +23,15 @@
       "operation_mode": {
         "default": "mdi:solar-power"
       }
+    },
+    "switch": {
+      "load_control": {
+        "default": "mdi:electric-switch",
+        "state": {
+          "on": "mdi:electric-switch-closed",
+          "off": "mdi:electric-switch"
+        }
+      }
     }
   }
 }
