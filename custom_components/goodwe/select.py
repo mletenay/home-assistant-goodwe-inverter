@@ -12,7 +12,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -74,7 +74,7 @@ async def async_setup_entry(
         )
         async_add_entities([entity])
 
-        eco_mode_power_entity_id = entity_registry.async_get(hass).async_get_entity_id(
+        eco_mode_power_entity_id = er.async_get(hass).async_get_entity_id(
             Platform.NUMBER,
             DOMAIN,
             f"{DOMAIN}-eco_mode_power-{inverter.serial_number}",
@@ -85,7 +85,7 @@ async def async_setup_entry(
                 eco_mode_power_entity_id,
                 entity.update_eco_mode_power,
             )
-        eco_mode_soc_entity_id = entity_registry.async_get(hass).async_get_entity_id(
+        eco_mode_soc_entity_id = er.async_get(hass).async_get_entity_id(
             Platform.NUMBER,
             DOMAIN,
             f"{DOMAIN}-eco_mode_soc-{inverter.serial_number}",
@@ -138,8 +138,13 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_current_option = option
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Get the current value from inverter."""
+        value = await self._inverter.get_operation_mode()
+        self._attr_current_option = _MODE_TO_OPTION[value]
+
     async def update_eco_mode_power(self, event: Event) -> None:
-        """Update eco mode power value in inverter (when in eco mode)"""
+        """Update eco mode power value in inverter (when in eco mode)."""
         state = event.data.get("new_state")
         if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
             return
@@ -157,7 +162,7 @@ class InverterOperationModeEntity(SelectEntity):
                 )
 
     async def update_eco_mode_soc(self, event: Event) -> None:
-        """Update eco mode SoC value in inverter (when in eco mode)"""
+        """Update eco mode SoC value in inverter (when in eco mode)."""
         state = event.data.get("new_state")
         if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
             return

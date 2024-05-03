@@ -108,6 +108,6 @@ class InverterSwitchEntity(SwitchEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Process update from entity."""
-        status = await self._inverter.read_setting(self.entity_description.setting)
-        return status == 1
+        """Get the current value from inverter."""
+        value = await self._inverter.read_setting(self.entity_description.setting)
+        self._attr_is_on = value == 1
