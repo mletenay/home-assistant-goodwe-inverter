@@ -50,7 +50,9 @@
                     "eco_discharge": "Režim ekonomického vybíjení",
                     "general": "Obecný režim",
                     "off_grid": "Režim vypnuté sítě",
-                    "peak_shaving": "Režim pokrývání špiček"
+                    "peak_shaving": "Režim pokrývání špiček",
+                    "self_use": "Vlastní spotřeba"
+
                 }
             }
         },

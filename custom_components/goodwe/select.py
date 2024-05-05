@@ -28,6 +28,7 @@ _MODE_TO_OPTION: dict[OperationMode, str] = {
     OperationMode.BACKUP: "backup",
     OperationMode.ECO: "eco",
     OperationMode.PEAK_SHAVING: "peak_shaving",
+    OperationMode.SELF_USE: "self_use",
     OperationMode.ECO_CHARGE: "eco_charge",
     OperationMode.ECO_DISCHARGE: "eco_discharge",
 }
