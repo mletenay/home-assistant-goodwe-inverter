@@ -92,7 +92,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            protocol = 502 if user_input[CONF_PROTOCOL] == "TCP" else 8899
+            protocol = user_input[CONF_PROTOCOL]
             model_family = user_input[CONF_MODEL_FAMILY]
 
             try:
