@@ -1,13 +1,14 @@
 """Config flow to configure Goodwe inverters using their local API."""
+
 from __future__ import annotations
 
 import logging
 
-from goodwe import InverterError, connect
 import voluptuous as vol
 
+from goodwe import InverterError, connect
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -23,12 +24,12 @@ from .const import (
     DOMAIN,
 )
 
+PROTOCOL_CHOICES = ["UDP", "TCP"]
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_MODEL_FAMILY,
-                        default="none"
-        ): str,
+        vol.Required(CONF_PROTOCOL, default="UDP"): vol.In(PROTOCOL_CHOICES),
+        vol.Required(CONF_MODEL_FAMILY, default="none"): str,
     }
 )
 
@@ -91,6 +92,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
+            protocol = 502 if user_input[CONF_PROTOCOL] == "TCP" else 8899
             model_family = user_input[CONF_MODEL_FAMILY]
 
             try:
@@ -105,6 +107,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     title=DEFAULT_NAME,
                     data={
                         CONF_HOST: host,
+                        CONF_PROTOCOL: protocol,
                         CONF_MODEL_FAMILY: type(inverter).__name__,
                     },
                 )

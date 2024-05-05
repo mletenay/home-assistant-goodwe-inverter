@@ -2,7 +2,7 @@
 
 from goodwe import InverterError, connect
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
@@ -27,7 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     host = entry.data[CONF_HOST]
-    model_family = entry.data[CONF_MODEL_FAMILY]
+    port = 502 if entry.data.get(CONF_PROTOCOL) == "TCP" else 8899
+    model_family = entry.data.get(CONF_MODEL_FAMILY)
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
 
@@ -35,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         inverter = await connect(
             host=host,
+            port=port,
             family=model_family,
             comm_addr=0,
             timeout=network_timeout,

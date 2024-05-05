@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "IP adresa",
+                    "protocol": "Protokol",
                     "model_family": "Typ střídače (volitelné)"
                 },
                 "description": "Připojí se ke střídači",

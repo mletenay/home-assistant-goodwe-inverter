@@ -11,7 +11,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "IP Address",
+                    "host": "Hostname / IP Address",
+                    "protocol": "Protocol",
                     "model_family": "Inverter Family (optional)"
                 },
                 "description": "Connect to inverter",
