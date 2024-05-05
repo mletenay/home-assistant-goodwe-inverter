@@ -131,13 +131,14 @@ async def async_setup_entry(
             continue
 
         entity = InverterNumberEntity(device_info, description, inverter, current_value)
-        # Adjust the max value according to actual inverter power (if provided)
+        # Set the max value of grid_export_limit (W version)
         if (
-            inverter.rated_power
-            and description.key == "grid_export_limit"
+            description.key == "grid_export_limit"
             and description.native_unit_of_measurement == UnitOfPower.WATT
         ):
-            entity.native_max_value = inverter.rated_power
+            entity.native_max_value = (
+                inverter.rated_power * 2 if inverter.rated_power else 10000
+            )
         entities.append(entity)
 
     async_add_entities(entities)
