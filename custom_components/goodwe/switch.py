@@ -63,13 +63,14 @@ async def async_setup_entry(
             # Inverter model does not support this feature
             _LOGGER.debug("Could not read %s value", description.setting)
         else:
-            entity = InverterSwitchEntity(
-                device_info,
-                description,
-                inverter,
-                current_state == 1,
+            entities.append(
+                InverterSwitchEntity(
+                    device_info,
+                    description,
+                    inverter,
+                    current_state == 1,
+                )
             )
-        entities.append(entity)
 
     async_add_entities(entities)
 

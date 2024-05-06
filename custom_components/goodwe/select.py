@@ -69,7 +69,7 @@ async def async_setup_entry(
             OPERATION_MODE,
             inverter,
             [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
-            _MODE_TO_OPTION[active_mode],
+            _MODE_TO_OPTION.get(active_mode),
             current_eco_power,
             current_eco_soc,
         )
