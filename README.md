@@ -12,8 +12,10 @@ Use at own risk.
 
 ### Differences between this HACS and native HA integration
 
+- Support for Modbus/TCP
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).
 - Network configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
+- Switch `Export Limit Switch`.
 - Switch `Load Control` (for ET+ inverters).
 - Services for getting/setting inverter configuration parameters
 
@@ -119,7 +121,7 @@ The source code implementing the actual communication with GoodWe inverters (whi
 
 ## Inverter discovery and communication testing
 
-To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script in your python (3.7+) environment.
+To test whether the inverter properly responds to UDP request, just execute the `inverter_test.py` script in your python (3.8+) environment.
 The `inverter_scan.py` script can be used to discover inverter(s) on your local network.
 
 ## References and inspiration
