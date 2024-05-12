@@ -32,6 +32,16 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_MODEL_FAMILY, default="none"): str,
     }
 )
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
+        vol.Required(CONF_MODEL_FAMILY): str,
+        vol.Optional(CONF_SCAN_INTERVAL): int,
+        vol.Optional(CONF_NETWORK_RETRIES): cv.positive_int,
+        vol.Optional(CONF_NETWORK_TIMEOUT): cv.positive_int,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,30 +58,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        settings_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                {
+                    CONF_HOST: self.config_entry.data[CONF_HOST],
+                    CONF_PROTOCOL: self.config_entry.data[CONF_PROTOCOL],
+                    CONF_MODEL_FAMILY: self.config_entry.data[CONF_MODEL_FAMILY],
+                    CONF_SCAN_INTERVAL: self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): int,
-                vol.Optional(
-                    CONF_NETWORK_RETRIES,
-                    default=self.config_entry.options.get(
+                    CONF_NETWORK_RETRIES: self.config_entry.options.get(
                         CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES
                     ),
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_NETWORK_TIMEOUT,
-                    default=self.config_entry.options.get(
+                    CONF_NETWORK_TIMEOUT: self.config_entry.options.get(
                         CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
                     ),
-                ): cv.positive_int,
-            }
+                },
+            ),
         )
-
-        return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 
 class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

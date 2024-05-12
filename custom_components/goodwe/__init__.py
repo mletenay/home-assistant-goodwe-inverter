@@ -26,9 +26,9 @@ from .services import async_setup_services, async_unload_services
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    host = entry.data[CONF_HOST]
-    port = 502 if entry.data.get(CONF_PROTOCOL) == "TCP" else 8899
-    model_family = entry.data.get(CONF_MODEL_FAMILY)
+    host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
+    protocol = entry.options.get(CONF_PROTOCOL, entry.data[CONF_PROTOCOL])
+    model_family = entry.options.get(CONF_MODEL_FAMILY, entry.data[CONF_MODEL_FAMILY])
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
 
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         inverter = await connect(
             host=host,
-            port=port,
+            port=502 if protocol == "TCP" else 8899,
             family=model_family,
             comm_addr=0,
             timeout=network_timeout,

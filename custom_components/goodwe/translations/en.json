@@ -77,6 +77,9 @@
         "step": {
             "init": {
                 "data": {
+                    "host": "Hostname / IP Address",
+                    "protocol": "Protocol",
+                    "model_family": "Inverter Family",
                     "scan_interval": "Scan interval (s)",
                     "network_retries": "Network retry attempts",
                     "network_timeout": "Network request timeout (s)"

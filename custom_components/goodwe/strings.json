@@ -6,6 +6,7 @@
         "description": "Connect to inverter",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
+          "protocol": "Protocol",
           "model_family": "Inverter Family (optional)"
         }
       }
@@ -64,6 +65,9 @@
         "title": "GoodWe optional settings",
         "description": "Specify optional (network) settings",
         "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "protocol": "Protocol",
+          "model_family": "Inverter Family (optional)",
           "scan_interval": "Scan interval (s)",
           "network_retries": "Network retry attempts",
           "network_timeout": "Network request timeout (s)"
