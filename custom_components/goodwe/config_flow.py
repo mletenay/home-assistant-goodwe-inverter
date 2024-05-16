@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_KEEP_ALIVE,
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
@@ -36,6 +37,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
+        vol.Required(CONF_KEEP_ALIVE): cv.boolean,
         vol.Required(CONF_MODEL_FAMILY): str,
         vol.Optional(CONF_SCAN_INTERVAL): int,
         vol.Optional(CONF_NETWORK_RETRIES): cv.positive_int,
@@ -65,6 +67,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     CONF_HOST: self.config_entry.data[CONF_HOST],
                     CONF_PROTOCOL: self.config_entry.data[CONF_PROTOCOL],
+                    CONF_KEEP_ALIVE: self.config_entry.options.get(
+                        CONF_KEEP_ALIVE, self.config_entry.data[CONF_PROTOCOL] != "TCP"
+                    ),
                     CONF_MODEL_FAMILY: self.config_entry.data[CONF_MODEL_FAMILY],
                     CONF_SCAN_INTERVAL: self.config_entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL

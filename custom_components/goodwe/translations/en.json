@@ -79,6 +79,7 @@
                 "data": {
                     "host": "Hostname / IP Address",
                     "protocol": "Protocol",
+                    "keep_alive": "TCP Keep alive",
                     "model_family": "Inverter Family",
                     "scan_interval": "Scan interval (s)",
                     "network_retries": "Network retry attempts",

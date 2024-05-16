@@ -174,7 +174,6 @@ async def async_setup_entry(
     entities.extend(
         InverterSensor(coordinator, device_info, inverter, sensor)
         for sensor in inverter.sensors()
-        if not sensor.id_.startswith("xx")
     )
 
     async_add_entities(entities)
