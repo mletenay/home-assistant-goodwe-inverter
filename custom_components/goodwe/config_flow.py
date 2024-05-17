@@ -68,7 +68,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_HOST: self.config_entry.data[CONF_HOST],
                     CONF_PROTOCOL: self.config_entry.data[CONF_PROTOCOL],
                     CONF_KEEP_ALIVE: self.config_entry.options.get(
-                        CONF_KEEP_ALIVE, self.config_entry.data[CONF_PROTOCOL] != "TCP"
+                        CONF_KEEP_ALIVE,
+                        self.config_entry.data.get(CONF_PROTOCOL) != "TCP",
                     ),
                     CONF_MODEL_FAMILY: self.config_entry.data[CONF_MODEL_FAMILY],
                     CONF_SCAN_INTERVAL: self.config_entry.options.get(

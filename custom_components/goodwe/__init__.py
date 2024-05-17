@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
     protocol = entry.options.get(CONF_PROTOCOL, entry.data[CONF_PROTOCOL])
-    keep_alive = entry.options.get(CONF_KEEP_ALIVE, entry.data[CONF_PROTOCOL] != "TCP")
+    keep_alive = entry.options.get(CONF_KEEP_ALIVE, protocol != "TCP")
     model_family = entry.options.get(CONF_MODEL_FAMILY, entry.data[CONF_MODEL_FAMILY])
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
