@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     host = entry.options.get(CONF_HOST, entry.data[CONF_HOST])
-    protocol = entry.options.get(CONF_PROTOCOL, entry.data.get(CONF_PROTOCOL), "UDP")
+    protocol = entry.options.get(CONF_PROTOCOL, entry.data.get(CONF_PROTOCOL, "UDP"))
     keep_alive = entry.options.get(CONF_KEEP_ALIVE, protocol != "TCP")
     model_family = entry.options.get(CONF_MODEL_FAMILY, entry.data[CONF_MODEL_FAMILY])
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
