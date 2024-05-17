@@ -66,7 +66,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 OPTIONS_SCHEMA,
                 {
                     CONF_HOST: self.config_entry.data[CONF_HOST],
-                    CONF_PROTOCOL: self.config_entry.data[CONF_PROTOCOL],
+                    CONF_PROTOCOL: self.config_entry.data.get(CONF_PROTOCOL, "UDP"),
                     CONF_KEEP_ALIVE: self.config_entry.options.get(
                         CONF_KEEP_ALIVE,
                         self.config_entry.data.get(CONF_PROTOCOL) != "TCP",
