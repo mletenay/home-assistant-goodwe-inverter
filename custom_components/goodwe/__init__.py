@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manufacturer="GoodWe",
         model=inverter.model_name,
         sw_version=f"{inverter.firmware} / {inverter.arm_firmware}",
+        hw_version=f"{inverter.serial_number[5:8]} {inverter.serial_number[0:5]}",
     )
 
     # Create update coordinator
