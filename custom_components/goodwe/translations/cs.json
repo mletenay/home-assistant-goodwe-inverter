@@ -80,7 +80,8 @@
                 "data": {
                     "host": "IP adresa",
                     "protocol": "Protokol",
-                    "model_family": "Typ střídače",
+                    "keep_alive": "TCP Keep alive",
+                    "model_family": "Typ protokolu [ET|DT|ES]",
                     "scan_interval": "Interval skenování (s)",
                     "network_retries": "Počet opakování síťového požadavku",
                     "network_timeout": "Časový limit síťového požadavku (s)"

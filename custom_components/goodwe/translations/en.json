@@ -80,7 +80,7 @@
                     "host": "Hostname / IP Address",
                     "protocol": "Protocol",
                     "keep_alive": "TCP Keep alive",
-                    "model_family": "Inverter Family",
+                    "model_family": "Protocol Family [ET|DT|ES]",
                     "scan_interval": "Scan interval (s)",
                     "network_retries": "Network retry attempts",
                     "network_timeout": "Network request timeout (s)"
