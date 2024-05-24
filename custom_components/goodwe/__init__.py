@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             timeout=network_timeout,
             retries=network_retries,
         )
-        inverter.keep_alive = keep_alive
+        inverter.set_keep_alive(keep_alive)
     except InverterError as err:
         raise ConfigEntryNotReady from err
 

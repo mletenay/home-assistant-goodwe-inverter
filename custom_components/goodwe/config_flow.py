@@ -53,34 +53,42 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Init object."""
-        self.config_entry = config_entry
+        self.entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        host = self.entry.options.get(CONF_HOST, self.entry.data[CONF_HOST])
+        protocol = self.entry.options.get(
+            CONF_PROTOCOL, self.entry.data.get(CONF_PROTOCOL, "UDP")
+        )
+        keep_alive = self.entry.options.get(CONF_KEEP_ALIVE, protocol != "TCP")
+        model_family = self.entry.options.get(
+            CONF_MODEL_FAMILY, self.entry.data[CONF_MODEL_FAMILY]
+        )
+        network_retries = self.entry.options.get(
+            CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES
+        )
+        network_timeout = self.entry.options.get(
+            CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
+        )
+
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
                 OPTIONS_SCHEMA,
                 {
-                    CONF_HOST: self.config_entry.data[CONF_HOST],
-                    CONF_PROTOCOL: self.config_entry.data.get(CONF_PROTOCOL, "UDP"),
-                    CONF_KEEP_ALIVE: self.config_entry.options.get(
-                        CONF_KEEP_ALIVE,
-                        self.config_entry.data.get(CONF_PROTOCOL) != "TCP",
-                    ),
-                    CONF_MODEL_FAMILY: self.config_entry.data[CONF_MODEL_FAMILY],
-                    CONF_SCAN_INTERVAL: self.config_entry.options.get(
+                    CONF_HOST: host,
+                    CONF_PROTOCOL: protocol,
+                    CONF_KEEP_ALIVE: keep_alive,
+                    CONF_MODEL_FAMILY: model_family,
+                    CONF_SCAN_INTERVAL: self.entry.options.get(
                         CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                    CONF_NETWORK_RETRIES: self.config_entry.options.get(
-                        CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES
-                    ),
-                    CONF_NETWORK_TIMEOUT: self.config_entry.options.get(
-                        CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
-                    ),
+                    CONF_NETWORK_RETRIES: network_retries,
+                    CONF_NETWORK_TIMEOUT: network_timeout,
                 },
             ),
         )
