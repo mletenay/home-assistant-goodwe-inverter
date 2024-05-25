@@ -23,6 +23,12 @@
     "button": {
       "synchronize_clock": {
         "name": "Synchronize inverter clock"
+      },
+      "start_inverter": {
+        "name": "Start inverter"
+      },
+      "stop_inverter": {
+        "name": "Stop inverter"
       }
     },
     "number": {

@@ -22,14 +22,30 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweButtonEntityDescription(ButtonEntityDescription):
     """Class describing Goodwe button entities."""
 
+    setting: str
     action: Callable[[Inverter], Awaitable[None]]
 
 
-SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
-    key="synchronize_clock",
-    translation_key="synchronize_clock",
-    entity_category=EntityCategory.CONFIG,
-    action=lambda inv: inv.write_setting("time", datetime.now()),
+BUTTONS = (
+    GoodweButtonEntityDescription(
+        key="synchronize_clock",
+        translation_key="synchronize_clock",
+        entity_category=EntityCategory.CONFIG,
+        setting="time",
+        action=lambda inv: inv.write_setting("time", datetime.now()),
+    ),
+    GoodweButtonEntityDescription(
+        key="start_inverter",
+        translation_key="start_inverter",
+        setting="start",
+        action=lambda inv: inv.write_setting("start", 0),
+    ),
+    GoodweButtonEntityDescription(
+        key="stop_inverter",
+        translation_key="stop_inverter",
+        setting="stop",
+        action=lambda inv: inv.write_setting("stop", 0),
+    ),
 )
 
 
@@ -42,16 +58,24 @@ async def async_setup_entry(
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
 
-    # read current time from the inverter
-    try:
-        await inverter.read_setting("time")
-    except (InverterError, ValueError):
-        # Inverter model does not support clock synchronization
-        _LOGGER.debug("Could not read inverter current clock time", exc_info=True)
-    else:
-        async_add_entities(
-            [GoodweButtonEntity(device_info, SYNCHRONIZE_CLOCK, inverter)]
-        )
+    entities = []
+
+    for description in BUTTONS:
+        try:
+            await inverter.read_setting(description.setting)
+        except (InverterError, ValueError):
+            # Inverter model does not support this feature
+            _LOGGER.debug("Could not read %s value", description.setting)
+        else:
+            entities.append(
+                GoodweButtonEntity(
+                    device_info,
+                    description,
+                    inverter,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class GoodweButtonEntity(ButtonEntity):

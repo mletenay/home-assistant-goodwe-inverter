@@ -24,6 +24,12 @@
         "button": {
             "synchronize_clock": {
                 "name": "Synchronizovat hodiny střídače"
+            },
+            "start_inverter": {
+                "name": "Start střídače"
+            },
+            "stop_inverter": {
+                "name": "Stop střídače"
             }
         },
         "number": {

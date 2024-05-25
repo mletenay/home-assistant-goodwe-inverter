@@ -3,6 +3,12 @@
     "button": {
       "synchronize_clock": {
         "default": "mdi:clock-check-outline"
+      },
+      "start_inverter": {
+        "default": "mdi:power"
+      },
+      "stop_inverter": {
+        "default": "mdi:power-off"
       }
     },
     "number": {
