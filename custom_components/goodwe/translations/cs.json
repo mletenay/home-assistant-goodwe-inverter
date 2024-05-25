@@ -38,6 +38,12 @@
             },
             "grid_export_limit": {
                 "name": "Limit dodávky do sítě"
+            },
+            "fast_charging_power": {
+                "name": "Rychlé nabíjení výkon"
+            },
+            "fast_charging_soc": {
+                "name": "Rychlé nabíjení stav baterie"
             }
         },
         "select": {
@@ -69,6 +75,9 @@
             "grid_export_limit_switch": {
                 "name": "Řízení dodávky do sítě"
             },
+            "fast_charging_switch": {
+                "name": "Rychlé nabíjení"
+              },
             "load_control": {
                 "name": "Řízení zátěže"
             }

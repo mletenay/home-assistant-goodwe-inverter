@@ -108,6 +108,30 @@ NUMBERS = (
         setter=None,
         filter=lambda inv: True,
     ),
+    GoodweNumberEntityDescription(
+        key="fast_charging_power",
+        translation_key="fast_charging_power",
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_power"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("fast_charging_power"),
+        filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="fast_charging_soc",
+        translation_key="fast_charging_soc",
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("fast_charging_soc"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("fast_charging_soc", val),
+        filter=lambda inv: True,
+    ),
 )
 
 

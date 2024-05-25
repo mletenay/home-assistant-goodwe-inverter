@@ -17,6 +17,12 @@
       },
       "eco_mode_soc": {
         "default": "mdi:battery-charging-low"
+      },
+      "fast_charging_power": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "fast_charging_soc": {
+        "default": "mdi:battery-arrow-up"
       }
     },
     "select": {
@@ -37,6 +43,13 @@
         "state": {
           "on": "mdi:electric-switch-closed",
           "off": "mdi:electric-switch"
+        }
+      },
+      "fast_charging_switch": {
+        "default": "mdi:battery-medium",
+        "state": {
+          "on": "mdi:battery-arrow-up",
+          "off": "mdi:battery-medium"
         }
       }
     }

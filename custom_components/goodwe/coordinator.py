@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -10,7 +10,11 @@ from goodwe import Inverter, InverterError, RequestFailedException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    BaseCoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DEFAULT_SCAN_INTERVAL
 
@@ -37,9 +41,12 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.inverter: Inverter = inverter
         self._last_data: dict[str, Any] = {}
+        self._polled_entities: dict[BaseCoordinatorEntity, datetime] = {}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the inverter."""
+        await self._update_polled_entities()
+
         try:
             self._last_data = self.data if self.data else {}
             return await self.inverter.read_runtime_data()
@@ -63,6 +70,14 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
 
+    async def _update_polled_entities(self) -> None:
+        for entity, interval in list(self._polled_entities.items()):
+            if interval:
+                try:
+                    await entity.async_update()
+                except InverterError:
+                    _LOGGER.debug("Failed to update entity %s", entity.name)
+
     def sensor_value(self, sensor: str) -> Any:
         """Answer current (or last known) value of the sensor."""
         val = self.data.get(sensor)
@@ -81,3 +96,12 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         self._last_data[sensor] = 0
         self.data[sensor] = 0
+
+    def entity_state_polling(
+        self, entity: BaseCoordinatorEntity, interval: int
+    ) -> None:
+        """Enable/disable polling of entity state."""
+        if interval:
+            self._polled_entities[entity] = interval
+        else:
+            self._polled_entities.pop(entity, None)

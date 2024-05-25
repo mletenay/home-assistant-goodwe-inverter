@@ -37,6 +37,12 @@
       },
       "battery_discharge_depth": {
         "name": "Depth of discharge (on-grid)"
+      },
+      "fast_charging_power": {
+        "name": "Fast charging power"
+      },
+      "fast_charging_soc": {
+        "name": "Fast charging SoC"
       }
     },
     "select": {
@@ -54,6 +60,12 @@
       }
     },
     "switch": {
+      "grid_export_limit_switch": {
+        "name": "Grid export limit switch"
+      },
+      "fast_charging_switch": {
+        "name": "Fast charging switch"
+      },
       "load_control": {
         "name": "Load control"
       }
