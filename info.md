@@ -11,9 +11,13 @@ Use at own risk.
 
 ### Differences between this HACS and native HA integration
 
+- Support for Modbus/TCP
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).
 - Network configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
+- Switch `Export Limit Switch`.
 - Switch `Load Control` (for ET+ inverters).
+- Switch and SoC/Power inputs for `Fast Charging` functionality.
+- `Start inverter` and `Stop inverter` buttons for grid-only inverters.
 - Services for getting/setting inverter configuration parameters
 
 ### Migration from HACS to HA
