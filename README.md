@@ -17,6 +17,8 @@ Use at own risk.
 - Network configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
 - Switch `Export Limit Switch`.
 - Switch `Load Control` (for ET+ inverters).
+- Switch and SoC/Power inputs for `Fast Charging` functionality.
+- `Start inverter` and `Stop inverter` buttons for grid-only inverters.
 - Services for getting/setting inverter configuration parameters
 
 ### Migration from HACS to HA

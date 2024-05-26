@@ -117,7 +117,7 @@ NUMBERS = (
         native_max_value=100,
         getter=lambda inv: inv.read_setting("fast_charging_power"),
         mapper=lambda v: v,
-        setter=lambda inv, val: inv.write_setting("fast_charging_power"),
+        setter=lambda inv, val: inv.write_setting("fast_charging_power", val),
         filter=lambda inv: True,
     ),
     GoodweNumberEntityDescription(
