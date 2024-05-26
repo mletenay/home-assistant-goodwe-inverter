@@ -180,13 +180,14 @@ class InverterNumberEntity(NumberEntity):
         device_info: DeviceInfo,
         description: GoodweNumberEntityDescription,
         inverter: Inverter,
-        current_value: int,
+        value: int,
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
-        self._attr_native_value = float(current_value)
+        self._attr_native_value = float(value) if value is not None else None
+
         self._inverter: Inverter = inverter
 
     async def async_update(self) -> None:
