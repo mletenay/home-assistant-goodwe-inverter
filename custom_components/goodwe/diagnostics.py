@@ -37,8 +37,6 @@ async def async_get_config_entry_diagnostics(
             "wifi_or_lan": await _read_register(inverter, 47009),
             "modbus_tcp_wo_internet": await _read_register(inverter, 47017),
             "wifi_modbus_tcp_enable": await _read_register(inverter, 47040),
-            "api_remote_timeout_enable": await _read_register(inverter, 47117),
-            "api_remote_timeout": await _read_register(inverter, 47118),
         },
     }
 
