@@ -64,7 +64,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         protocol = self.entry.options.get(
             CONF_PROTOCOL, self.entry.data.get(CONF_PROTOCOL, "UDP")
         )
-        keep_alive = self.entry.options.get(CONF_KEEP_ALIVE, protocol != "TCP")
+        keep_alive = self.entry.options.get(CONF_KEEP_ALIVE, False)
         model_family = self.entry.options.get(
             CONF_MODEL_FAMILY, self.entry.data[CONF_MODEL_FAMILY]
         )
