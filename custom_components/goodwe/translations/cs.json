@@ -86,6 +86,9 @@
               },
             "load_control": {
                 "name": "Řízení zátěže"
+            },
+            "backup_supply_switch": {
+                "name": "Záloha"
             }
         }
     },

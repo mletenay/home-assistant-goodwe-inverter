@@ -51,6 +51,13 @@ SWITCHES = (
         setting="fast_charging",
         polling_interval=30,
     ),
+    GoodweSwitchEntityDescription(
+        key="backup_supply_switch",
+        translation_key="backup_supply_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="backup_supply",
+    ),
 )
 
 

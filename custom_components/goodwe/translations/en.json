@@ -85,6 +85,9 @@
               },
             "load_control": {
                 "name": "Load control"
+            },
+            "backup_supply_switch": {
+                "name": "Backup supply"
             }
         }
     },
