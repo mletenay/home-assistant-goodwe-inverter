@@ -18,6 +18,9 @@
       "battery_discharge_depth": {
         "default": "mdi:battery-arrow-down"
       },
+      "battery_discharge_depth_offline": {
+        "default": "mdi:battery-arrow-down"
+      },
       "eco_mode_power": {
         "default": "mdi:battery-charging-low"
       },
@@ -63,6 +66,13 @@
         "state": {
           "on": "mdi:battery-medium",
           "off": "mdi:battery-medium"
+        }
+      },
+      "dod_holding_switch": {
+        "default": "mdi:battery-arrow-down",
+        "state": {
+          "on": "mdi:battery-arrow-down",
+          "off": "mdi:battery-arrow-down"
         }
       }
     }
