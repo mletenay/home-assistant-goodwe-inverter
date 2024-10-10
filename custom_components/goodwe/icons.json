@@ -57,6 +57,13 @@
           "on": "mdi:battery-arrow-up",
           "off": "mdi:battery-medium"
         }
+      },
+      "backup_supply_switch": {
+        "default": "mdi:battery-medium",
+        "state": {
+          "on": "mdi:battery-medium",
+          "off": "mdi:battery-medium"
+        }
       }
     }
   }
