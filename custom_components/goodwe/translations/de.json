@@ -1,0 +1,109 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "already_in_progress": "Die Konfiguration wird bereits bearbeitet"
+        },
+        "error": {
+            "connection_error": "Verbindung fehlgeschlagen"
+        },
+    "flow_title": "GoodWe",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hostname / IP-Adresse",
+                    "protocol": "Protokoll",
+                    "model_family": "Wechselrichterfamilie (optional)"
+                },
+                "description": "Verbinden zum Wechselrichter",
+                "title": "GoodWe Wechselrichter"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "synchronize_clock": {
+                "name": "Wechselrichter-Uhr synchronisieren"
+            },
+            "start_inverter": {
+                "name": "Wechselrichter starten"
+            },
+            "stop_inverter": {
+                "name": "Wechselrichter stoppen"
+            }
+        },
+        "number": {
+            "battery_discharge_depth": {
+                "name": "Entladungstiefe (Netzbetrieb)"
+            },
+            "eco_mode_power": {
+                "name": "Öko-Modus Leistung"
+            },
+            "eco_mode_soc": {
+                "name": "Öko-Modus SoC"
+            },
+            "grid_export_limit": {
+                "name": "Netzeinspeisung Limit"
+            },
+            "fast_charging_power": {
+                "name": "Schnellladeleistung"
+            },
+              "fast_charging_soc": {
+                "name": "Schnelllade SoC"
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "name": "Wechselrichter-Betriebsart",
+                "state": {
+                    "backup": "Backup Modus",
+                    "eco": "Öko Modus",
+                    "eco_charge": "Öko Lademodus",
+                    "eco_discharge": "Öko Entlademodus",
+                    "general": "Allgemeiner Modus",
+                    "off_grid": "Netzunabhängiger Modus",
+                    "peak_shaving": "Spitzenlastreduzierungs-Modus",
+                    "self_use": "Selbstnutzung-Modus"
+                }
+            }
+        },
+        "sensor": {
+            "grid_in_out_label": {
+                "state": {
+                    "0": "Untätig",
+                    "1": "Exportieren",
+                    "2": "Importieren"
+                }
+            }
+        },
+        "switch": {
+            "grid_export_limit_switch": {
+                "name": "Netz-Export Begrenzungsschalter"
+            },
+            "fast_charging_switch": {
+                "name": "Schnellladungs-Schalter"
+              },
+            "load_control": {
+                "name": "Lastkontrolle"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Hostname / IP-Adresse",
+                    "protocol": "Protokoll",
+                    "keep_alive": "TCP Aufrechterhaltung",
+                    "model_family": "Protokoll Familie [ET|DT|ES]",
+                    "scan_interval": "Scan-Intervall (s)",
+                    "network_retries": "Netzwiederholungsversuche",
+                    "network_timeout": "Zeitüberschreitung bei Netzanfragen(s)"
+                },
+                "description": "Optionale (Netzwerk-)Einstellungen",
+                "title": "GoodWe optionale Einstellungen"
+            }
+        }
+    }
+}
+
