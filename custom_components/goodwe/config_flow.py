@@ -18,9 +18,11 @@ from .const import (
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
+    CONF_MODBUS_ID,
     DEFAULT_NAME,
     DEFAULT_NETWORK_RETRIES,
     DEFAULT_NETWORK_TIMEOUT,
+    DEFAULT_MODBUS_ID,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -40,6 +42,7 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Required(CONF_KEEP_ALIVE): cv.boolean,
         vol.Required(CONF_MODEL_FAMILY): str,
         vol.Optional(CONF_SCAN_INTERVAL): int,
+        vol.Optional(CONF_MODBUS_ID): int,
         vol.Optional(CONF_NETWORK_RETRIES): cv.positive_int,
         vol.Optional(CONF_NETWORK_TIMEOUT): cv.positive_int,
     }
@@ -74,6 +77,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         network_timeout = self.entry.options.get(
             CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
         )
+        modbus_id = self.entry.options.get(
+            CONF_MODBUS_ID, DEFAULT_MODBUS_ID
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -89,6 +95,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ),
                     CONF_NETWORK_RETRIES: network_retries,
                     CONF_NETWORK_TIMEOUT: network_timeout,
+                    CONF_MODBUS_ID: modbus_id,
                 },
             ),
         )

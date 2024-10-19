@@ -19,11 +19,13 @@ SCAN_INTERVAL = timedelta(seconds=10)
 DEFAULT_SCAN_INTERVAL = 5
 DEFAULT_NETWORK_RETRIES = 10
 DEFAULT_NETWORK_TIMEOUT = 1
+DEFAULT_MODBUS_ID = 0
 
 CONF_KEEP_ALIVE = "keep_alive"
 CONF_MODEL_FAMILY = "model_family"
 CONF_NETWORK_RETRIES = "network_retries"
 CONF_NETWORK_TIMEOUT = "network_timeout"
+CONF_MODBUS_ID = "modbus_id"
 
 KEY_INVERTER = "inverter"
 KEY_COORDINATOR = "coordinator"
