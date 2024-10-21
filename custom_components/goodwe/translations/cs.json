@@ -36,6 +36,9 @@
             "battery_discharge_depth": {
                 "name": "Maximum vybití (v síti)"
             },
+            "battery_discharge_depth_offline": {
+                "name": "Maximum vybití (backup)"
+            },
             "eco_mode_power": {
                 "name": "Výkon v ekonomickém režimu"
             },
@@ -89,6 +92,9 @@
             },
             "backup_supply_switch": {
                 "name": "Záloha"
+            },
+            "dod_holding_switch": {
+                "name": "Udržovat DOD baterie"
             }
         }
     },

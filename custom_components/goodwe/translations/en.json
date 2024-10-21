@@ -36,6 +36,9 @@
             "battery_discharge_depth": {
                 "name": "Depth of discharge (on-grid)"
             },
+            "battery_discharge_depth_offline": {
+                "name": "Depth of discharge (backup)"
+            },
             "eco_mode_power": {
                 "name": "Eco mode power"
             },
@@ -88,6 +91,9 @@
             },
             "backup_supply_switch": {
                 "name": "Backup supply"
+            },
+            "dod_holding_switch": {
+                "name": "DOD holding"
             }
         }
     },
