@@ -1,4 +1,5 @@
 """The Goodwe inverter component."""
+import logging
 
 from goodwe import InverterError, connect
 from homeassistant.config_entries import ConfigEntry
@@ -22,9 +23,11 @@ from .const import (
     KEY_INVERTER,
     PLATFORMS,
 )
-from .coordinator import GoodweUpdateCoordinator
+from .coordinator import GoodweUpdateCoordinator, GoodweUpdateCoordinatorWithWakeUp, send_wakeup_packet
 from .services import async_setup_services, async_unload_services
 
+
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Goodwe components from a config entry."""
@@ -39,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Connect to Goodwe inverter
     try:
+        _LOGGER.debug("Sending wakeup packet before inverter connect")
+        await send_wakeup_packet(logger=_LOGGER, host=host)
         inverter = await connect(
             host=host,
             port=502 if protocol == "TCP" else 8899,
@@ -62,7 +67,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Create update coordinator
-    coordinator = GoodweUpdateCoordinator(hass, entry, inverter)
+    # it seems some newer models of the Wi-Fi Kit 20 require an occasional wake-up packet
+    #   on UDP 48899, otherwise port 8899 will not respond.
+    if protocol == "UDP":
+        coordinator = GoodweUpdateCoordinatorWithWakeUp(hass, entry, inverter, host)
+    else:
+        coordinator = GoodweUpdateCoordinator(hass, entry, inverter)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

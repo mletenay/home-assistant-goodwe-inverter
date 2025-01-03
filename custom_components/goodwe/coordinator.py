@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+import asyncio
 import logging
+from datetime import datetime, timedelta
+from logging import Logger
 from typing import Any
 
-from goodwe import Inverter, InverterError, RequestFailedException
+from goodwe import Inverter, InverterError, RequestFailedException, ProtocolCommand, \
+    UdpInverterProtocol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant, CALLBACK_TYPE
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
     DataUpdateCoordinator,
@@ -25,10 +29,10 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Gather data for the energy device."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        inverter: Inverter,
+            self,
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+            inverter: Inverter,
     ) -> None:
         """Initialize update coordinator."""
         super().__init__(
@@ -98,10 +102,73 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data[sensor] = 0
 
     def entity_state_polling(
-        self, entity: BaseCoordinatorEntity, interval: int
+            self, entity: BaseCoordinatorEntity, interval: int
     ) -> None:
         """Enable/disable polling of entity state."""
         if interval:
             self._polled_entities[entity] = interval
         else:
             self._polled_entities.pop(entity, None)
+
+
+class GoodweUpdateCoordinatorWithWakeUp(GoodweUpdateCoordinator):
+    _host: str
+    _cancel_wakeup_interval: CALLBACK_TYPE | None = None
+
+    def __init__(
+            self,
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+            inverter: Inverter,
+            host: str,
+    ):
+        super().__init__(hass=hass, entry=entry, inverter=inverter)
+        self._host = host
+        self.logger.debug("waiting for HA start event")
+
+        async def on_ha_started(_):
+            await self._start_wakeup_interval()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_ha_started)
+
+    async def _start_wakeup_interval(self):
+        self.logger.debug("setting up wakeup packet interval")
+
+        async def on_wakeup_interval(_):
+            await self._send_wakeup_packet()
+
+        self._cancel_wakeup_interval = async_track_time_interval(
+            hass=self.hass,
+            action=on_wakeup_interval,
+            interval=timedelta(minutes=1),
+            name="goodwe_inverter_send_wakeup_packet"
+        )
+
+        # send a wakeup packet on start as well just to be safe
+        self.logger.debug("sending initial wakeup packet")
+        await self._send_wakeup_packet()
+        self.logger.debug("initial wakeup packet sent")
+
+    async def async_shutdown(self):
+        if self._cancel_wakeup_interval:
+            self._cancel_wakeup_interval()
+            self._cancel_wakeup_interval = None
+
+        return super().async_shutdown()
+
+    async def _send_wakeup_packet(self) -> None:
+        return await send_wakeup_packet(logger=self.logger, host=self._host)
+
+
+async def send_wakeup_packet(logger: Logger, host: str) -> None:
+    logger.debug("Sending wakeup packet to inverter on port 48899")
+    command = ProtocolCommand("WIFIKIT-214028-READ".encode("utf-8"), lambda r: True)
+    try:
+        result = await command.execute(UdpInverterProtocol(host=host, port=48899, comm_addr=1, timeout=1))
+        if result is not None:
+            raw_data = result.response_data()
+            logger.debug(f"Received response from wakeup packet: {repr(raw_data)}")
+        else:
+            logger.debug(f"No response received from wakeup packet")
+    except asyncio.CancelledError:
+        logger.debug(f"No valid response received to wakeup packet")
