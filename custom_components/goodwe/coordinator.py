@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import asyncio
 import logging
 from typing import Any
 
-from goodwe import Inverter, InverterError, RequestFailedException
+from goodwe import Inverter, InverterError, RequestFailedException, ProtocolCommand, \
+    UdpInverterProtocol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
     DataUpdateCoordinator,
@@ -105,3 +108,37 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._polled_entities[entity] = interval
         else:
             self._polled_entities.pop(entity, None)
+
+
+class GoodweUpdateCoordinatorRequiringWakeUp(GoodweUpdateCoordinator):
+    _host: str
+
+    def __init__(
+            self,
+            hass: HomeAssistant,
+            entry: ConfigEntry,
+            inverter: Inverter,
+            host: str,
+    ):
+        super().__init__(hass=hass, entry=entry, inverter=inverter)
+        self._host = host
+        self.logger.debug("Setting up discovery task")
+        self._cancel_wakeup_interval = async_track_time_interval(
+            hass=hass,
+            action=lambda dt: self._send_wakeup_packet(),
+            interval=timedelta(minutes=1),
+            name="goodwe_inverter_send_wakeup_packet"
+        )
+
+    async def _send_wakeup_packet(self) -> None:
+        self.logger.debug("Sending wakeup packet to inverter on port 48899")
+        command = ProtocolCommand("WIFIKIT-214028-READ".encode("utf-8"), lambda r: True)
+        try:
+            result = await command.execute(UdpInverterProtocol(host=self._host, port=48899, comm_addr=1, timeout=0))
+            if result is not None:
+                raw_data = result.response_data()
+                self.logger.debug(f"Received response from wakeup packet: {repr(raw_data)}")
+            else:
+                raise InverterError("No response received to wake up request")
+        except asyncio.CancelledError:
+            raise InverterError("No valid response received to broadcast request.") from None
