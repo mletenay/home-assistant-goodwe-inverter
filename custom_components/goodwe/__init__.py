@@ -22,7 +22,7 @@ from .const import (
     KEY_INVERTER,
     PLATFORMS,
 )
-from .coordinator import GoodweUpdateCoordinator, GoodweUpdateCoordinatorRequiringWakeUp
+from .coordinator import GoodweUpdateCoordinator, GoodweUpdateCoordinatorWithWakeUp
 from .services import async_setup_services, async_unload_services
 
 
@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # it seems some newer models of the Wi-Fi Kit 20 require an occasional wake-up packet
     #   on UDP 48899, otherwise port 8899 will not respond.
     if protocol == "UDP":
-        coordinator = GoodweUpdateCoordinatorRequiringWakeUp(hass, entry, inverter, host)
+        coordinator = GoodweUpdateCoordinatorWithWakeUp(hass, entry, inverter, host)
     else:
         coordinator = GoodweUpdateCoordinator(hass, entry, inverter)
 
