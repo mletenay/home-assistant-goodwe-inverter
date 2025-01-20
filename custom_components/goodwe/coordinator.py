@@ -127,15 +127,23 @@ class GoodweUpdateCoordinatorWithWakeUp(GoodweUpdateCoordinator):
         self.logger.debug("waiting for HA start event")
 
         async def on_ha_started(_):
+            self.logger.debug("HA is started, setting up wakeup event")
             await self._start_wakeup_interval()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_ha_started)
+        if hass.is_running:
+            self.logger.debug("HA already running, setting up wakeup event")
+            self.hass.async_run_job(on_ha_started, args=(None,))
+        else:
+            self.logger.debug("HA not running, waiting for start event")
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_ha_started)
 
     async def _start_wakeup_interval(self):
         self.logger.debug("setting up wakeup packet interval")
 
         async def on_wakeup_interval(_):
+            self.logger.debug("received wakeup interval event, sending wakeup packet")
             await self._send_wakeup_packet()
+            self.logger.debug("wakeup packet sent from wakeup interval event")
 
         self._cancel_wakeup_interval = async_track_time_interval(
             hass=self.hass,
@@ -150,7 +158,9 @@ class GoodweUpdateCoordinatorWithWakeUp(GoodweUpdateCoordinator):
         self.logger.debug("initial wakeup packet sent")
 
     async def async_shutdown(self):
+        self.logger.debug("shutdown called")
         if self._cancel_wakeup_interval:
+            self.logger.debug("cancelling wakeup interval")
             self._cancel_wakeup_interval()
             self._cancel_wakeup_interval = None
 
