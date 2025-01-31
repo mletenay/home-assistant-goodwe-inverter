@@ -1,0 +1,112 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie je už nastavené",
+            "already_in_progress": "Konfigurácia už prebieha"
+        },
+        "error": {
+            "connection_error": "Nepodarilo sa pripojiť"
+        },
+        "flow_title": "GoodWe",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP adresa",
+                    "protocol": "Protokol",
+                    "model_family": "Typ meniča (voliteľné)"
+                },
+                "description": "Pripojiť sa k meniča",
+                "title": "Menič GoodWe"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "synchronize_clock": {
+                "name": "Synchronizácia hodín meniča"
+            },
+            "start_inverter": {
+                "name": "Zapnúť menič"
+            },
+            "stop_inverter": {
+                "name": "Zastaviť menič"
+            }
+        },
+        "number": {
+            "battery_discharge_depth": {
+                "name": "Maximum vybitia (v sieti)"
+            },
+            "eco_mode_power": {
+                "name": "Výkon v ekonomickom režime"
+            },
+            "eco_mode_soc": {
+                "name": "Stav nabitia batérie v ekonomickom režime"
+            },
+            "grid_export_limit": {
+                "name": "Limit dodávky do siete"
+            },
+            "fast_charging_power": {
+                "name": "Rýchle nabíjanie výkon"
+            },
+            "fast_charging_soc": {
+                "name": "Rýchle nabíjanie stav batérie"
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "name": "Prevádzkový režim meniča",
+                "state": {
+                    "backup": "Režim zálohovania",
+                    "eco": "Ekonomický režim",
+                    "eco_charge": "Režim ekonomického nabíjania",
+                    "eco_discharge": "Režim ekonomického vybíjania",
+                    "general": "Všeobecný režim",
+                    "off_grid": "Režim mimo siete",
+                    "peak_shaving": "Režim šetrenia v špičke",
+                    "self_use": "Vlastná spotreba"
+
+                }
+            }
+        },
+        "sensor": {
+            "grid_in_out_label": {
+                "state": {
+                    "Idle": "Nečinnosť",
+                    "Exporting": "Export",
+                    "Importing": "Import"
+                }
+            }
+        },
+        "switch": {
+            "grid_export_limit_switch": {
+                "name": "Riadenie dodávky do siete"
+            },
+            "fast_charging_switch": {
+                "name": "Rýchle nabíjanie"
+              },
+            "load_control": {
+                "name": "Riadenie záťaže"
+            },
+            "backup_supply_switch": {
+                "name": "Záloha"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "host": "IP adresa",
+                    "protocol": "Protokol",
+                    "keep_alive": "TCP Keep alive",
+                    "model_family": "Typ protokolu [ET|DT|ES]",
+                    "scan_interval": "Interval skenovania (s)",
+                    "network_retries": "Počet opakovaní sieťových dopytov",
+                    "network_timeout": "Časový limit sieťových dopytov (s)"
+                },
+                "description": "Nastaví voliteľné (sieťové) parametre",
+                "title": "Voliteľné parametre GoodWe"
+            }
+        }
+    }
+}
