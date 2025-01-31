@@ -13,23 +13,23 @@
                 "data": {
                     "host": "IP adresa",
                     "protocol": "Protokol",
-                    "model_family": "Typ striedača (voliteľné)"
+                    "model_family": "Typ meniča (voliteľné)"
                 },
-                "description": "Pripojiť sa k striedaču",
-                "title": "Striedač GoodWe"
+                "description": "Pripojiť sa k meniča",
+                "title": "Menič GoodWe"
             }
         }
     },
     "entity": {
         "button": {
             "synchronize_clock": {
-                "name": "Synchronizovať hodiny striedača"
+                "name": "Synchronizácia hodín meniča"
             },
             "start_inverter": {
-                "name": "Zapnúť striedač"
+                "name": "Zapnúť menič"
             },
             "stop_inverter": {
-                "name": "Zastaviť striedač"
+                "name": "Zastaviť menič"
             }
         },
         "number": {
@@ -54,15 +54,15 @@
         },
         "select": {
             "operation_mode": {
-                "name": "Prevádzkový režim striedača",
+                "name": "Prevádzkový režim meniča",
                 "state": {
-                    "backup": "Režim zálohy",
+                    "backup": "Režim zálohovania",
                     "eco": "Ekonomický režim",
                     "eco_charge": "Režim ekonomického nabíjania",
                     "eco_discharge": "Režim ekonomického vybíjania",
-                    "general": "Obecný režim",
+                    "general": "Všeobecný režim",
                     "off_grid": "Režim mimo siete",
-                    "peak_shaving": "Režim vyhladzovania špičiek",
+                    "peak_shaving": "Režim šetrenia v špičke",
                     "self_use": "Vlastná spotreba"
 
                 }
