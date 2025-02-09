@@ -132,7 +132,7 @@ class GoodweUpdateCoordinatorWithWakeUp(GoodweUpdateCoordinator):
 
         if hass.is_running:
             self.logger.debug("HA already running, setting up wakeup event")
-            self.hass.async_run_job(on_ha_started, args=(None,))
+            self.hass.async_add_executor_job(on_ha_started, None)
         else:
             self.logger.debug("HA not running, waiting for start event")
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_ha_started)
