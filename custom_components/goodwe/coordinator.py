@@ -11,7 +11,7 @@ from typing import Any
 from goodwe import Inverter, InverterError, RequestFailedException, ProtocolCommand, \
     UdpInverterProtocol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, CALLBACK_TYPE
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
@@ -124,18 +124,9 @@ class GoodweUpdateCoordinatorWithWakeUp(GoodweUpdateCoordinator):
     ):
         super().__init__(hass=hass, entry=entry, inverter=inverter)
         self._host = host
-        self.logger.debug("waiting for HA start event")
-
-        async def on_ha_started(_):
-            self.logger.debug("HA is started, setting up wakeup event")
-            await self._start_wakeup_interval()
-
-        if hass.is_running:
-            self.logger.debug("HA already running, setting up wakeup event")
-            self.hass.async_add_executor_job(on_ha_started, None)
-        else:
-            self.logger.debug("HA not running, waiting for start event")
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, on_ha_started)
+        self.logger.debug(f"setting up start event, ha is running: {hass.is_running}")
+        hass.create_task(target=self._start_wakeup_interval(), name="start wakeup interval")
+        self.logger.debug(f"task scheduled")
 
     async def _start_wakeup_interval(self):
         self.logger.debug("setting up wakeup packet interval")
