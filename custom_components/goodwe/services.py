@@ -15,8 +15,6 @@ from .const import (
     ATTR_PARAMETER,
     ATTR_VALUE,
     DOMAIN,
-    KEY_DEVICE_INFO,
-    KEY_INVERTER,
     SERVICE_GET_PARAMETER,
     SERVICE_SET_PARAMETER,
 )
@@ -49,9 +47,9 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def _get_inverter_by_device_id(hass: HomeAssistant, device_id: str):
         """Return a inverter instance given a device_id."""
         device = dr.async_get(hass).async_get(device_id)
-        for entry_values in hass.data[DOMAIN].values():
-            if device.identifiers == entry_values[KEY_DEVICE_INFO].get("identifiers"):
-                return entry_values[KEY_INVERTER]
+        for runtime_data in hass.data[DOMAIN].values():
+            if device.identifiers == runtime_data.device_info.get("identifiers"):
+                return runtime_data.inverter
         raise ValueError(f"Inverter for device id {device_id} not found")
 
     async def async_get_parameter(call):

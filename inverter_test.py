@@ -1,4 +1,5 @@
 """Simple test script to check inverter UDP protocol communication"""
+
 import asyncio
 import goodwe
 import logging
@@ -12,14 +13,17 @@ logging.basicConfig(
 )
 
 # Set the appropriate IP address
-IP_ADDRESS = "192.168.1.14"
+IP_ADDRESS = "192.168.2.14"
+PORT = 8899
 
 FAMILY = "ET"  # One of ET, ES, DT or None to detect inverter family automatically
 COMM_ADDR = None  # Usually 0xf7 for ET/ES or 0x7f for DT, or None for default value
 TIMEOUT = 1
 RETRIES = 3
 
-inverter = asyncio.run(goodwe.connect(IP_ADDRESS, COMM_ADDR, FAMILY, TIMEOUT, RETRIES))
+inverter = asyncio.run(
+    goodwe.connect(host=IP_ADDRESS, family=FAMILY, timeout=TIMEOUT, retries=RETRIES)
+)
 print(
     f"Identified inverter:\n"
     f"\tModel:    {inverter.model_name}\n"

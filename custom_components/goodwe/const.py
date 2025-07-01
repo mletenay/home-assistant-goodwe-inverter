@@ -27,10 +27,6 @@ CONF_NETWORK_RETRIES = "network_retries"
 CONF_NETWORK_TIMEOUT = "network_timeout"
 CONF_MODBUS_ID = "modbus_id"
 
-KEY_INVERTER = "inverter"
-KEY_COORDINATOR = "coordinator"
-KEY_DEVICE_INFO = "device_info"
-
 SERVICE_GET_PARAMETER = "get_parameter"
 SERVICE_SET_PARAMETER = "set_parameter"
 ATTR_DEVICE_ID = "device_id"

@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from goodwe import InverterError, connect
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -15,14 +21,14 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_KEEP_ALIVE,
+    CONF_MODBUS_ID,
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
-    CONF_MODBUS_ID,
+    DEFAULT_MODBUS_ID,
     DEFAULT_NAME,
     DEFAULT_NETWORK_RETRIES,
     DEFAULT_NETWORK_TIMEOUT,
-    DEFAULT_MODBUS_ID,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -51,10 +57,10 @@ OPTIONS_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Options for the component."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Init object."""
         self.entry = config_entry
 
@@ -77,9 +83,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         network_timeout = self.entry.options.get(
             CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
         )
-        modbus_id = self.entry.options.get(
-            CONF_MODBUS_ID, DEFAULT_MODBUS_ID
-        )
+        modbus_id = self.entry.options.get(CONF_MODBUS_ID, DEFAULT_MODBUS_ID)
 
         return self.async_show_form(
             step_id="init",
@@ -101,7 +105,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Goodwe config flow."""
 
     VERSION = 1
@@ -109,12 +113,14 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
