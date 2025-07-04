@@ -57,6 +57,13 @@ SWITCHES = (
         device_class=SwitchDeviceClass.SWITCH,
         setting="backup_supply",
     ),
+    GoodweSwitchEntityDescription(
+        key="dod_holding_switch",
+        translation_key="dod_holding_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="dod_holding",
+    ),
 )
 
 
