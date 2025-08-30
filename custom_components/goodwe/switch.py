@@ -57,6 +57,27 @@ SWITCHES = (
         device_class=SwitchDeviceClass.SWITCH,
         setting="backup_supply",
     ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv1",
+        translation_key="shadow_scan_pv1",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv1",
+    ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv2",
+        translation_key="shadow_scan_pv2",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv2",
+    ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv3",
+        translation_key="shadow_scan_pv3",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv3",
+    ),
 )
 
 

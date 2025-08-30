@@ -46,6 +46,12 @@ BUTTONS = (
         setting="stop",
         action=lambda inv: inv.write_setting("stop", 0),
     ),
+    GoodweButtonEntityDescription(
+        key="restart_inverter",
+        translation_key="restart_inverter",
+        setting="restart",
+        action=lambda inv: inv.write_setting("restart", 0),
+    ),
 )
 
 
