@@ -9,6 +9,9 @@
       },
       "stop_inverter": {
         "default": "mdi:power-off"
+      },
+      "restart_inverter": {
+        "default": "mdi:restart"
       }
     },
     "number": {
@@ -29,6 +32,9 @@
       },
       "fast_charging_soc": {
         "default": "mdi:battery-arrow-up"
+      },
+      "shadow_scan_time": {
+        "default": "mdi:weather-cloudy-clock"
       }
     },
     "select": {
@@ -63,6 +69,27 @@
         "state": {
           "on": "mdi:battery-medium",
           "off": "mdi:battery-medium"
+        }
+      },
+      "shadow_scan_pv1": {
+        "default": "mdi:cloud",
+        "state": {
+          "on": "mdi:cloud-check",
+          "off": "mdi:cloud-cancel-outline"
+        }
+      },
+      "shadow_scan_pv2": {
+        "default": "mdi:cloud",
+        "state": {
+          "on": "mdi:cloud-check",
+          "off": "mdi:cloud-cancel-outline"
+        }
+      },
+      "shadow_scan_pv3": {
+        "default": "mdi:cloud",
+        "state": {
+          "on": "mdi:cloud-check",
+          "off": "mdi:cloud-cancel-outline"
         }
       }
     }
