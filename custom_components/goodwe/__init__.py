@@ -34,11 +34,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
     modbus_id = entry.options.get(CONF_MODBUS_ID, DEFAULT_MODBUS_ID)
 
+    # Determine port: options -> data -> protocol default
+    port = entry.options.get("port", entry.data.get("port"))
+    if port is None:
+        port = 502 if protocol == "TCP" else 8899
+
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
             host=host,
-            port=502 if protocol == "TCP" else 8899,
+            port=port,
             family=model_family,
             comm_addr=modbus_id,
             timeout=network_timeout,

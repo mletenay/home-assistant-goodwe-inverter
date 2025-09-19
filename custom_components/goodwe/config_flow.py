@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_SCAN_INTERVAL, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -38,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PROTOCOL, default="UDP"): vol.In(PROTOCOL_CHOICES),
+        vol.Optional(CONF_PORT): int,
         vol.Required(CONF_MODEL_FAMILY, default="none"): str,
     }
 )
@@ -45,6 +46,7 @@ OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
+        vol.Optional(CONF_PORT): int,
         vol.Required(CONF_KEEP_ALIVE): cv.boolean,
         vol.Required(CONF_MODEL_FAMILY): str,
         vol.Optional(CONF_SCAN_INTERVAL): int,
@@ -73,6 +75,9 @@ class OptionsFlowHandler(OptionsFlow):
         protocol = self.entry.options.get(
             CONF_PROTOCOL, self.entry.data.get(CONF_PROTOCOL, "UDP")
         )
+        port = self.entry.options.get(
+            CONF_PORT, self.entry.data.get(CONF_PORT, None)
+        )
         keep_alive = self.entry.options.get(CONF_KEEP_ALIVE, False)
         model_family = self.entry.options.get(
             CONF_MODEL_FAMILY, self.entry.data[CONF_MODEL_FAMILY]
@@ -92,6 +97,7 @@ class OptionsFlowHandler(OptionsFlow):
                 {
                     CONF_HOST: host,
                     CONF_PROTOCOL: protocol,
+                        CONF_PORT: port,
                     CONF_KEEP_ALIVE: keep_alive,
                     CONF_MODEL_FAMILY: model_family,
                     CONF_SCAN_INTERVAL: self.entry.options.get(
@@ -127,7 +133,9 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
             model_family = user_input[CONF_MODEL_FAMILY]
-            port = 502 if protocol == "TCP" else 8899
+            port = user_input.get(CONF_PORT)
+            if port is None:
+                port = 502 if protocol == "TCP" else 8899
 
             try:
                 inverter = await connect(
@@ -144,6 +152,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_HOST: host,
                         CONF_PROTOCOL: protocol,
+                        CONF_PORT: port,
                         CONF_MODEL_FAMILY: type(inverter).__name__,
                     },
                 )
