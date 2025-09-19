@@ -133,9 +133,14 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
             model_family = user_input[CONF_MODEL_FAMILY]
-            port = user_input.get(CONF_PORT)
-            if port is None:
-                port = 502 if protocol == "TCP" else 8899
+            # If protocol is UDP, always use 8899. For TCP prefer user-specified port,
+            # otherwise fall back to 502.
+            if protocol == "UDP":
+                port = 8899
+            elif protocol == "TCP":
+                port = user_input.get(CONF_PORT) or 502
+            else:
+                port = user_input.get(CONF_PORT)
 
             try:
                 inverter = await connect(
