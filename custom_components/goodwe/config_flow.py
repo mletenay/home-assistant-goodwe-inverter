@@ -37,8 +37,8 @@ PROTOCOL_CHOICES = ["UDP", "ModBus TCP"]
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PROTOCOL, default="UDP"): vol.In(PROTOCOL_CHOICES),
         vol.Optional(CONF_PORT): int,
+        vol.Required(CONF_PROTOCOL, default="UDP"): vol.In(PROTOCOL_CHOICES),
         vol.Required(CONF_MODEL_FAMILY, default="none"): str,
     }
 )
