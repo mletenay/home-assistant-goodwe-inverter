@@ -96,6 +96,7 @@
             "init": {
                 "data": {
                     "host": "Hostname / IP Address",
+                    "port": "Port",
                     "protocol": "Protocol",
                     "keep_alive": "TCP Keep alive",
                     "model_family": "Protocol Family [ET|DT|ES]",

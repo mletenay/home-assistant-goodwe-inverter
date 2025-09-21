@@ -93,6 +93,7 @@
             "init": {
                 "data": {
                     "host": "Hostname / IP-Adresse",
+                    "port": "Port",
                     "protocol": "Protokoll",
                     "keep_alive": "TCP Aufrechterhaltung",
                     "model_family": "Protokoll Familie [ET|DT|ES]",

@@ -33,7 +33,7 @@ from .const import (
     DOMAIN,
 )
 
-PROTOCOL_CHOICES = ["UDP", "TCP"]
+PROTOCOL_CHOICES = ["UDP", "ModBus TCP"]
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
@@ -45,8 +45,8 @@ CONFIG_SCHEMA = vol.Schema(
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
         vol.Optional(CONF_PORT): int,
+        vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
         vol.Required(CONF_KEEP_ALIVE): cv.boolean,
         vol.Required(CONF_MODEL_FAMILY): str,
         vol.Optional(CONF_SCAN_INTERVAL): int,
@@ -96,8 +96,8 @@ class OptionsFlowHandler(OptionsFlow):
                 OPTIONS_SCHEMA,
                 {
                     CONF_HOST: host,
+                    CONF_PORT: port,
                     CONF_PROTOCOL: protocol,
-                        CONF_PORT: port,
                     CONF_KEEP_ALIVE: keep_alive,
                     CONF_MODEL_FAMILY: model_family,
                     CONF_SCAN_INTERVAL: self.entry.options.get(
@@ -137,12 +137,13 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             # otherwise fall back to 502.
             if protocol == "UDP":
                 port = 8899
-            elif protocol == "TCP":
+            elif protocol == "ModBus TCP":
                 port = user_input.get(CONF_PORT) or 502
             else:
                 port = user_input.get(CONF_PORT)
 
             try:
+                _LOGGER.debug("Goodwe connecting to %s:%s protocol=%s family=%s", host, port, protocol, model_family)
                 inverter = await connect(
                     host=host, port=port, family=model_family, retries=10
                 )

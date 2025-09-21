@@ -1,6 +1,7 @@
 """The Goodwe inverter component."""
 
 from goodwe import InverterError, connect
+import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -21,6 +22,8 @@ from .const import (
 )
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 from .services import async_setup_services, async_unload_services
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
@@ -46,6 +49,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
 
     # Connect to Goodwe inverter
     try:
+        import inspect
+
+        mod = inspect.getmodule(connect)
+        if mod is not None and getattr(mod, "__file__", None):
+            _LOGGER.debug("goodwe module file (via connect): %s", mod.__file__)
+        else:
+            try:
+                import goodwe
+                _LOGGER.debug("goodwe module file (import): %s", getattr(goodwe, "__file__", None))
+            except Exception as err:
+                _LOGGER.debug("goodwe module not found: %s", err)
+
+        _LOGGER.debug("Goodwe connecting to %s:%s protocol=%s family=%s", host, port, protocol, model_family)
+
         inverter = await connect(
             host=host,
             port=port,
