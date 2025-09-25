@@ -31,6 +31,8 @@ from .const import (
     DEFAULT_NETWORK_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    GOODWE_TCP_PORT,
+    GOODWE_UDP_PORT,
 )
 
 PROTOCOL_CHOICES = ["UDP", "ModBus TCP"]
@@ -136,9 +138,9 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             # If protocol is UDP, always use 8899. For TCP prefer user-specified port,
             # otherwise fall back to 502.
             if protocol == "UDP":
-                port = 8899
+                port = GOODWE_UDP_PORT
             elif protocol == "ModBus TCP":
-                port = user_input.get(CONF_PORT) or 502
+                port = user_input.get(CONF_PORT) or GOODWE_TCP_PORT
             else:
                 port = user_input.get(CONF_PORT)
 

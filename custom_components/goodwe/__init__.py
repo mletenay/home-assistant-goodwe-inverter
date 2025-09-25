@@ -19,6 +19,8 @@ from .const import (
     DEFAULT_NETWORK_TIMEOUT,
     DOMAIN,
     PLATFORMS,
+    GOODWE_TCP_PORT,
+    GOODWE_UDP_PORT,
 )
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 from .services import async_setup_services, async_unload_services
@@ -41,11 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     # - If protocol is UDP -> always 8899
     # - If protocol is TCP -> prefer user-provided port (options/data), else 502
     if protocol == "UDP":
-        port = 8899
+        port = GOODWE_UDP_PORT
     else:
         port = entry.options.get(CONF_PORT, entry.data.get(CONF_PORT))
         if port is None:
-            port = 502
+            port = GOODWE_TCP_PORT
+            
 
     # Connect to Goodwe inverter
     try:
