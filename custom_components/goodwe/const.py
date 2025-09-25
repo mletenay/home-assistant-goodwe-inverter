@@ -4,6 +4,9 @@ from datetime import timedelta
 
 from homeassistant.const import Platform
 
+GOODWE_TCP_PORT = 502
+GOODWE_UDP_PORT = 8899
+
 DOMAIN = "goodwe"
 
 PLATFORMS = [

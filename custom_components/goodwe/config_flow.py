@@ -31,7 +31,7 @@ from .const import (
     DEFAULT_NETWORK_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    GOODWE_TCP_PORT,
+    GOODWE_TCP_PORT,   
     GOODWE_UDP_PORT,
 )
 
