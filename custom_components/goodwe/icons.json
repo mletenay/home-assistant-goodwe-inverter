@@ -12,9 +12,6 @@
       }
     },
     "number": {
-      "grid_export_limit": {
-        "default": "mdi:transmission-tower"
-      },
       "battery_discharge_depth": {
         "default": "mdi:battery-arrow-down"
       },
@@ -32,6 +29,9 @@
       },
       "fast_charging_soc": {
         "default": "mdi:battery-arrow-up"
+      },
+      "grid_export_limit": {
+        "default": "mdi:transmission-tower"
       }
     },
     "select": {
