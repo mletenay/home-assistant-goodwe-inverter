@@ -1,6 +1,10 @@
 """The Goodwe inverter component."""
 
-from goodwe import Inverter, InverterError, connect
+from __future__ import annotations
+
+import logging
+
+from goodwe import InverterError, connect
 from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -22,6 +26,8 @@ from .const import (
 )
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 from .services import async_setup_services, async_unload_services
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
@@ -135,22 +141,28 @@ async def async_migrate_entry(
 ) -> bool:
     """Migrate old config entries."""
 
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
+    version = config_entry.version
+    data = dict(config_entry.data)
+
+    if version > 3:
+        _LOGGER.error(
+            "Config entry %s is version %s, newer than supported version %s",
+            config_entry.title,
+            version,
+            3,
+        )
         return False
 
-    if config_entry.version == 1:
-        # Update from version 1 to version 2 adding the PROTOCOL to the config entry
-        host = config_entry.data[CONF_HOST]
-        port = config_entry.data.get(
+    if version == 1:
+        # Update from version 1 to version 2 adding the CONF_PORT to the config entry
+        host = data[CONF_HOST]
+        port = data.get(
             CONF_PORT,
-            config_entry.data.get(
+            data.get(
                 CONF_PORT,
-                (
-                    GOODWE_TCP_PORT
-                    if config_entry.data.get(CONF_PROTOCOL) == "TCP"
-                    else GOODWE_UDP_PORT
-                ),
+                GOODWE_TCP_PORT
+                if data.get(CONF_PROTOCOL) == "TCP"
+                else GOODWE_UDP_PORT,
             ),
         )
         if not port:
@@ -161,14 +173,41 @@ async def async_migrate_entry(
         new_data = {
             CONF_HOST: host,
             CONF_PORT: port,
-            CONF_PROTOCOL: config_entry.data.get(CONF_PROTOCOL),
-            CONF_KEEP_ALIVE: config_entry.data.get(CONF_KEEP_ALIVE),
-            CONF_MODEL_FAMILY: config_entry.data.get(CONF_MODEL_FAMILY),
-            CONF_SCAN_INTERVAL: config_entry.data.get(CONF_SCAN_INTERVAL),
-            CONF_NETWORK_RETRIES: config_entry.data.get(CONF_NETWORK_RETRIES),
-            CONF_NETWORK_TIMEOUT: config_entry.data.get(CONF_NETWORK_TIMEOUT),
-            CONF_MODBUS_ID: config_entry.data.get(CONF_MODBUS_ID),
+            CONF_PROTOCOL: data.get(CONF_PROTOCOL),
+            CONF_KEEP_ALIVE: data.get(CONF_KEEP_ALIVE),
+            CONF_MODEL_FAMILY: data.get(CONF_MODEL_FAMILY),
+            CONF_SCAN_INTERVAL: data.get(CONF_SCAN_INTERVAL),
+            CONF_NETWORK_RETRIES: data.get(CONF_NETWORK_RETRIES),
+            CONF_NETWORK_TIMEOUT: data.get(CONF_NETWORK_TIMEOUT),
+            CONF_MODBUS_ID: data.get(CONF_MODBUS_ID),
         }
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=2)
+        version = 2
+        data = new_data
+
+    if version == 2:
+        host = data[CONF_HOST]
+        port = data.get(CONF_PORT)
+        if not port:
+            try:
+                _, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
+            except InverterError as err:
+                raise ConfigEntryNotReady from err
+        protocol = data.get(CONF_PROTOCOL)
+        if not protocol:
+            protocol = "TCP" if port == GOODWE_TCP_PORT else "UDP"
+        new_data = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_PROTOCOL: protocol,
+            CONF_KEEP_ALIVE: data.get(CONF_KEEP_ALIVE),
+            CONF_MODEL_FAMILY: data.get(CONF_MODEL_FAMILY),
+            CONF_SCAN_INTERVAL: data.get(CONF_SCAN_INTERVAL),
+            CONF_NETWORK_RETRIES: data.get(CONF_NETWORK_RETRIES),
+            CONF_NETWORK_TIMEOUT: data.get(CONF_NETWORK_TIMEOUT),
+            CONF_MODBUS_ID: data.get(CONF_MODBUS_ID),
+        }
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
+        data = new_data
 
     return True

@@ -111,6 +111,7 @@ class OptionsFlowHandler(OptionsFlow):
 class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Goodwe config flow."""
 
+    VERSION = 3
     MINOR_VERSION = 2
 
     @staticmethod
