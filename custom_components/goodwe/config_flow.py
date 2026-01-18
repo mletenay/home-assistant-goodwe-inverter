@@ -7,14 +7,15 @@ from typing import Any
 
 import voluptuous as vol
 
-from goodwe import InverterError, connect
+from goodwe import Inverter, InverterError, connect
+from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PROTOCOL, CONF_SCAN_INTERVAL, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
@@ -68,7 +69,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Init object."""
         self.entry = config_entry
 
-    async def async_step_init(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -116,7 +117,7 @@ class OptionsFlowHandler(OptionsFlow):
 class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Goodwe config flow."""
 
-    VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -159,6 +160,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=DEFAULT_NAME,
                     data={
                         CONF_HOST: host,
+                        CONF_PORT: port,
                         CONF_PROTOCOL: protocol,
                         CONF_PORT: port,
                         CONF_MODEL_FAMILY: type(inverter).__name__,
@@ -168,3 +170,16 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
+
+    @staticmethod
+    async def async_detect_inverter_port(
+        host: str,
+    ) -> tuple[Inverter, int]:
+        """Detects the port of the Inverter."""
+        port = GOODWE_UDP_PORT
+        try:
+            inverter = await connect(host=host, port=port, retries=10)
+        except InverterError:
+            port = GOODWE_TCP_PORT
+            inverter = await connect(host=host, port=port, retries=10)
+        return inverter, port

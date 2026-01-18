@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Hostname / IP Address",
+                    "host": "Hostname / IP address",
                     "protocol": "Protocol",
                     "model_family": "Inverter Family (optional)"
                 },
@@ -35,6 +35,9 @@
         "number": {
             "battery_discharge_depth": {
                 "name": "Depth of discharge (on-grid)"
+            },
+            "battery_discharge_depth_offline": {
+                "name": "Depth of discharge (backup)"
             },
             "eco_mode_power": {
                 "name": "Eco mode power"
@@ -61,7 +64,7 @@
                     "eco_charge": "Eco charge mode",
                     "eco_discharge": "Eco discharge mode",
                     "general": "General mode",
-                    "off_grid": "Off grid mode",
+                    "off_grid": "Off-grid mode",
                     "peak_shaving": "Peak shaving mode",
                     "self_use": "Self Use mode"
                 }
@@ -88,6 +91,9 @@
             },
             "backup_supply_switch": {
                 "name": "Backup supply"
+            },
+            "dod_holding_switch": {
+                "name": "DOD holding"
             }
         }
     },
