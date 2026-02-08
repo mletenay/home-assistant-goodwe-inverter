@@ -11,7 +11,7 @@ Use at own risk.
 
 ### Differences between this HACS and native HA integration
 
-- Support for Modbus/TCP
+- EMS modes
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).
 - Network configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
 - Switch `Export Limit Switch`.
