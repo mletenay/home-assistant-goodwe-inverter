@@ -49,6 +49,9 @@
       },
       "grid_export_limit": {
         "name": "Grid export limit"
+      },
+      "soc_upper_limit": {
+        "name": "SoC upper limit"
       }
     },
     "select": {

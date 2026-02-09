@@ -32,6 +32,9 @@
       },
       "grid_export_limit": {
         "default": "mdi:transmission-tower"
+      },
+      "soc_upper_limit": {
+        "default": "mdi:battery-heart-outline"
       }
     },
     "select": {
