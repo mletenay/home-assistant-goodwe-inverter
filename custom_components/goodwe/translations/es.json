@@ -1,0 +1,118 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya está configurado",
+            "already_in_progress": "El proceso de configuración ya está en curso"
+        },
+        "error": {
+            "connection_error": "No se pudo conectar"
+        },
+    "flow_title": "GoodWe",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nombre de equipo / Dirección IP",
+                    "protocol": "Protocolo",
+                    "model_family": "Familia de inversores (opcional)"
+                },
+                "description": "Conectar al inversor",
+                "title": "Inversor GoodWe"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "synchronize_clock": {
+                "name": "Sincronizar reloj del inversor"
+            },
+            "start_inverter": {
+                "name": "Iniciar inversor"
+            },
+            "stop_inverter": {
+                "name": "Detener inversor"
+            }
+        },
+        "number": {
+            "battery_discharge_depth": {
+                "name": "Profundidad de descarga (en red)"
+            },
+            "battery_discharge_depth_offline": {
+                "name": "Profundidad de descarga (respaldo)"
+            },
+            "eco_mode_power": {
+                "name": "Potencia en modo ecológico"
+            },
+            "eco_mode_soc": {
+                "name": "Estado de carga en modo ecológico"
+            },
+            "grid_export_limit": {
+                "name": "Límite de exportación a la red"
+            },
+            "fast_charging_power": {
+                "name": "Potencia de carga rápida"
+            },
+              "fast_charging_soc": {
+                "name": "Estado de carga para carga rápida"
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "name": "Modo de funcionamiento del inversor",
+                "state": {
+                    "backup": "Modo de respaldo",
+                    "eco": "Modo ecológico",
+                    "eco_charge": "Modo de carga ecológica",
+                    "eco_discharge": "Modo de descarga ecológica",
+                    "general": "Modo general",
+                    "off_grid": "Modo aislado",
+                    "peak_shaving": "Modo de recorte de picos",
+                    "self_use": "Modo de autoconsumo"
+                }
+            }
+        },
+        "sensor": {
+            "grid_in_out_label": {
+                "state": {
+                    "0": "En reposo",
+                    "1": "Exportando",
+                    "2": "Importando"
+                }
+            }
+        },
+        "switch": {
+            "grid_export_limit_switch": {
+                "name": "Interruptor de límite de exportación a red"
+            },
+            "fast_charging_switch": {
+                "name": "Interruptor de carga rápida"
+              },
+            "load_control": {
+                "name": "Control de carga"
+            },
+            "backup_supply_switch": {
+                "name": "Suministro de respaldo"
+            },
+            "dod_holding_switch": {
+                "name": "Retención de profundidad de descarga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Nombre de equipo / Dirección IP",
+                    "protocol": "Protocolo",
+                    "keep_alive": "Mantenimiento de conexión TCP",
+                    "model_family": "Familia de protocolos [ET|DT|ES]",
+                    "scan_interval": "Intervalo de escaneo (s)",
+                    "network_retries": "Reintentos de red",
+                    "network_timeout": "Tiempo de espera de solicitud de red (s)"
+                },
+                "description": "Especificar configuraciones opcionales (de red)",
+                "title": "Configuraciones opcionales de GoodWe"
+            }
+        }
+    }
+}
+

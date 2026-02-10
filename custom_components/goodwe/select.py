@@ -2,7 +2,9 @@
 
 import logging
 
+from dataclasses import dataclass
 from goodwe import Inverter, InverterError, OperationMode
+from goodwe.inverter import EMSMode
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import (
     STATE_UNAVAILABLE,
@@ -37,10 +39,25 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
     value: key for key, value in _MODE_TO_OPTION.items()
 }
 
+
+@dataclass(frozen=True, kw_only=True)
+class GoodweSelectEntityDescription(SelectEntityDescription):
+    """Class describing Goodwe number entities."""
+
+    options: dict[str, EMSMode]
+
+
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
+)
+
+EMS_MODE = GoodweSelectEntityDescription(
+    key="ems_mode",
+    entity_category=EntityCategory.CONFIG,
+    translation_key="ems_mode",
+    options={e.name.lower(): e for e in list(EMSMode)},
 )
 
 
@@ -98,6 +115,21 @@ async def async_setup_entry(
                 entity.update_eco_mode_soc,
             )
 
+    # read current EMS mode from the inverter
+    try:
+        ems_mode = await inverter.get_ems_mode()
+    except (InverterError, ValueError):
+        # Inverter model does not support EMS modes
+        _LOGGER.debug("Could not read inverter EMS mode", exc_info=True)
+    else:
+        entity = InverterEMSModeEntity(
+            device_info,
+            EMS_MODE,
+            inverter,
+            ems_mode,
+        )
+        async_add_entities([entity])
+
 
 class InverterOperationModeEntity(SelectEntity):
     """Entity representing the inverter operation mode."""
@@ -128,7 +160,7 @@ class InverterOperationModeEntity(SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         _LOGGER.debug(
-            "Settin operation mode to %s, power %d, max SoC %d",
+            "Setting operation mode to %s, power %d, max SoC %d",
             option,
             self._eco_mode_power,
             self._eco_mode_soc,
@@ -179,3 +211,38 @@ class InverterOperationModeEntity(SelectEntity):
                 await self._inverter.set_operation_mode(
                     operation_mode, self._eco_mode_power, self._eco_mode_soc
                 )
+
+
+class InverterEMSModeEntity(SelectEntity):
+    """Entity representing the inverter EMS mode."""
+
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    entity_description: GoodweSelectEntityDescription
+
+    def __init__(
+        self,
+        device_info: DeviceInfo,
+        description: GoodweSelectEntityDescription,
+        inverter: Inverter,
+        current_mode: EMSMode,
+    ) -> None:
+        """Initialize the inverter operation mode setting entity."""
+        self.entity_description = description
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        self._attr_device_info = device_info
+        self._attr_options = list(description.options.keys())
+        self._attr_current_option = current_mode.name.lower()
+        self._inverter: Inverter = inverter
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the EMS mode."""
+        _LOGGER.debug("Setting EMS mode to %s")
+        await self._inverter.set_ems_mode(self.entity_description.options[option])
+        self._attr_current_option = option
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Get the current EMS mode from inverter."""
+        value = await self._inverter.get_ems_mode()
+        self._attr_current_option = value.name.lower()

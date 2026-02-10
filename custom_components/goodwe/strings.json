@@ -38,6 +38,9 @@
       "eco_mode_soc": {
         "name": "Eco mode SoC"
       },
+            "ems_power_limit": {
+        "name": "EMS power limit"
+      },
       "fast_charging_power": {
         "name": "Fast charging power"
       },
@@ -46,9 +49,28 @@
       },
       "grid_export_limit": {
         "name": "Grid export limit"
+      },
+      "soc_upper_limit": {
+        "name": "SoC upper limit"
       }
     },
     "select": {
+      "ems_mode": {
+        "name": "EMS mode",
+        "state": {
+          "auto": "Auto",
+          "charge_pv": "Charge PV",
+          "import_ac": "Import AC",
+          "export_ac": "Export AC",
+          "conserve": "Conserve",
+          "off_grid": "Off-grid",
+          "battery_standby": "Battery Standby",
+          "buy_power": "Buy Power",
+          "sell_power": "Sell Power",
+          "charge_battery": "Charge Battery",
+          "discharge_battery": "Discharge Battery"
+        }
+      },
       "operation_mode": {
         "name": "Inverter operation mode",
         "state": {

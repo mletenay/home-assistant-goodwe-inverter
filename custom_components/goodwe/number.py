@@ -39,14 +39,15 @@ def _get_setting_unit(inverter: Inverter, setting: str) -> str:
 
 
 async def set_offline_battery_dod(inverter: Inverter, dod: int) -> None:
-    """Sets offline battery dod - dod for backup output"""
+    """Sets offline battery dod - dod for backup output."""
     if 10 <= dod <= 100:
-        await inverter.write_setting('battery_discharge_depth_offline', 100 - dod)
+        await inverter.write_setting("battery_discharge_depth_offline", 100 - dod)
 
 
 async def get_offline_battery_dod(inverter: Inverter) -> int:
-    """Returns offline battery dod - dod for backup output"""
-    return 100 - (await inverter.read_setting('battery_discharge_depth_offline'))
+    """Returns offline battery dod - dod for backup output."""
+    return 100 - (await inverter.read_setting("battery_discharge_depth_offline"))
+
 
 NUMBERS = (
     # Only one of the export limits are added.
@@ -91,6 +92,32 @@ NUMBERS = (
         getter=lambda inv: inv.get_ongrid_battery_dod(),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
+        filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="battery_discharge_depth",
+        translation_key="battery_discharge_depth",
+        icon="mdi:battery-arrow-down",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=99,
+        getter=lambda inv: inv.get_ongrid_battery_dod(),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.set_ongrid_battery_dod(val),
+        filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="soc_upper_limit",
+        translation_key="soc_upper_limit",
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("soc_upper_limit"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("soc_upper_limit", val),
         filter=lambda inv: True,
     ),
     GoodweNumberEntityDescription(
@@ -154,6 +181,19 @@ NUMBERS = (
         getter=lambda inv: inv.read_setting("fast_charging_soc"),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("fast_charging_soc", val),
+        filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="ems_power_limit",
+        translation_key="ems_power_limit",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        native_step=100,
+        native_min_value=0,
+        getter=lambda inv: inv.read_setting("ems_power_limit"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("ems_power_limit", val),
         filter=lambda inv: True,
     ),
 )
