@@ -1,8 +1,8 @@
 """GoodWe PV inverter selection settings entities."""
 
+from dataclasses import dataclass
 import logging
 
-from dataclasses import dataclass
 from goodwe import Inverter, InverterError, OperationMode
 from goodwe.inverter import EMSMode
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -76,21 +76,28 @@ async def async_setup_entry(
         active_mode = await inverter.get_operation_mode()
         eco_mode = await inverter.read_setting("eco_mode_1")
         current_eco_power = abs(eco_mode.power) if eco_mode.power else 0
-        current_eco_soc = eco_mode.soc if eco_mode.soc else 0
-    except (InverterError, ValueError):
+        current_eco_soc = eco_mode.soc or 0
+    except InverterError, ValueError:
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode", exc_info=True)
     else:
-        entity = InverterOperationModeEntity(
-            device_info,
-            OPERATION_MODE,
-            inverter,
-            [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
-            _MODE_TO_OPTION.get(active_mode),
-            current_eco_power,
-            current_eco_soc,
-        )
-        async_add_entities([entity])
+        active_mode_option = _MODE_TO_OPTION.get(active_mode)
+        if active_mode_option is not None:
+            entity = InverterOperationModeEntity(
+                device_info,
+                OPERATION_MODE,
+                inverter,
+                [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
+                active_mode_option,
+                current_eco_power,
+                current_eco_soc,
+            )
+            async_add_entities([entity])
+        else:
+            _LOGGER.warning(
+                "Active mode %s not found in Goodwe Inverter Operation Mode Entity. Skipping entity creation",
+                active_mode,
+            )
 
         eco_mode_power_entity_id = er.async_get(hass).async_get_entity_id(
             Platform.NUMBER,
@@ -118,7 +125,7 @@ async def async_setup_entry(
     # read current EMS mode from the inverter
     try:
         ems_mode = await inverter.get_ems_mode()
-    except (InverterError, ValueError):
+    except InverterError, ValueError:
         # Inverter model does not support EMS modes
         _LOGGER.debug("Could not read inverter EMS mode", exc_info=True)
     else:

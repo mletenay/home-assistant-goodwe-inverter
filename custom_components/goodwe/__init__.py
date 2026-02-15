@@ -1,6 +1,6 @@
 """The Goodwe inverter component."""
 
-from goodwe import InverterError, connect
+from goodwe import Inverter, InverterError, connect
 from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -53,7 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
         )
         inverter.set_keep_alive(keep_alive)
     except InverterError as err:
-        raise ConfigEntryNotReady from err
+        try:
+            inverter = await async_check_port(hass, entry, host)
+        except InverterError:
+            raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
         configuration_url="https://www.semsportal.com",
@@ -88,6 +91,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     return True
 
 
+async def async_check_port(
+    hass: HomeAssistant, entry: GoodweConfigEntry, host: str
+) -> Inverter:
+    """Check the communication port of the inverter, it may have changed after a firmware update."""
+    inverter, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
+    family = type(inverter).__name__
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_MODEL_FAMILY: family,
+        },
+    )
+    return inverter
+
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> bool:
@@ -120,15 +140,17 @@ async def async_migrate_entry(
         return False
 
     if config_entry.version == 1:
-        # Update from version 1 to version 2 adding the CONF_PORT to the config entry
+        # Update from version 1 to version 2 adding the PROTOCOL to the config entry
         host = config_entry.data[CONF_HOST]
         port = config_entry.data.get(
             CONF_PORT,
             config_entry.data.get(
                 CONF_PORT,
-                GOODWE_TCP_PORT
-                if config_entry.data.get(CONF_PROTOCOL) == "TCP"
-                else GOODWE_UDP_PORT,
+                (
+                    GOODWE_TCP_PORT
+                    if config_entry.data.get(CONF_PROTOCOL) == "TCP"
+                    else GOODWE_UDP_PORT
+                ),
             ),
         )
         if not port:

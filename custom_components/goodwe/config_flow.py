@@ -17,7 +17,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -119,6 +118,27 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_handle_successful_connection(
+        self,
+        inverter: Inverter,
+        host: str,
+        port: int,
+        protocol: str,
+    ) -> ConfigFlowResult:
+        """Handle a successful connection storing it's values on the entry data."""
+        await self.async_set_unique_id(inverter.serial_number)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=DEFAULT_NAME,
+            data={
+                CONF_HOST: host,
+                CONF_PORT: port,
+                CONF_PROTOCOL: protocol,
+                CONF_MODEL_FAMILY: type(inverter).__name__,
+            },
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -137,19 +157,9 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             except InverterError:
                 errors[CONF_HOST] = "connection_error"
             else:
-                await self.async_set_unique_id(inverter.serial_number)
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data={
-                        CONF_HOST: host,
-                        CONF_PORT: port,
-                        CONF_PROTOCOL: protocol,
-                        CONF_MODEL_FAMILY: type(inverter).__name__,
-                    },
+                return await self.async_handle_successful_connection(
+                    inverter, host, port, protocol
                 )
-
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )

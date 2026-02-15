@@ -155,7 +155,7 @@ NUMBERS = (
         native_min_value=0,
         native_max_value=100,
         getter=lambda inv: inv.read_setting("eco_mode_1"),
-        mapper=lambda v: v.soc if v.soc else 0,
+        mapper=lambda v: v.soc or 0,
         setter=None,
         filter=lambda inv: True,
     ),
@@ -213,7 +213,7 @@ async def async_setup_entry(
     for description in filter(lambda dsc: dsc.filter(inverter), NUMBERS):
         try:
             current_value = description.mapper(await description.getter(inverter))
-        except (InverterError, ValueError):
+        except InverterError, ValueError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
             continue
@@ -250,10 +250,7 @@ class InverterNumberEntity(NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
-        self._attr_native_value = (
-            float(current_value) if current_value is not None else None
-        )
-
+        self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
 
     async def async_update(self) -> None:
