@@ -109,6 +109,7 @@
         "description": "Specify optional (network) settings",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
+          "port": "Port (8899/UDP | 502/TCP)",
           "protocol": "Protocol",
           "keep_alive": "TCP Keep alive",
           "model_family": "Protocol Family [ET|DT|ES] (optional)",

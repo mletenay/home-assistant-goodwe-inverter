@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "Nombre de equipo / Dirección IP",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protocolo",
                     "model_family": "Familia de inversores (opcional)"
                 },
@@ -102,6 +103,7 @@
             "init": {
                 "data": {
                     "host": "Nombre de equipo / Dirección IP",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protocolo",
                     "keep_alive": "Mantenimiento de conexión TCP",
                     "model_family": "Familia de protocolos [ET|DT|ES]",

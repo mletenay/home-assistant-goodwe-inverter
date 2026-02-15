@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "Hostname / IP-Adresse",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protokoll",
                     "model_family": "Wechselrichterfamilie (optional)"
                 },
@@ -93,6 +94,7 @@
             "init": {
                 "data": {
                     "host": "Hostname / IP-Adresse",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protokoll",
                     "keep_alive": "TCP Aufrechterhaltung",
                     "model_family": "Protokoll Familie [ET|DT|ES]",

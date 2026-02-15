@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "IP adresa",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protokol",
                     "model_family": "Typ meniča (voliteľné)"
                 },
@@ -97,6 +98,7 @@
             "init": {
                 "data": {
                     "host": "IP adresa",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protokol",
                     "keep_alive": "TCP Keep alive",
                     "model_family": "Typ protokolu [ET|DT|ES]",

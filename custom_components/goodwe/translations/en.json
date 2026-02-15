@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "host": "Hostname / IP address",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protocol",
                     "model_family": "Inverter Family (optional)"
                 },
@@ -121,6 +122,7 @@
             "init": {
                 "data": {
                     "host": "Hostname / IP Address",
+                    "port": "Port (8899/UDP | 502/TCP)",
                     "protocol": "Protocol",
                     "keep_alive": "TCP Keep alive",
                     "model_family": "Protocol Family [ET|DT|ES]",

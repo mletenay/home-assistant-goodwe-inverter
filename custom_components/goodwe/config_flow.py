@@ -44,6 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PORT): int,
         vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
         vol.Required(CONF_KEEP_ALIVE): cv.boolean,
         vol.Required(CONF_MODEL_FAMILY): str,
@@ -70,6 +71,7 @@ class OptionsFlowHandler(OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         host = self.entry.options.get(CONF_HOST, self.entry.data[CONF_HOST])
+        port = self.entry.options.get(CONF_PORT, self.entry.data.get(CONF_PORT))
         protocol = self.entry.options.get(
             CONF_PROTOCOL, self.entry.data.get(CONF_PROTOCOL, "UDP")
         )
@@ -91,6 +93,7 @@ class OptionsFlowHandler(OptionsFlow):
                 OPTIONS_SCHEMA,
                 {
                     CONF_HOST: host,
+                    CONF_PORT: port,
                     CONF_PROTOCOL: protocol,
                     CONF_KEEP_ALIVE: keep_alive,
                     CONF_MODEL_FAMILY: model_family,
@@ -148,9 +151,18 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             protocol = user_input[CONF_PROTOCOL]
             model_family = user_input[CONF_MODEL_FAMILY]
-            port = GOODWE_TCP_PORT if protocol == "TCP" else GOODWE_UDP_PORT
+            port = user_input.get(
+                CONF_PORT, GOODWE_UDP_PORT if protocol == "UDP" else GOODWE_TCP_PORT
+            )
 
             try:
+                _LOGGER.debug(
+                    "Goodwe connecting to %s:%s protocol=%s family=%s",
+                    host,
+                    port,
+                    protocol,
+                    model_family,
+                )
                 inverter = await connect(
                     host=host, port=port, family=model_family, retries=10
                 )
