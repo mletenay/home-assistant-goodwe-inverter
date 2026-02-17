@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    await hass.async_add_executor_job(     hass.config_entries.async_forward_entry_setups, entry, PLATFORMS )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_setup_services(hass)
 
