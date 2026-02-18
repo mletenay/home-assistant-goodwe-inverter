@@ -77,7 +77,7 @@ async def async_setup_entry(
         eco_mode = await inverter.read_setting("eco_mode_1")
         current_eco_power = abs(eco_mode.power) if eco_mode.power else 0
         current_eco_soc = eco_mode.soc or 0
-    except InverterError, ValueError:
+    except (InverterError, ValueError):
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode", exc_info=True)
     else:
@@ -125,7 +125,7 @@ async def async_setup_entry(
     # read current EMS mode from the inverter
     try:
         ems_mode = await inverter.get_ems_mode()
-    except InverterError, ValueError:
+    except (InverterError, ValueError):
         # Inverter model does not support EMS modes
         _LOGGER.debug("Could not read inverter EMS mode", exc_info=True)
     else:
