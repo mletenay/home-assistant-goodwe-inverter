@@ -172,9 +172,15 @@ class InverterOperationModeEntity(SelectEntity):
             self._eco_mode_power,
             self._eco_mode_soc,
         )
-        await self._inverter.set_operation_mode(
-            _OPTION_TO_MODE[option], self._eco_mode_power, self._eco_mode_soc
-        )
+        try:
+            await self._inverter.set_operation_mode(
+                _OPTION_TO_MODE[option], self._eco_mode_power, self._eco_mode_soc
+            )
+        except InverterError as err:
+            _LOGGER.warning(
+                "Failed to set operation mode to %s: %s", option, err
+            )
+            return
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -197,9 +203,16 @@ class InverterOperationModeEntity(SelectEntity):
                 OperationMode.ECO_DISCHARGE,
             ):
                 _LOGGER.debug("Setting eco mode power to %d", self._eco_mode_power)
-                await self._inverter.set_operation_mode(
-                    operation_mode, self._eco_mode_power, self._eco_mode_soc
-                )
+                try:
+                    await self._inverter.set_operation_mode(
+                        operation_mode, self._eco_mode_power, self._eco_mode_soc
+                    )
+                except InverterError as err:
+                    _LOGGER.warning(
+                        "Failed to update eco mode power to %d: %s",
+                        self._eco_mode_power,
+                        err,
+                    )
 
     async def update_eco_mode_soc(self, event: Event) -> None:
         """Update eco mode SoC value in inverter (when in eco mode)."""
@@ -215,9 +228,16 @@ class InverterOperationModeEntity(SelectEntity):
                 OperationMode.ECO_DISCHARGE,
             ):
                 _LOGGER.debug("Setting eco mode SoC to %d", self._eco_mode_soc)
-                await self._inverter.set_operation_mode(
-                    operation_mode, self._eco_mode_power, self._eco_mode_soc
-                )
+                try:
+                    await self._inverter.set_operation_mode(
+                        operation_mode, self._eco_mode_power, self._eco_mode_soc
+                    )
+                except InverterError as err:
+                    _LOGGER.warning(
+                        "Failed to update eco mode SoC to %d: %s",
+                        self._eco_mode_soc,
+                        err,
+                    )
 
 
 class InverterEMSModeEntity(SelectEntity):
@@ -244,8 +264,12 @@ class InverterEMSModeEntity(SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the EMS mode."""
-        _LOGGER.debug("Setting EMS mode to %s")
-        await self._inverter.set_ems_mode(self.entity_description.options[option])
+        _LOGGER.debug("Setting EMS mode to %s", option)
+        try:
+            await self._inverter.set_ems_mode(self.entity_description.options[option])
+        except InverterError as err:
+            _LOGGER.warning("Failed to set EMS mode to %s: %s", option, err)
+            return
         self._attr_current_option = option
         self.async_write_ha_state()
 
