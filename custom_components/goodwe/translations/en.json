@@ -46,6 +46,9 @@
             "eco_mode_soc": {
                 "name": "Eco mode SoC"
             },
+            "battery_soc_protection": {
+                "name": "Battery SoC protection"
+            },
             "ems_power_limit": {
                 "name": "EMS power limit"
             },

@@ -182,6 +182,20 @@ NUMBERS = (
         setter=lambda inv, val: inv.write_setting("ems_power_limit", val),
         filter=lambda inv: True,
     ),
+    GoodweNumberEntityDescription(
+        key="battery_soc_protection",
+        translation_key="battery_soc_protection",
+        icon="mdi:battery-arrow-down-outline",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("battery_soc_protection"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("battery_soc_protection", val),
+        filter=lambda inv: True,
+    ),
 )
 
 
