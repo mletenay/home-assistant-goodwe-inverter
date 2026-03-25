@@ -32,6 +32,7 @@ If you have been using this custom component and want to migrate to standard HA 
 
 The integration exposes inverter's EMS mode and EMS power (limit) settings.
 The following list should explain individual modes and their behavior.
+(The `Xset`/`Xmax` variables below are values of the `EMS power` setting. )
 
 - **Auto**
   - _Scenario:_ Self-use.

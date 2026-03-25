@@ -32,14 +32,14 @@
       "battery_discharge_depth_offline": {
         "name": "Depth of discharge (backup)"
       },
+      "battery_soc_protection": {
+        "name": "Battery SoC protection"
+      },
       "eco_mode_power": {
         "name": "Eco mode power"
       },
       "eco_mode_soc": {
         "name": "Eco mode SoC"
-      },
-      "battery_soc_protection": {
-        "name": "Battery SoC protection"
       },
       "ems_power_limit": {
         "name": "EMS power limit"
