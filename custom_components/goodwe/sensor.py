@@ -185,16 +185,11 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data.coordinator
     device_info = config_entry.runtime_data.device_info
 
-    # Individual inverter sensors entities - deduplicate by sensor id to avoid
-    # "already exists" warnings when the inverter reports the same sensor twice.
-    seen_ids: set[str] = set()
-    for sensor in inverter.sensors():
-        if sensor.id_ in seen_ids:
-            _LOGGER.debug("Skipping duplicate sensor id %s", sensor.id_)
-            continue
-        seen_ids.add(sensor.id_)
-        entities.append(InverterSensor(coordinator, device_info, inverter, sensor))
-
+    # Individual inverter sensors entities
+    entities.extend(
+        InverterSensor(coordinator, device_info, inverter, sensor)
+        for sensor in inverter.sensors()
+    )
     async_add_entities(entities)
 
 
