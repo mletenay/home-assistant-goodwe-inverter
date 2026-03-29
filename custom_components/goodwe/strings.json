@@ -63,6 +63,7 @@
         "state": {
           "auto": "Auto",
           "charge_pv": "Charge PV",
+          "discharge_pv": "Discharge PV",
           "import_ac": "Import AC",
           "export_ac": "Export AC",
           "conserve": "Conserve",
