@@ -64,6 +64,14 @@ SWITCHES = (
         device_class=SwitchDeviceClass.SWITCH,
         setting="dod_holding",
     ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan",
+        translation_key="shadow_scan",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan",
+    ),
+
 )
 
 
