@@ -1,5 +1,7 @@
 """The Goodwe inverter component."""
 
+import logging
+
 from goodwe import Inverter, InverterError, connect
 from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_SCAN_INTERVAL
@@ -14,14 +16,20 @@ from .const import (
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
+    CONF_WAKEUP_ENABLED,
+    CONF_WAKEUP_INTERVAL,
     DEFAULT_MODBUS_ID,
     DEFAULT_NETWORK_RETRIES,
     DEFAULT_NETWORK_TIMEOUT,
+    DEFAULT_WAKEUP_INTERVAL,
     DOMAIN,
     PLATFORMS,
 )
 from .coordinator import GoodweConfigEntry, GoodweRuntimeData, GoodweUpdateCoordinator
 from .services import async_setup_services, async_unload_services
+from .wakeup import async_send_wakeup_packet
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bool:
@@ -40,9 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
     network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
     modbus_id = entry.options.get(CONF_MODBUS_ID, DEFAULT_MODBUS_ID)
+    wakeup_enabled = entry.options.get(CONF_WAKEUP_ENABLED, False)
+    wakeup_interval = entry.options.get(CONF_WAKEUP_INTERVAL, DEFAULT_WAKEUP_INTERVAL)
 
     # Connect to Goodwe inverter
     try:
+        if wakeup_enabled:
+            _LOGGER.debug("Sending GoodWe wake-up packet before inverter connect")
+            await async_send_wakeup_packet(host, _LOGGER)
         inverter = await connect(
             host=host,
             port=port,
@@ -69,7 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     )
 
     # Create update coordinator
-    coordinator = GoodweUpdateCoordinator(hass, entry, inverter)
+    coordinator = GoodweUpdateCoordinator(
+        hass,
+        entry,
+        inverter,
+        wakeup_host=host if wakeup_enabled else None,
+        wakeup_interval=wakeup_interval,
+    )
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()

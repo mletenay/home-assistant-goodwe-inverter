@@ -10,15 +10,17 @@ from typing import Any
 from goodwe import Inverter, InverterError, RequestFailedException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DEFAULT_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_WAKEUP_INTERVAL
+from .wakeup import async_send_wakeup_packet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +46,8 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         hass: HomeAssistant,
         entry: GoodweConfigEntry,
         inverter: Inverter,
+        wakeup_host: str | None = None,
+        wakeup_interval: int = DEFAULT_WAKEUP_INTERVAL,
     ) -> None:
         """Initialize update coordinator."""
         super().__init__(
@@ -58,6 +62,23 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.inverter: Inverter = inverter
         self._last_data: dict[str, Any] = {}
         self._polled_entities: dict[BaseCoordinatorEntity, datetime] = {}
+        self._wakeup_host = wakeup_host
+        try:
+            wakeup_interval_minutes = max(1, int(wakeup_interval))
+        except (TypeError, ValueError):
+            wakeup_interval_minutes = DEFAULT_WAKEUP_INTERVAL
+        self._wakeup_interval = timedelta(minutes=wakeup_interval_minutes)
+        self._last_wakeup_attempt: datetime | None = None
+        self._cancel_wakeup_interval: CALLBACK_TYPE | None = None
+
+        if self._wakeup_host:
+            self._cancel_wakeup_interval = async_track_time_interval(
+                hass,
+                self._async_wakeup_interval,
+                self._wakeup_interval,
+                name=f"goodwe_wakeup_{entry.entry_id}",
+            )
+            entry.async_on_unload(self._cancel_wakeup_interval)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the inverter."""
@@ -82,9 +103,33 @@ class GoodweUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug(
                 "Inverter not responding (streak of %d)", ex.consecutive_failures_count
             )
+            await self._async_send_wakeup_packet("communication failure", throttle=True)
             raise UpdateFailed(ex) from ex
         except InverterError as ex:
             raise UpdateFailed(ex) from ex
+
+    async def _async_wakeup_interval(self, _: datetime) -> None:
+        """Send the scheduled wake-up packet."""
+        await self._async_send_wakeup_packet("scheduled interval")
+
+    async def _async_send_wakeup_packet(
+        self, reason: str, throttle: bool = False
+    ) -> None:
+        """Send a wake-up packet if the opt-in wake-up option is enabled."""
+        if not self._wakeup_host:
+            return
+
+        now = datetime.now()
+        if (
+            throttle
+            and self._last_wakeup_attempt
+            and now - self._last_wakeup_attempt < self._wakeup_interval
+        ):
+            return
+
+        self._last_wakeup_attempt = now
+        _LOGGER.debug("Sending GoodWe wake-up packet after %s", reason)
+        await async_send_wakeup_packet(self._wakeup_host, _LOGGER)
 
     async def _update_polled_entities(self) -> None:
         for entity, interval in list(self._polled_entities.items()):

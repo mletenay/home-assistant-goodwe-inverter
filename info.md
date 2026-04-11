@@ -13,7 +13,7 @@ Use at own risk.
 
 - EMS modes
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).
-- Network configuration parameters `Scan iterval`, `Network retry attempts`, `Network request timeout`.
+- Network configuration parameters `Scan interval`, `Network retry attempts`, `Network request timeout`, `Wake-up discovery packet`.
 - Switch `Export Limit Switch`.
 - Switch `Load Control` (for ET+ inverters).
 - Switch and SoC/Power inputs for `Fast Charging` functionality.

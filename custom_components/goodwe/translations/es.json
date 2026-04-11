@@ -109,7 +109,13 @@
                     "model_family": "Familia de protocolos [ET|DT|ES]",
                     "scan_interval": "Intervalo de escaneo (s)",
                     "network_retries": "Reintentos de red",
-                    "network_timeout": "Tiempo de espera de solicitud de red (s)"
+                    "network_timeout": "Tiempo de espera de solicitud de red (s)",
+                    "wakeup_enabled": "Enviar paquete de descubrimiento de activación del adaptador",
+                    "wakeup_interval": "Intervalo de activación (min)"
+                },
+                "data_description": {
+                    "wakeup_enabled": "Actívelo solo para adaptadores WiFi/LAN que dejan de responder hasta que SolarGo u otra herramienta envía el paquete de descubrimiento de GoodWe.",
+                    "wakeup_interval": "Frecuencia con la que se envía el paquete de descubrimiento UDP al puerto 48899 mientras la integración está cargada."
                 },
                 "description": "Especificar configuraciones opcionales (de red)",
                 "title": "Configuraciones opcionales de GoodWe"
@@ -117,4 +123,3 @@
         }
     }
 }
-
