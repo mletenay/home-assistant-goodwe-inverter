@@ -65,6 +65,7 @@ _MAIN_SENSORS = (
     "ppv",
     "house_consumption",
     "active_power",
+    "meter_active_power",
     "battery_soc",
     "e_day",
     "e_total",
@@ -101,6 +102,12 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    "mA": GoodweSensorEntityDescription(
+        key="mA",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
     ),
     "V": GoodweSensorEntityDescription(
         key="V",

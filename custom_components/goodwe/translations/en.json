@@ -31,7 +31,10 @@
             },
             "stop_inverter": {
                 "name": "Stop inverter"
-            }
+            },
+            "restart_inverter": {
+                "name": "Restart inverter"
+			}
         },
         "number": {
             "battery_discharge_depth": {
@@ -58,8 +61,11 @@
             "fast_charging_power": {
                 "name": "Fast charging power"
             },
-              "fast_charging_soc": {
+            "fast_charging_soc": {
                 "name": "Fast charging SoC"
+            },
+            "shadow_scan_time": {
+                "name": "Shadow Scan Time"
             }
         },
         "select": {
@@ -118,6 +124,15 @@
             },
             "dod_holding_switch": {
                 "name": "DOD holding"
+            },
+            "shadow_scan_pv1_switch": {
+                "name": "Shadow Scan PV1 switch"
+            },
+            "shadow_scan_pv2_switch": {
+                "name": "Shadow Scan PV2 switch"
+            },
+            "shadow_scan_pv3_switch": {
+                "name": "Shadow Scan PV3 switch"
             }
         }
     },
