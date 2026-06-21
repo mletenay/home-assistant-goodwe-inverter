@@ -12,7 +12,12 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -195,6 +200,36 @@ NUMBERS = (
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("battery_soc_protection", val),
         filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="battery_charge_current",
+        translation_key="battery_charge_current",
+        icon="mdi:battery-arrow-up",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("battery_charge_current"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("battery_charge_current", val),
+        filter=lambda inv: "battery_charge_current" in {s.id_ for s in inv.settings()},
+    ),
+    GoodweNumberEntityDescription(
+        key="battery_discharge_current",
+        translation_key="battery_discharge_current",
+        icon="mdi:battery-arrow-down",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("battery_discharge_current"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("battery_discharge_current", val),
+        filter=lambda inv: "battery_discharge_current" in {s.id_ for s in inv.settings()},
     ),
 )
 
