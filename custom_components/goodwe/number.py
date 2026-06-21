@@ -218,7 +218,7 @@ NUMBERS = (
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("battery_charge_current", val),
         filter=lambda inv: "battery_charge_current" in {s.id_ for s in inv.settings()},
-        max_setting="bms_bat_charge_i_max",
+        max_setting="bms2_bat_charge_i_max",
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_current",
@@ -234,7 +234,7 @@ NUMBERS = (
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("battery_discharge_current", val),
         filter=lambda inv: "battery_discharge_current" in {s.id_ for s in inv.settings()},
-        max_setting="bms_bat_discharge_i_max",
+        max_setting="bms2_bat_discharge_i_max",
     ),
 )
 
