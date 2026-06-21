@@ -272,7 +272,7 @@ async def async_setup_entry(
             try:
                 bms_max = await inverter.read_setting(description.max_setting)
                 if bms_max and bms_max > 0:
-                    entity.native_max_value = float(bms_max)
+                    entity._attr_native_max_value = float(bms_max)
             except (InverterError, ValueError):
                 pass
         entities.append(entity)
@@ -286,7 +286,6 @@ class InverterNumberEntity(NumberEntity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     entity_description: GoodweNumberEntityDescription
-    native_max_value: float
 
     def __init__(
         self,
@@ -301,7 +300,6 @@ class InverterNumberEntity(NumberEntity):
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
-        self.native_max_value = float(description.native_max_value or 100)
 
     async def async_update(self) -> None:
         """Get the current value from inverter."""
