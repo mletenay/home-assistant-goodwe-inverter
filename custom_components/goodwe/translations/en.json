@@ -132,7 +132,13 @@
                     "model_family": "Protocol Family [ET|DT|ES]",
                     "scan_interval": "Scan interval (s)",
                     "network_retries": "Network retry attempts",
-                    "network_timeout": "Network request timeout (s)"
+                    "network_timeout": "Network request timeout (s)",
+                    "wakeup_enabled": "Send adapter wake-up discovery packet",
+                    "wakeup_interval": "Wake-up interval (min)"
+                },
+                "data_description": {
+                    "wakeup_enabled": "Enable this only for WiFi/LAN adapters that stop responding until SolarGo or another tool sends the GoodWe discovery packet.",
+                    "wakeup_interval": "How often to send the UDP discovery packet to port 48899 while the integration is loaded."
                 },
                 "description": "Specify optional (network) settings",
                 "title": "GoodWe optional settings"
@@ -140,4 +146,3 @@
         }
     }
 }
-

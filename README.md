@@ -15,7 +15,7 @@ Use at own risk.
 
 - EMS modes
 - Special work modes `Eco charge mode` and `Eco discharge mode` (24/7 with defined power and SoC).
-- Network configuration parameters `Port`, `Modbus id`, `Scan iterval`, `Network retry attempts`, `Network request timeout`.
+- Network configuration parameters `Port`, `Modbus id`, `Scan interval`, `Network retry attempts`, `Network request timeout`, `Wake-up discovery packet`.
 - Input `SoC upper limit`, `DoD (backup)`
 - Switch `DOD holding`, `Export Limit`. `Load Control`, `Backup supply`
 - Switch and SoC/Power inputs for `Fast Charging` functionality.
@@ -27,6 +27,12 @@ Use at own risk.
 If you have been using this custom component and want to migrate to standard HA integration, the migration is straightforward. Just remove the integration from HACS (press Ignore and force uninstall despite the warning the integration is still configured). Afrer restart of Home Assistant, the standard Goodwe integration will start and all your existing settings, entity names, history and statistics should be preserved.
 
 (If you uninstall the integration first, then uninstall HACS component and install integration back again, it will also work, but you will probably loose some history and settings since HA integration uses slightly different default entity names.)
+
+### GoodWe adapter wake-up packets
+
+Some WiFi/LAN adapters stop responding after a daily adapter reset until SolarGo or another tool sends the GoodWe discovery packet.
+If your inverter shows this behavior, enable `Send adapter wake-up discovery packet` in the integration options.
+The option is disabled by default and sends `WIFIKIT-214028-READ` to UDP port 48899 only for entries where you enable it.
 
 ## EMS modes
 

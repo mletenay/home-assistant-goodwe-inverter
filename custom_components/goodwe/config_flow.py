@@ -25,11 +25,14 @@ from .const import (
     CONF_MODEL_FAMILY,
     CONF_NETWORK_RETRIES,
     CONF_NETWORK_TIMEOUT,
+    CONF_WAKEUP_ENABLED,
+    CONF_WAKEUP_INTERVAL,
     DEFAULT_MODBUS_ID,
     DEFAULT_NAME,
     DEFAULT_NETWORK_RETRIES,
     DEFAULT_NETWORK_TIMEOUT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_WAKEUP_INTERVAL,
     DOMAIN,
 )
 
@@ -52,6 +55,8 @@ OPTIONS_SCHEMA = vol.Schema(
         vol.Optional(CONF_MODBUS_ID): int,
         vol.Optional(CONF_NETWORK_RETRIES): cv.positive_int,
         vol.Optional(CONF_NETWORK_TIMEOUT): cv.positive_int,
+        vol.Required(CONF_WAKEUP_ENABLED): cv.boolean,
+        vol.Optional(CONF_WAKEUP_INTERVAL): cv.positive_int,
     }
 )
 
@@ -86,6 +91,10 @@ class OptionsFlowHandler(OptionsFlow):
             CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT
         )
         modbus_id = self.entry.options.get(CONF_MODBUS_ID, DEFAULT_MODBUS_ID)
+        wakeup_enabled = self.entry.options.get(CONF_WAKEUP_ENABLED, False)
+        wakeup_interval = self.entry.options.get(
+            CONF_WAKEUP_INTERVAL, DEFAULT_WAKEUP_INTERVAL
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -103,6 +112,8 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_NETWORK_RETRIES: network_retries,
                     CONF_NETWORK_TIMEOUT: network_timeout,
                     CONF_MODBUS_ID: modbus_id,
+                    CONF_WAKEUP_ENABLED: wakeup_enabled,
+                    CONF_WAKEUP_INTERVAL: wakeup_interval,
                 },
             ),
         )

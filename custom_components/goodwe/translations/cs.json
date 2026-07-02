@@ -110,7 +110,13 @@
                     "model_family": "Typ protokolu [ET|DT|ES]",
                     "scan_interval": "Interval skenování (s)",
                     "network_retries": "Počet opakování síťového požadavku",
-                    "network_timeout": "Časový limit síťového požadavku (s)"
+                    "network_timeout": "Časový limit síťového požadavku (s)",
+                    "wakeup_enabled": "Odesílat probouzecí discovery paket adaptéru",
+                    "wakeup_interval": "Interval probuzení (min)"
+                },
+                "data_description": {
+                    "wakeup_enabled": "Zapněte pouze pro adaptéry WiFi/LAN, které přestanou odpovídat, dokud SolarGo nebo jiný nástroj neodešle discovery paket GoodWe.",
+                    "wakeup_interval": "Jak často odesílat UDP discovery paket na port 48899, když je integrace načtená."
                 },
                 "description": "Nastaví volitelné (síťové) volby",
                 "title": "Volitelné volby GoodWe"
