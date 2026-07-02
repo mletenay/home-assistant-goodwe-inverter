@@ -64,6 +64,27 @@ SWITCHES = (
         device_class=SwitchDeviceClass.SWITCH,
         setting="dod_holding",
     ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv1_switch",
+        translation_key="shadow_scan_pv1_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv1",
+    ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv2_switch",
+        translation_key="shadow_scan_pv2_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv2",
+    ),
+    GoodweSwitchEntityDescription(
+        key="shadow_scan_pv3_switch",
+        translation_key="shadow_scan_pv3_switch",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="shadow_scan_pv3",
+    ),
 )
 
 

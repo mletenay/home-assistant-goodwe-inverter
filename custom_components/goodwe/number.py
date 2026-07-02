@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -194,6 +194,20 @@ NUMBERS = (
         getter=lambda inv: inv.read_setting("battery_soc_protection"),
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("battery_soc_protection", val),
+        filter=lambda inv: True,
+    ),
+    GoodweNumberEntityDescription(
+        key="shadow_scan_time",
+        translation_key="shadow_scan_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        native_step=5,
+        native_max_value=300,
+        native_min_value=5,
+        getter=lambda inv: inv.read_setting("shadow_scan_time"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("shadow_scan_time", val),
         filter=lambda inv: True,
     ),
 )

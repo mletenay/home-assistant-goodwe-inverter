@@ -21,6 +21,15 @@
   },
   "entity": {
     "button": {
+      "restart_inverter": {
+        "name": "Restart inverter"
+      },
+      "start_inverter": {
+        "name": "Start inverter"
+      },
+      "stop_inverter": {
+        "name": "Stop inverter"
+      },
       "synchronize_clock": {
         "name": "Synchronize inverter clock"
       }
@@ -52,6 +61,9 @@
       },
       "grid_export_limit": {
         "name": "Grid export limit"
+      },
+      "shadow_scan_time": {
+        "name": "Shadow Scan Time"
       },
       "soc_upper_limit": {
         "name": "SoC upper limit"
@@ -103,6 +115,15 @@
       },
       "load_control": {
         "name": "Load control"
+      },
+      "shadow_scan_pv1_switch": {
+        "name": "Shadow Scan PV1 switch"
+      },
+      "shadow_scan_pv2_switch": {
+        "name": "Shadow Scan PV2 switch"
+      },
+      "shadow_scan_pv3_switch": {
+        "name": "Shadow Scan PV3 switch"
       }
     }
   },
