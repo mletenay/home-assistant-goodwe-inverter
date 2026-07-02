@@ -64,6 +64,13 @@ SWITCHES = (
         device_class=SwitchDeviceClass.SWITCH,
         setting="dod_holding",
     ),
+    GoodweSwitchEntityDescription(
+        key="smart_charging_enable",
+        translation_key="smart_charging_enable",
+        entity_category=EntityCategory.CONFIG,
+        device_class=SwitchDeviceClass.SWITCH,
+        setting="smart_charging_enable",
+    ),
 )
 
 
