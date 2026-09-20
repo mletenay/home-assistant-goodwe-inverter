@@ -52,10 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
             retries=network_retries,
         )
         inverter.set_keep_alive(keep_alive)
-    except InverterError as err:
+    except (InverterError, OSError) as err:
         try:
             inverter = await async_check_port(hass, entry, host)
-        except InverterError:
+        except (InverterError, OSError):
             raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
@@ -152,7 +152,7 @@ async def async_migrate_entry(
         if not port:
             try:
                 _, port = await GoodweFlowHandler.async_detect_inverter_port(host=host)
-            except InverterError as err:
+            except (InverterError, OSError) as err:
                 raise ConfigEntryNotReady from err
         new_data = {
             CONF_HOST: host,
