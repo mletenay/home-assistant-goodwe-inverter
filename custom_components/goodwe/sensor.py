@@ -180,17 +180,32 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GoodWe inverter from a config entry."""
-    entities: list[InverterSensor] = []
     inverter = config_entry.runtime_data.inverter
     coordinator = config_entry.runtime_data.coordinator
     device_info = config_entry.runtime_data.device_info
+    created_ids: set[str] = set()
 
-    # Individual inverter sensors entities
-    entities.extend(
-        InverterSensor(coordinator, device_info, inverter, sensor)
-        for sensor in inverter.sensors()
-    )
-    async_add_entities(entities)
+    # Individual inverter sensor entities.
+    # The set of sensors reported by inverter.sensors() can grow after setup,
+    # e.g. when battery support is detected only after the first successful
+    # runtime read (battery_mode can transiently report 0 "No battery" during
+    # BMS communication dropouts, which previously removed battery sensors
+    # from the list). Entities created here once must not be lost, and any
+    # sensor appearing later must still get an entity, so check for new
+    # sensors on every coordinator update.
+    @callback
+    def _add_new_sensors() -> None:
+        new_sensors = [s for s in inverter.sensors() if s.id_ not in created_ids]
+        if not new_sensors:
+            return
+        created_ids.update(s.id_ for s in new_sensors)
+        async_add_entities(
+            InverterSensor(coordinator, device_info, inverter, sensor)
+            for sensor in new_sensors
+        )
+
+    _add_new_sensors()
+    config_entry.async_on_unload(coordinator.async_add_listener(_add_new_sensors))
 
 
 class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
