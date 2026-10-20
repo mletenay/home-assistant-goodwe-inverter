@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from goodwe import Inverter, InverterError
@@ -22,6 +23,9 @@ from .coordinator import GoodweConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+# Polling interval of settings marked with poll=True (EMS power limit)
+SCAN_INTERVAL = timedelta(minutes=1)
+
 
 @dataclass(frozen=True, kw_only=True)
 class GoodweNumberEntityDescription(NumberEntityDescription):
@@ -31,6 +35,18 @@ class GoodweNumberEntityDescription(NumberEntityDescription):
     mapper: Callable[[any], int]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
+    # Re-read the value periodically, for settings the inverter may change itself
+    poll: bool = False
+
+
+def _rated_power_w(inverter: Inverter) -> int:
+    """Return inverter rated power in W.
+
+    Some inverters (e.g. GoodWe ESA) report rated power in units of 100 W
+    (125 for a 12.5 kW unit); no hybrid inverter is rated below 1 kW.
+    """
+    rated_power = inverter.rated_power or 0
+    return rated_power * 100 if 0 < rated_power < 1000 else rated_power
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
@@ -181,6 +197,7 @@ NUMBERS = (
         mapper=lambda v: v,
         setter=lambda inv, val: inv.write_setting("ems_power_limit", val),
         filter=lambda inv: True,
+        poll=True,
     ),
     GoodweNumberEntityDescription(
         key="battery_soc_protection",
@@ -224,9 +241,8 @@ async def async_setup_entry(
             description.key in ("grid_export_limit", "ems_power_limit")
             and description.native_unit_of_measurement == UnitOfPower.WATT
         ):
-            entity.native_max_value = (
-                inverter.rated_power * 2 if inverter.rated_power else 10000
-            )
+            rated_power = _rated_power_w(inverter)
+            entity.native_max_value = rated_power * 2 if rated_power else 10000
         entities.append(entity)
 
     async_add_entities(entities)
@@ -251,12 +267,17 @@ class InverterNumberEntity(NumberEntity):
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
+        self._attr_should_poll = description.poll
         self._inverter: Inverter = inverter
 
     async def async_update(self) -> None:
         """Get the current value from inverter."""
-        value = await self.entity_description.getter(self._inverter)
-        self._attr_native_value = float(value)
+        try:
+            value = await self.entity_description.getter(self._inverter)
+        except InverterError as err:
+            _LOGGER.debug("Could not read %s: %s", self.entity_description.key, err)
+            return
+        self._attr_native_value = float(self.entity_description.mapper(value))
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value to inverter."""

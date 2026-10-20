@@ -72,7 +72,8 @@
           "buy_power": "Buy Power",
           "sell_power": "Sell Power",
           "charge_battery": "Charge Battery",
-          "discharge_battery": "Discharge Battery"
+          "discharge_battery": "Discharge Battery",
+          "stop": "Stop"
         }
       },
       "operation_mode": {
