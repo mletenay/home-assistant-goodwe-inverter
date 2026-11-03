@@ -55,6 +55,12 @@
       },
       "soc_upper_limit": {
         "name": "SoC upper limit"
+      },
+      "battery_charge_current": {
+        "name": "Battery charge current limit"
+      },
+      "battery_discharge_current": {
+        "name": "Battery discharge current limit"
       }
     },
     "select": {
@@ -103,6 +109,9 @@
       },
       "load_control": {
         "name": "Load control"
+      },
+      "smart_charging_enable": {
+        "name": "Smart charging (grid import)"
       }
     }
   },

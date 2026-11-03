@@ -12,7 +12,12 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -31,6 +36,9 @@ class GoodweNumberEntityDescription(NumberEntityDescription):
     mapper: Callable[[any], int]
     setter: Callable[[Inverter, int], Awaitable[None]]
     filter: Callable[[Inverter], bool]
+    # When set, the inverter setting named here is read at setup time and used
+    # as native_max_value (falls back to the descriptor's native_max_value).
+    max_setting: str | None = None
 
 
 def _get_setting_unit(inverter: Inverter, setting: str) -> str:
@@ -196,6 +204,38 @@ NUMBERS = (
         setter=lambda inv, val: inv.write_setting("battery_soc_protection", val),
         filter=lambda inv: True,
     ),
+    GoodweNumberEntityDescription(
+        key="battery_charge_current",
+        translation_key="battery_charge_current",
+        icon="mdi:battery-arrow-up",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("battery_charge_current"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("battery_charge_current", val),
+        filter=lambda inv: "battery_charge_current" in {s.id_ for s in inv.settings()},
+        max_setting="bms2_bat_charge_i_max",
+    ),
+    GoodweNumberEntityDescription(
+        key="battery_discharge_current",
+        translation_key="battery_discharge_current",
+        icon="mdi:battery-arrow-down",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        getter=lambda inv: inv.read_setting("battery_discharge_current"),
+        mapper=lambda v: v,
+        setter=lambda inv, val: inv.write_setting("battery_discharge_current", val),
+        filter=lambda inv: "battery_discharge_current" in {s.id_ for s in inv.settings()},
+        max_setting="bms2_bat_discharge_i_max",
+    ),
 )
 
 
@@ -227,6 +267,14 @@ async def async_setup_entry(
             entity.native_max_value = (
                 inverter.rated_power * 2 if inverter.rated_power else 10000
             )
+        # Set the max value from a BMS-reported setting when available
+        if description.max_setting:
+            try:
+                bms_max = await inverter.read_setting(description.max_setting)
+                if bms_max and bms_max > 0:
+                    entity._attr_native_max_value = float(bms_max)
+            except (InverterError, ValueError):
+                pass
         entities.append(entity)
 
     async_add_entities(entities)
